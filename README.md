@@ -19,3 +19,19 @@
 ข้อมูลบิลถูกบันทึกไว้ใน localStorage ของเครื่องผู้ใช้เท่านั้น ไม่มีการส่งข้อมูลออกนอกเครื่อง
 
 FairDish v1.6 · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น
+
+## Deploy บน Vercel
+
+โปรเจกต์เป็น static site ไม่มี build step มี `vercel.json` กำหนดค่าไว้แล้ว
+
+**วิธีที่ 1 — import จาก GitHub**
+1. เข้า vercel.com/new แล้วเลือก repo `FairDish`
+2. ที่ Framework Preset เลือก **Other**
+3. กด Deploy (ไม่ต้องตั้ง build command หรือ output directory เพิ่ม)
+
+**วิธีที่ 2 — deploy จากเครื่องตัวเอง**
+```
+npm i -g vercel
+vercel login
+vercel --prod
+```
