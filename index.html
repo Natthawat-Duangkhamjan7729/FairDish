@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FairDish — จ่ายเท่าที่กิน ไม่ใช่เท่าที่หาร</title>
+<meta name="description" content="FairDish คำนวณค่าอาหารจากเมนูที่แต่ละคนกินจริง รวมค่าส่วนกลางให้อัตโนมัติ แล้วสรุปเป็นบิลที่ส่งเข้ากลุ่มได้ทันที">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===================================================================
+   FairDish — ระบบดีไซน์
+   ฟอนต์   : Mitr (หัวข้อ) + Anuphan (เนื้อหา) + IBM Plex Mono (ตัวเลขเงิน)
+   สีหลัก  : เขียวใบเตย #156B52 — ปุ่ม ลิงก์ และยอดที่ถูกต้อง
+   สีรอง   : ส้มมะม่วง #F0A33C / #9A500B — จุดเน้น คำเตือน และฝั่ง "หารเท่ากัน"
+   ตัวอักษร: 4 ระดับเท่านั้น (display / title / body / small)
+   ระยะห่าง: สเกลฐาน 4px (--s1 ถึง --s9) ใช้ทั้งแอป ไม่มีค่าสุ่ม
+   =================================================================== */
+:root{
+  /* ---- สี ---- */
+  --bg:#FAF6EF;
+  --surface:#FFFFFF;
+  --surface-2:#F4EFE6;
+  --paper:#FFFDF8;
+  --line:#E7DFD2;
+  --line-2:#D2C7B6;
+
+  --ink:#23302B;
+  --ink-2:#56655C;
+  --ink-3:#5E6C64;
+
+  --primary:#156B52;
+  --primary-strong:#0F5B45;
+  --primary-soft:#E1EFE8;
+  --primary-ink:#0E5540;
+
+  --secondary:#F0A33C;
+  --secondary-ink:#9A500B;
+  --secondary-soft:#FBF2DD;
+
+  --danger:#B0402B;
+  --danger-soft:#FCEDE9;
+
+  /* ---- ตัวอักษร 4 ระดับ ---- */
+  --fs-display:clamp(28px,7vw,42px);
+  --fs-title:21px;
+  --fs-body:16px;
+  --fs-small:14px;
+  /* ---- ระยะห่าง ---- */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px;
+  --s6:32px; --s7:48px; --s8:64px; --s9:88px;
+
+  /* ---- อื่น ๆ ---- */
+  --r-sm:12px; --r-md:16px; --r-lg:20px; --r-pill:999px;
+  --tap:44px; --tap-sm:40px;
+  --wrap:1080px;
+  --shadow:0 1px 2px rgba(35,48,43,.05), 0 10px 28px -18px rgba(35,48,43,.35);
+  --font-head:"Mitr","Anuphan",system-ui,sans-serif;
+  --font-body:"Anuphan","Noto Sans Thai",system-ui,-apple-system,sans-serif;
+  --font-num:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);
+  font-size:var(--fs-body);line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,p,ul,dl{margin:0}
+ul{padding:0;list-style:none}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:8px}
+h1,h2,h3,.logo b,.r-title,.form-title{font-family:var(--font-head);font-weight:500;line-height:1.45}
+h1{font-size:var(--fs-display);line-height:1.3;letter-spacing:-.3px}
+h2{font-size:var(--fs-title)}
+h3{font-size:var(--fs-body);font-weight:500}
+.wrap{width:100%;max-width:var(--wrap);margin:0 auto;padding:0 var(--s4)}
+.mono{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------------- ปุ่มทุกชนิดใช้ฐานเดียวกัน ---------------- */
+.btn,.btn-main,.btn-line,.btn-sm,.btn-quiet,.btn-danger,.nav-cta{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);
+  min-height:var(--tap);padding:var(--s2) var(--s5);
+  border-radius:var(--r-pill);border:1px solid transparent;
+  font-family:var(--font-body);font-size:var(--fs-body);font-weight:600;
+  line-height:1.3;text-align:center;white-space:nowrap;
+}
+.btn-main,.btn-sm,.nav-cta{background:var(--primary);color:#FFF}
+.btn-main:hover,.btn-sm:hover,.nav-cta:hover{background:var(--primary-strong)}
+.btn-line,.btn-quiet{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.btn-line:hover,.btn-quiet:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--danger);color:#FFF}
+.btn-danger:hover{background:#96351F}
+.btn-sm[disabled],.btn[disabled]{opacity:.6;cursor:not-allowed}
+.btn-block{width:100%;display:flex}
+.btn-row{display:flex;flex-wrap:wrap;gap:var(--s3)}
+.icon-btn{
+  display:grid;place-items:center;min-width:var(--tap);min-height:var(--tap);
+  border-radius:var(--r-pill);color:var(--ink-2);
+}
+.icon-btn:hover{color:var(--ink);background:var(--surface-2)}
+.icon-btn svg{width:18px;height:18px;display:block}
+.add-slot{
+  display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  width:100%;min-height:var(--tap);padding:var(--s2) var(--s4);
+  border:1px dashed var(--line-2);border-radius:var(--r-pill);
+  background:var(--surface);color:var(--ink-2);font-size:var(--fs-small);font-weight:600;
+}
+.add-slot:hover{color:var(--primary);border-color:var(--primary)}
+
+/* ---------------- แถบนำทาง ---------------- */
+.nav{position:sticky;top:0;z-index:50;background:rgba(250,246,239,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;gap:var(--s3);min-height:64px}
+.logo{display:flex;align-items:center;gap:var(--s2);margin-right:auto}
+.logo-mark{width:36px;height:36px;border-radius:var(--r-sm);flex:0 0 auto;background:var(--primary);display:grid;place-items:center;color:#FFF}
+.logo-mark svg{width:20px;height:20px}
+.logo b{font-size:var(--fs-title);font-weight:600;letter-spacing:-.2px}
+.nav-links{display:none;gap:var(--s5);align-items:center}
+.nav-links a{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);min-height:var(--tap);display:inline-flex;align-items:center}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a.on{color:var(--primary)}
+.burger{display:grid;place-items:center;width:var(--tap);height:var(--tap);border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface)}
+.burger svg{width:20px;height:20px}
+.sheet{display:none;border-top:1px solid var(--line);background:var(--surface)}
+.sheet.open{display:block}
+.sheet a{display:flex;align-items:center;min-height:var(--tap);padding:var(--s3) var(--s4);color:var(--ink-2);font-weight:600;border-bottom:1px solid var(--line)}
+.sheet a.on{color:var(--primary)}
+@media(min-width:860px){.nav-links{display:flex}.burger{display:none}.sheet{display:none !important}}
+
+.save-chip{
+  display:inline-flex;align-items:center;gap:var(--s2);
+  font-size:var(--fs-small);color:var(--ink-2);
+  border:1px solid var(--line);background:var(--surface);
+  border-radius:var(--r-pill);padding:var(--s1) var(--s3);min-height:36px;white-space:nowrap;
+}
+.save-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--ink-3);flex:0 0 auto}
+.save-chip[data-state=saved] .dot{background:var(--primary)}
+.save-chip[data-state=error]{border-color:var(--danger);color:var(--danger)}
+.save-chip[data-state=error] .dot{background:var(--danger)}
+.save-chip[data-state=saving] .dot,.save-chip[data-state=loading] .dot{background:var(--secondary)}
+.save-chip .label{display:none}
+@media(min-width:600px){.save-chip .label{display:inline}}
+
+/* ---------------- โครงหน้า ---------------- */
+.page{padding:var(--s6) 0 var(--s8)}
+.page-head{max-width:640px;margin-bottom:var(--s6)}
+.page-head p{margin-top:var(--s3);color:var(--ink-2)}
+.crumb{display:inline-flex;align-items:center;min-height:var(--tap);font-size:var(--fs-small);font-weight:600;color:var(--ink-2)}
+.crumb:hover{color:var(--primary)}
+section+section{margin-top:var(--s8)}
+.sec-head{max-width:620px;margin-bottom:var(--s5)}
+.sec-head p{margin-top:var(--s3);color:var(--ink-2)}
+
+/* ---------------- hero ---------------- */
+.hero{padding:var(--s6) 0 var(--s8)}
+.hero-grid{display:grid;gap:var(--s7)}
+.hero .lede{margin-top:var(--s4);color:var(--ink-2);max-width:34em}
+.hero .btn-row{margin-top:var(--s5)}
+.hero .note{margin-top:var(--s4);font-size:var(--fs-small);color:var(--ink-2)}
+.hero .note span{color:var(--primary-ink);font-weight:600}
+@media(min-width:900px){.hero-grid{grid-template-columns:1.05fr .95fr;align-items:center;gap:var(--s8)}.hero{padding:var(--s8) 0}}
+
+/* ---------------- ใบเสร็จ ---------------- */
+.receipt-wrap{position:relative;max-width:390px;margin:0 auto;width:100%}
+.receipt{
+  background:var(--paper);color:var(--ink);
+  border:1px solid var(--line);border-bottom:none;border-radius:var(--s1) var(--s1) 0 0;
+  padding:var(--s5) var(--s4) var(--s4);box-shadow:var(--shadow);
+}
+.receipt-edge{height:11px;background:
+  linear-gradient(-45deg,var(--paper) 50%,transparent 50%) 0 0/14px 11px repeat-x,
+  linear-gradient(45deg,var(--paper) 50%,transparent 50%) 0 0/14px 11px repeat-x}
+.r-title{text-align:center;font-size:var(--fs-body);font-weight:500}
+.r-meta{text-align:center;font-size:var(--fs-small);color:var(--ink-2);margin:0 0 var(--s4)}
+.r-line{
+  width:100%;display:flex;align-items:center;gap:var(--s2);
+  padding:var(--s2) 0;min-height:var(--tap);
+  border-bottom:1px dashed var(--line-2);font-size:var(--fs-small);text-align:left;color:inherit;
+}
+.r-line .caret{font-size:var(--fs-small);color:var(--ink-2);flex:0 0 auto}
+.r-line[aria-expanded=true] .caret{transform:rotate(90deg)}
+.r-line .who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.r-line .val{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:600}
+.r-detail{font-size:var(--fs-small);color:var(--ink-2);padding:var(--s2) 0 var(--s3) var(--s3);border-bottom:1px dashed var(--line-2)}
+.r-detail div{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0}
+.r-detail span:last-child{font-family:var(--font-num)}
+.r-sum{margin-top:var(--s4);font-size:var(--fs-small);color:var(--ink-2)}
+.r-sum div{display:flex;justify-content:space-between;padding:var(--s1) 0}
+.r-sum span:last-child{font-family:var(--font-num)}
+.r-total{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:var(--s3);padding-top:var(--s3);border-top:2px solid var(--ink);
+  font-family:var(--font-head);font-size:var(--fs-title);font-weight:500;
+}
+.r-total span:last-child{font-family:var(--font-num);font-weight:600}
+.barcode{display:flex;gap:1.5px;align-items:flex-end;height:26px;margin-top:var(--s4);overflow:hidden;opacity:.8}
+.barcode i{background:var(--ink);display:block}
+
+/* ---------------- บล็อกบนหน้าแรก ---------------- */
+.compare{display:grid;gap:var(--s4)}
+@media(min-width:720px){.compare{grid-template-columns:1fr 1fr;gap:var(--s5)}}
+.cmp{border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--s5);background:var(--surface);box-shadow:var(--shadow)}
+.cmp.bad{background:var(--secondary-soft);border-color:#EFDFBC}
+.cmp.good{background:var(--primary-soft);border-color:#C8E2D6}
+.cmp .tag{font-size:var(--fs-small);color:var(--ink-2);margin-top:var(--s1)}
+.cmp ul{margin-top:var(--s4);border-top:1px solid var(--line-2)}
+.cmp li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s3) 0;border-bottom:1px solid var(--line-2);font-size:var(--fs-small)}
+.cmp li span:last-child{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:600}
+.cmp.bad li span:last-child{color:var(--secondary-ink)}
+.cmp.good li span:last-child{color:var(--primary-ink)}
+.cmp .foot{margin-top:var(--s4);font-size:var(--fs-small);color:var(--ink-2)}
+
+.bill-list{border-top:1px solid var(--line)}
+.bill-list li{display:flex;align-items:flex-start;gap:var(--s4);padding:var(--s4) 0;border-bottom:1px solid var(--line)}
+.bill-list .k{font-family:var(--font-num);font-size:var(--fs-small);color:var(--primary-ink);padding-top:var(--s1);flex:0 0 34px}
+.bill-list p{margin-top:var(--s1);color:var(--ink-2);font-size:var(--fs-small);max-width:52em}
+
+.steps{display:grid;gap:var(--s4)}
+@media(min-width:720px){.steps{grid-template-columns:repeat(4,1fr)}}
+.stp{border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s5);background:var(--surface);box-shadow:var(--shadow)}
+.stp b{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--primary-soft);color:var(--primary-ink);font-family:var(--font-num);font-size:var(--fs-small);font-weight:600}
+.stp h3{margin-top:var(--s3)}
+.stp p{margin-top:var(--s2);color:var(--ink-2);font-size:var(--fs-small)}
+
+.cta-box{border:1px solid #C8E2D6;border-radius:var(--r-lg);padding:var(--s7) var(--s5);text-align:center;background:var(--primary-soft)}
+.cta-box p{margin-top:var(--s3);color:var(--ink-2);max-width:44em;margin-inline:auto}
+.cta-box .btn-row{justify-content:center;margin-top:var(--s5)}
+
+.split2{display:grid;gap:var(--s4)}
+@media(min-width:760px){.split2{grid-template-columns:1fr 1fr;gap:var(--s5)}}
+.panel{border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--s5);background:var(--surface);box-shadow:var(--shadow)}
+.panel h3{margin-bottom:var(--s3)}
+.panel p{color:var(--ink-2);font-size:var(--fs-small)}
+.dl div{display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--line);font-size:var(--fs-small)}
+.dl div:last-child{border-bottom:none}
+.dl dt{color:var(--ink-2);flex:0 0 96px}
+.dl dd{margin:0;flex:1}
+
+/* ---------------- หน้าแอป ---------------- */
+.app-col{max-width:540px;margin:0 auto}
+.step-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s4);margin-bottom:var(--s3);box-shadow:var(--shadow)}
+.step-head{display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s4)}
+.step-num{width:28px;height:28px;border-radius:50%;flex:0 0 auto;background:var(--primary-soft);color:var(--primary-ink);font-family:var(--font-num);font-size:var(--fs-small);font-weight:600;display:grid;place-items:center}
+.step-head h2{font-size:var(--fs-body);font-weight:500}
+.step-head .aside{margin-left:auto;text-align:right;font-size:var(--fs-small);color:var(--ink-2);line-height:1.4}
+.hint{font-size:var(--fs-small);color:var(--ink-2);margin-bottom:var(--s3)}
+.sub-head{font-size:var(--fs-small);color:var(--ink-2);margin:var(--s4) 0 var(--s2);font-weight:600}
+
+input[type=text],input[type=number]{
+  width:100%;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);
+  color:var(--ink);font-family:var(--font-body);font-size:var(--fs-body);
+  padding:var(--s2) var(--s3);min-height:var(--tap);
+}
+input::placeholder{color:var(--ink-3)}
+input[type=number]{font-family:var(--font-num);-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[aria-invalid=true]{border-color:var(--danger);background:var(--danger-soft)}
+.field-row{display:flex;gap:var(--s2);align-items:flex-start}
+.field-row>div{flex:1;min-width:0}
+.field-msg{font-size:var(--fs-small);margin-top:var(--s1);min-height:20px;line-height:1.45}
+.field-msg.error{color:var(--danger)}
+.field-msg.muted{color:var(--ink-2)}
+
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.45);border-top-color:#FFF;flex:0 0 auto}
+@media(prefers-reduced-motion:no-preference){
+  .spinner{animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+}
+
+/* สมาชิก */
+.chips{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s3)}
+.chip{
+  display:inline-flex;align-items:center;gap:var(--s1);
+  background:var(--primary-soft);border:1px solid #C8E2D6;border-radius:var(--r-pill);
+  padding:0 var(--s1) 0 var(--s4);min-height:48px;
+  font-size:var(--fs-small);font-weight:600;color:var(--primary-ink);
+}
+.chip .nm{max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .act{width:var(--tap-sm);height:var(--tap-sm);border-radius:50%;display:grid;place-items:center;color:var(--primary-ink)}
+.chip .act:hover{background:rgba(14,85,64,.12)}
+.chip .act.del:hover{background:var(--danger-soft);color:var(--danger)}
+.chip .act svg{width:16px;height:16px}
+.chip.editing{background:var(--surface);border-color:var(--line-2);padding:var(--s1);gap:var(--s2)}
+.chip.editing input{min-height:var(--tap-sm);padding:var(--s1) var(--s2);font-size:var(--fs-small);width:9em}
+.chip .count{font-family:var(--font-num);font-size:var(--fs-small);opacity:.8}
+
+.skeleton{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s3)}
+.skeleton i{display:block;height:48px;width:96px;border-radius:var(--r-pill);background:var(--surface-2);border:1px solid var(--line)}
+.skeleton i:nth-child(2){width:118px}
+.skeleton i:nth-child(3){width:84px}
+@media(prefers-reduced-motion:no-preference){
+  .skeleton i{animation:pulse 1.25s ease-in-out infinite}
+  .skeleton i:nth-child(2){animation-delay:.12s}
+  .skeleton i:nth-child(3){animation-delay:.24s}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+}
+
+.notice{border-radius:var(--r-sm);padding:var(--s3);font-size:var(--fs-small);margin-top:var(--s3);display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.notice p{flex:1;min-width:12em;margin:0}
+.notice.error{background:var(--danger-soft);border:1px solid #F1CFC6;color:var(--danger)}
+.notice.warn{background:var(--secondary-soft);border:1px solid #EFDFBC;color:var(--secondary-ink)}
+.notice .btn-quiet{background:transparent;border-color:currentColor;color:inherit;font-size:var(--fs-small);padding:var(--s2) var(--s4)}
+.confirm{border:1px solid var(--line-2);background:var(--surface-2);border-radius:var(--r-sm);padding:var(--s4);margin-top:var(--s3)}
+.confirm p{font-size:var(--fs-small);color:var(--ink-2);margin-top:var(--s1)}
+.confirm .btn-row{margin-top:var(--s4)}
+.confirm .btn-row>*{flex:1}
+
+/* แถวรายการ */
+.row-item{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s2);margin-bottom:var(--s2);display:flex;align-items:center;gap:var(--s2)}
+.row-item .body{flex:1;min-width:0}
+.row-item .name{display:block;font-size:var(--fs-body);font-weight:600}
+.row-item .sub{display:block;font-size:var(--fs-small);color:var(--ink-2);word-break:break-word;line-height:1.5}
+.row-item .amt{font-family:var(--font-num);font-size:var(--fs-body);font-weight:600;white-space:nowrap}
+.row-item .acts{display:flex;gap:var(--s1);flex:0 0 auto}
+.row-item.warn{border-color:#E9C0B4;background:var(--danger-soft)}
+.row-item.warn .sub{color:var(--danger)}
+.row-item.editing{border-color:var(--primary);background:var(--primary-soft)}
+.row-tap{flex:1;min-width:0;display:flex;align-items:center;gap:var(--s3);min-height:var(--tap);text-align:left;border-radius:var(--r-sm);padding:0 var(--s2);color:inherit}
+.row-tap .body{flex:1;min-width:0}
+.row-tap:hover .name{color:var(--primary-ink)}
+
+.form-box{border:1px dashed var(--line-2);border-radius:var(--r-sm);padding:var(--s3);display:grid;gap:var(--s2);background:var(--surface)}
+.form-box .label{font-size:var(--fs-small);color:var(--ink-2);font-weight:600}
+.form-box .field-msg{margin-top:var(--s1)}
+.form-title{font-size:var(--fs-body);color:var(--ink)}
+.form-preview{font-size:var(--fs-small);color:var(--primary-ink);font-weight:600;min-height:20px;margin:0}
+.form-actions{display:flex;gap:var(--s2)}
+.form-actions button{flex:1}
+.pick{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s2)}
+.pick button{
+  border:1px solid var(--line-2);border-radius:var(--r-pill);
+  padding:var(--s2) var(--s4);min-height:var(--tap);
+  font-size:var(--fs-small);font-weight:600;color:var(--ink-2);background:var(--surface);
+}
+.pick button[aria-pressed=true]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-ink)}
+.pick .all{border-style:dashed}
+.empty{border:1px dashed var(--line-2);border-radius:var(--r-sm);padding:var(--s5) var(--s4);text-align:center;color:var(--ink-2);font-size:var(--fs-small);background:var(--surface)}
+.app-foot{display:flex;gap:var(--s2);justify-content:center;margin-top:var(--s5);flex-wrap:wrap}
+.app-foot button,.app-foot a{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);padding:var(--s2) var(--s4);min-height:var(--tap);display:inline-flex;align-items:center;border-radius:var(--r-pill)}
+.app-foot button:hover,.app-foot a:hover{color:var(--ink);background:var(--surface)}
+
+/* กล่องเมนูแนะนำ (v1.4) */
+.suggest{margin-top:var(--s1);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);overflow:hidden;box-shadow:var(--shadow)}
+.suggest .s-head{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--line);background:var(--surface-2)}
+.suggest button{display:flex;align-items:center;gap:var(--s3);width:100%;min-height:var(--tap);padding:var(--s2) var(--s3);text-align:left;font-size:var(--fs-small);border-bottom:1px solid var(--line);color:var(--ink)}
+.suggest button:last-child{border-bottom:none}
+.suggest button:hover,.suggest button[aria-selected=true]{background:var(--primary-soft);color:var(--primary-ink)}
+.suggest .s-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.suggest .s-name b{color:var(--primary-ink);font-weight:600}
+.suggest .s-price{font-family:var(--font-num);color:var(--ink-2);white-space:nowrap}
+.suggest .s-tag{font-size:var(--fs-small);font-weight:600;color:var(--primary-ink);background:var(--primary-soft);border-radius:var(--r-pill);padding:0 var(--s2);white-space:nowrap}
+
+/* ---------------- ท้ายหน้า / ข้อความเด้ง ---------------- */
+.foot{border-top:1px solid var(--line);padding:var(--s6) 0;margin-top:var(--s8);color:var(--ink-2);font-size:var(--fs-small)}
+.foot-in{display:flex;flex-wrap:wrap;gap:var(--s4);justify-content:space-between;align-items:center}
+.foot nav{display:flex;gap:var(--s2);flex-wrap:wrap}
+.foot nav a{min-height:var(--tap);display:inline-flex;align-items:center;padding:0 var(--s2);font-weight:600}
+.foot a:hover{color:var(--primary)}
+
+.toast{
+  position:fixed;left:50%;bottom:var(--s5);transform:translateX(-50%);z-index:80;
+  display:flex;align-items:center;gap:var(--s3);
+  background:var(--ink);color:#FFF;font-size:var(--fs-small);
+  padding:var(--s2) var(--s2) var(--s2) var(--s5);border-radius:var(--r-pill);
+  box-shadow:0 12px 32px -12px rgba(35,48,43,.55);
+  opacity:0;pointer-events:none;max-width:calc(100vw - 32px);
+}
+.toast.show{opacity:1;pointer-events:auto}
+.toast[data-kind=error]{background:var(--danger)}
+.toast .msg{flex:1;min-width:0}
+.toast button{background:rgba(255,255,255,.2);color:#FFF;font-weight:600;border-radius:var(--r-pill);padding:0 var(--s4);min-height:var(--tap-sm);white-space:nowrap}
+.toast button:hover{background:rgba(255,255,255,.32)}
+@media(prefers-reduced-motion:no-preference){
+  .toast{transition:opacity .18s ease}
+  .r-line .caret{transition:transform .15s ease}
+  .reveal .r-line,.reveal .r-sum,.reveal .r-total{animation:rise .5s cubic-bezier(.2,.7,.3,1) both}
+  .reveal .r-line:nth-child(4){animation-delay:.05s}
+  .reveal .r-line:nth-child(5){animation-delay:.1s}
+  .reveal .r-line:nth-child(6){animation-delay:.15s}
+  .reveal .r-line:nth-child(7){animation-delay:.2s}
+  .reveal .r-sum{animation-delay:.26s}
+  .reveal .r-total{animation-delay:.32s}
+  @keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="#/" aria-label="FairDish หน้าแรก">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3v18l2-1.4 2 1.4 2-1.4 2 1.4 2-1.4 2 1.4V3l-2 1.4L13 3l-2 1.4L9 3 7 4.4Z"/>
+          <path d="M9 8.5h6M9 12h6M9 15.5h3"/>
+        </svg>
+      </span>
+      <b>FairDish</b>
+    </a>
+    <nav class="nav-links">
+      <a href="#/" data-nav="/">หน้าแรก</a>
+      <a href="#/how" data-nav="/how">วิธีใช้</a>
+      <a href="#/bill" data-nav="/bill">ใบสรุปยอด</a>
+      <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
+    </nav>
+    <span class="save-chip" id="saveChip" data-state="loading">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="label" id="saveChipText" aria-live="polite">กำลังโหลดข้อมูล</span>
+    </span>
+    <a class="nav-cta" href="#/split">หารบิล</a>
+    <button class="burger" id="burger" aria-label="เปิดเมนู" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+  <div class="sheet" id="sheet">
+    <a href="#/" data-nav="/">หน้าแรก</a>
+    <a href="#/split" data-nav="/split">หารบิล</a>
+    <a href="#/how" data-nav="/how">วิธีใช้</a>
+    <a href="#/bill" data-nav="/bill">ใบสรุปยอด</a>
+    <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
+  </div>
+</header>
+
+<main id="view"></main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span>FairDish v1.6 · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
+    <nav>
+      <a href="#/">หน้าแรก</a>
+      <a href="#/how">วิธีใช้</a>
+      <a href="#/bill">ใบสรุปยอด</a>
+      <a href="#/about">เกี่ยวกับ</a>
+    </nav>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   1. ชั้นเก็บข้อมูล — เลือกที่เก็บที่ใช้ได้จริงในสภาพแวดล้อมนั้น
+   ========================================================= */
+var Store = {
+  key: "fairdish:bill:v1",
+  menuKey: "fairdish:menu-memory:v1",   // คีย์ใหม่ ไม่ทับข้อมูลบิลที่เคยบันทึกไว้
+  mode: "memory",
+  mem: null,
+  memStore: {},
+  async init(){
+    try {
+      if (window.storage && typeof window.storage.get === "function"){ this.mode = "artifact"; return; }
+    } catch(e){}
+    try {
+      var probe = "__fairdish_probe__";
+      window.localStorage.setItem(probe,"1");
+      window.localStorage.removeItem(probe);
+      this.mode = "local";
+    } catch(e){ this.mode = "memory"; }
+  },
+  async readRaw(key){
+    if (this.mode === "artifact"){
+      try {
+        var res = await window.storage.get(key);
+        return res && res.value ? res.value : null;
+      } catch(e){ return null; }            // ยังไม่เคยมีข้อมูล = ไม่ใช่ข้อผิดพลาด
+    }
+    if (this.mode === "local") return window.localStorage.getItem(key);
+    return this.memStore[key] || null;
+  },
+  async writeRaw(key, text){
+    if (this.mode === "artifact"){
+      var res = await window.storage.set(key, text);
+      if (!res) throw new Error("storage rejected");
+      return;
+    }
+    if (this.mode === "local"){ window.localStorage.setItem(key, text); return; }
+    this.memStore[key] = text;
+  },
+  async load(){
+    var raw = await this.readRaw(this.key);
+    return raw ? JSON.parse(raw) : null;
+  },
+  async save(data){
+    var text = JSON.stringify(data);
+    await this.writeRaw(this.key, text);
+    this.mem = JSON.parse(text);
+  },
+  async loadMenus(){
+    var raw = await this.readRaw(this.menuKey);
+    var list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  },
+  async saveMenus(list){
+    await this.writeRaw(this.menuKey, JSON.stringify(list));
+  }
+};
+
+/* =========================================================
+   2. ข้อมูลของบิล
+   ========================================================= */
+var uid = 0;
+function nid(){ uid += 1; return "i" + uid; }
+
+var state = {
+  members: [],
+  menus: [],
+  shared: [],
+  charges: [
+    { id:"svc", label:"ค่าบริการ", rate:10, on:false, fixed:true },
+    { id:"vat", label:"VAT", rate:7, on:false, fixed:true }
+  ],
+  menuMemory: [],
+  menuForm:null, sharedForm:null, chargeForm:null, open:{}
+};
+
+var ui = {
+  loading:true,
+  save:"loading",
+  savingMember:false,
+  memberError:"",
+  editingMember:null,
+  editError:"",
+  confirmMember:null,
+  savingMenu:false,
+  menuErr:{},
+  suggest:{ open:false, items:[], active:-1, total:0 },
+  focusMenuField:null,
+  saveFailedIn:null,
+  undo:null,
+  undoTimer:null
+};
+
+var MAX_NAME = 24;
+var MAX_MENU_NAME = 40;
+var MAX_PRICE = 100000;
+function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
+var APP_VERSION = "1.6";
+var MENU_MEMORY_LIMIT = 60;
+
+/* ---- คลังเมนู ----
+   สร้างจาก "ตระกูลอาหาร × วัตถุดิบ" แบบที่ร้านไทยตั้งชื่อจริง ได้เกิน 1,000 รายการ
+   โดยไฟล์ไม่บวม */
+var TAM = ["ไทย","ไทยไข่เค็ม","ปูปลาร้า","ปูม้า","ปลาร้า","ลาวไข่เค็ม","ซั่ว","ถาด","หมูยอ","ไข่เค็ม",
+"กุ้งสด","คอหมูย่าง","แคบหมู","ผลไม้","แตง","ข้าวโพด","มะม่วง","ถั่วฝักยาว","หอยดอง","ซีฟู้ด",
+"ปลากระป๋อง","ไทยกุ้งสด","ป่า","มั่ว","ปูดอง","หอยแมลงภู่","ไข่ดาว","ปลาทู","กุ้งดอง","ซั่วไข่เค็ม"];
+var LAAB = ["หมู","หมูคั่ว","หมูกรอบ","เนื้อ","เนื้อคั่ว","ไก่","เป็ด","ปลาดุก","ปลา","ทะเล","หมูยอ","เห็ด","ปลาทู","เลือด","ไก่คั่ว","ปลาคัง","หมูสามชั้น","อีสาน"];
+var YAM = ["วุ้นเส้น","หมูยอ","ไข่ดาว","ทะเล","มาม่า","ปลากระป๋อง","แซลมอน","หัวปลี","ถั่วพู","ปูอัด",
+"กุนเชียง","หมูมะนาว","ปลาดุกฟู","ตะไคร้","ไส้กรอก","สามกรอบ","เห็ดรวม","คะน้ากรอบ","ไข่เค็ม","แหนมสด","กุ้งสด","หอยแครง","เนื้อย่าง","รวมมิตรทะเล"];
+var MENU_FAMILIES = [
+  { base:"ส้มตำ", variants:TAM },
+  { base:"ตำ", variants:TAM },
+  { base:"ลาบ", variants:LAAB },
+  { base:"น้ำตก", variants:["หมู","เนื้อ","ไก่","คอหมู","หมูย่าง","เนื้อย่าง"] },
+  { base:"ก้อย", variants:["เนื้อ","หมู","กุ้ง","ปลา","หอย","ไก่"] },
+  { base:"ต้มแซ่บ", variants:["กระดูกอ่อน","ซี่โครงหมู","เนื้อ","ขาหมู","กระดูกหมู","ไก่","ปลา","เอ็นเนื้อ","ปลาดุก"] },
+  { base:"ต้มยำ", variants:["กุ้ง","กุ้งน้ำข้น","ทะเล","ไก่","ไก่บ้าน","ปลา","ปลากะพง","ปลาหมึก","หม้อไฟ","เห็ด","ปลาคัง","ขาหมู","ปลาทู","รวมมิตร","แซลมอน"] },
+  { base:"ต้มข่า", variants:["ไก่","กุ้ง","ทะเล","เห็ด","ปลา","หมู"] },
+  { base:"ต้มจืด", variants:["เต้าหู้หมูสับ","วุ้นเส้น","ฟักหมูสับ","ผักกาดขาว","มะระยัดไส้","สาหร่าย","ตำลึง","เกี๊ยวหมู"] },
+  { base:"แกงเขียวหวาน", variants:["ไก่","หมู","เนื้อ","ลูกชิ้นปลา","ทะเล","หน่อไม้"] },
+  { base:"แกงเผ็ด", variants:["เป็ดย่าง","ไก่","หมู","ฟักทองหมู","ลูกชิ้นปลา"] },
+  { base:"แกงส้ม", variants:["ชะอมกุ้ง","ผักรวม","ปลากะพง","กุ้ง","ดอกแค","ไข่ปลา"] },
+  { base:"แกงป่า", variants:["หมู","ไก่","ปลาดุก","เนื้อ","ปลาช่อน","ลูกชิ้นปลา"] },
+  { base:"แกงมัสมั่น", variants:["ไก่","เนื้อ","หมู"] },
+  { base:"พะแนง", variants:["หมู","ไก่","เนื้อ","ซี่โครงหมู"] },
+  { base:"แกงกะหรี่", variants:["ไก่","เนื้อ","หมู","กุ้ง"] },
+  { base:"แกงหน่อไม้", variants:["ใส่ย่านาง","ไก่","หมู"] },
+  { base:"แกงอ่อม", variants:["หมู","ไก่","เนื้อ","ปลาดุก","หน่อไม้"] },
+  { base:"อ่อม", variants:["หมู","ไก่","เนื้อ","ปลาดุก","หน่อไม้","เครื่องใน"] },
+  { base:"หมก", variants:["หน่อไม้","ปลา","ไก่","เห็ด","ไข่มดแดง"] },
+  { base:"ผัดกะเพรา", variants:["หมูสับ","หมูกรอบ","หมูชิ้น","ไก่","ไก่กรอบ","เนื้อ","กุ้ง","ทะเล","ปลาหมึก","ปลาดุก","เบคอน","เต้าหู้","หมูยอ","ไข่เจียว"] },
+  { base:"ผัดพริกแกง", variants:["หมู","หมูกรอบ","ไก่","ปลาดุก","ถั่วฝักยาวหมู","ทะเล"] },
+  { base:"ผัด", variants:["คะน้าหมูกรอบ","คะน้าน้ำมันหอย","ผักบุ้งไฟแดง","ผักรวมมิตร","บล็อกโคลี่กุ้ง",
+    "ถั่วฝักยาวหมูสับ","ยอดฟักทอง","ดอกกะหล่ำหมู","มะระใส่ไข่","หน่อไม้ฝรั่งกุ้ง","เห็ดรวมน้ำมันหอย","ฟักทองใส่ไข่","วุ้นเส้นหมูสับ","มาม่าใส่ไข่"] },
+  { base:"ผัดฉ่า", variants:["ทะเล","หมู","ปลาดุก","ปลาหมึก","กุ้ง","ไก่"] },
+  { base:"ผัดขี้เมา", variants:["หมู","ไก่","ทะเล","เส้นใหญ่","ปลาหมึก","กุ้ง"] },
+  { base:"ผัดเปรี้ยวหวาน", variants:["หมู","ไก่","กุ้ง","ปลา","หมูกรอบ"] },
+  { base:"ผัดไทย", variants:["กุ้งสด","หมู","ไก่","ทะเล","กุ้งแม่น้ำ","ไข่","หอยทอด"] },
+  { base:"ผัดซีอิ๊ว", variants:["หมู","ไก่","ทะเล","เนื้อ","กุ้ง"] },
+  { base:"ราดหน้า", variants:["หมู","ไก่","ทะเล","หมูกรอบ","เนื้อ","เส้นใหญ่","หมี่กรอบ"] },
+  { base:"ข้าวผัด", variants:["หมู","ไก่","กุ้ง","ปู","ทะเล","สับปะรด","อเมริกัน","แหนม","หมูกรอบ",
+    "ต้มยำ","ไข่เค็ม","ปลาเค็ม","น้ำพริกลงเรือ","กะเพราหมูสับ","พริกแกง","ปลาทู","ไข่","กะปิ","แกงเขียวหวาน","หมูยอ","กุนเชียง"] },
+  { base:"ข้าว", variants:["มันไก่","มันไก่ทอด","หมูแดง","หมูกรอบ","ขาหมู","หน้าเป็ด","คลุกกะปิ","ไข่ข้น",
+    "ไข่เจียวหมูสับ","หมูทอดกระเทียม","ไก่ทอด","แกงกะหรี่ญี่ปุ่น","ยำไข่ดาว","หมูสามชั้นทอด","หมูกระเทียม","เหนียวหมูปิ้ง","เหนียวไก่ย่าง","ต้มยำ","หน้าไก่ทอด","ไข่ดาว","หมูสับไข่เค็ม","แกงเขียวหวานไก่","ต้มยำไก่","กะเพราทะเล","หมูพะโล้","ไก่ผัดเม็ดมะม่วง"] },
+  { base:"ก๋วยเตี๋ยว", variants:["หมูน้ำตก","เนื้อตุ๋น","ต้มยำหมู","ลูกชิ้นปลา","หมูตุ๋น","เป็ดตุ๋น",
+    "ไก่มะระ","ต้มยำทะเล","เรือ","แคะ","หมูสับ","เย็นตาโฟ","ต้มยำแห้ง","น้ำใสหมู","เนื้อน้ำตก","ไก่ตุ๋น","หมูมะนาว"] },
+  { base:"บะหมี่", variants:["หมูแดง","เกี๊ยวหมูแดง","ต้มยำ","หมูกรอบ","เป็ดย่าง","แห้งหมูสับ","เกี๊ยวปู"] },
+  { base:"ขนมจีน", variants:["น้ำยา","น้ำเงี้ยว","น้ำพริก","แกงไก่","ซาวน้ำ"] },
+  { base:"ยำ", variants:YAM },
+  { base:"สุกี้", variants:["แห้ง","น้ำ","แห้งทะเล","น้ำทะเล","หม้อไฟ"] },
+  { base:"จิ้มจุ่ม", variants:["หมู","เนื้อ","ทะเล","รวมมิตร","เครื่องใน"] },
+  { base:"หม้อไฟ", variants:["ทะเล","ปลาคัง","กระดูกอ่อน","เห็ด","ไก่"] },
+  { base:"สปาเกตตี", variants:["คาโบนาร่า","ขี้เมาทะเล","ซอสมะเขือเทศ","ครีมซอสไก่","ผัดพริกแห้งเบคอน","ไส้กรอก"] },
+  { base:"พิซซ่า", variants:["หน้ารวม","ซีฟู้ด","แฮมชีส","ฮาวายเอียน","เปปเปอโรนี","ไส้กรอกชีส","บาร์บีคิวไก่"] },
+  { base:"สเต๊ก", variants:["หมู","ไก่","เนื้อ","ปลาแซลมอน","หมูพริกไทยดำ","รวมมิตร"] },
+  { base:"สลัด", variants:["ผักรวม","ซีซาร์","ทูน่า","ไก่ย่าง","ผลไม้","อกไก่"] },
+  { base:"ซูชิ", variants:["รวม","แซลมอน","ไข่หวาน","ปูอัด","ทูน่า","กุ้ง"] },
+  { base:"ข้าวหน้า", variants:["แซลมอน","เนื้อ","ไก่เทริยากิ","หมูทอด","ปลาไหล","กุ้งเทมปุระ"] },
+  { base:"ราเมง", variants:["หมูชาชู","ต้มยำ","มิโสะ","เกี๊ยวซ่า","สาหร่าย"] },
+  { base:"ไก่ทอด", variants:["เกาหลี","ซอสเผ็ด","กระเทียม","หาดใหญ่","ชีส","น้ำปลา"] },
+  { base:"หมูกระทะ", variants:["ชุดเล็ก","ชุดใหญ่","บุฟเฟ่ต์","ชุดทะเล","ชุดเนื้อ"] },
+  { base:"ชาบู", variants:["หมู","เนื้อ","ทะเล","บุฟเฟ่ต์","ชุดรวม","น้ำซุปต้มยำ"] },
+  { base:"ปิ้งย่าง", variants:["เกาหลี","ญี่ปุ่น","ชุดหมู","ชุดเนื้อ","ชุดรวม"] },
+  { base:"แหนมเนือง", variants:["ชุดเล็ก","ชุดใหญ่"] },
+  { base:"หอย", variants:["ลายผัดน้ำพริกเผา","แครงลวก","แมลงภู่อบ","นางรมสด","ทอด","จ๊อทอด","เชลล์ย่าง"] },
+  { base:"ปลากะพง", variants:["ทอดน้ำปลา","นึ่งมะนาว","นึ่งซีอิ๊ว","ราดพริก","ทอดกระเทียม","ผัดฉ่า","ต้มยำ","สามรส","ทอดขมิ้น","ต้มส้ม"] },
+  { base:"ปลานิล", variants:["เผาเกลือ","ทอด","นึ่งมะนาว","ราดพริก","ทอดสมุนไพร"] },
+  { base:"ปลาดุก", variants:["ย่าง","ผัดเผ็ด","ทอดกรอบ","ฟูผัดพริก"] },
+  { base:"ปู", variants:["ผัดผงกะหรี่","นิ่มทอดกระเทียม","ดองน้ำปลา","อบวุ้นเส้น","นึ่ง","ผัดพริกไทยดำ"] },
+  { base:"กุ้ง", variants:["แช่น้ำปลา","อบวุ้นเส้น","เผา","ทอดกระเทียม","ผัดพริกเกลือ","ดองน้ำปลา","เทมปุระ","ชุบแป้งทอด","นึ่งซีอิ๊ว","ผัดพริกแกง","อบเกลือ"] },
+  { base:"ปลาหมึก", variants:["ผัดไข่เค็ม","ย่าง","ทอดกระเทียม","นึ่งมะนาว","ผัดพริกเกลือ","ไข่ย่าง"] },
+  { base:"คอหมู", variants:["ย่าง","ทอด","ย่างจิ้มแจ่ว","ทอดน้ำปลา"] },
+  { base:"ไก่ย่าง", variants:["เขาสวนกวาง","วิเชียรบุรี","ไม้มะดัน","จิ้มแจ่ว","ครึ่งตัว","เต็มตัว"] },
+  { base:"เนื้อย่าง", variants:["จิ้มแจ่ว","เกาหลี","ริบอาย","สันคอ","เสือร้องไห้"] },
+  { base:"ซี่โครงหมู", variants:["ย่าง","อบบาร์บีคิว","ทอดกระเทียม","ต้มแซ่บ"] },
+  { base:"ไข่เจียว", variants:["หมูสับ","ปู","กุ้ง","ชะอม","ฟู"] },
+  { base:"ชา", variants:["ไทยเย็น","เย็น","มะนาว","นมไข่มุก","เขียวนมสด","ดำเย็น","มะนาวโซดา"] },
+  { base:"กาแฟ", variants:["เย็น","ดำเย็น","ลาเต้เย็น","อเมริกาโน่","คาปูชิโน่","มอคค่าเย็น"] },
+  { base:"น้ำ", variants:["เปล่า","มะนาวโซดา","ส้มคั้น","มะพร้าว","อัดลม","แข็ง","แตงโมปั่น","เก๊กฮวย","ใบเตย","มะนาว"] },
+  { base:"บิงซู", variants:["นมสด","สตรอว์เบอร์รี","ช็อกโกแลต","ชาไทย","มะม่วง","ชาเขียว","โอริโอ้","ทุเรียน"] },
+  { base:"ไอศกรีม", variants:["กะทิ","วานิลลา","ช็อกโกแลต","ชาไทย","ทอด","ผลไม้รวม","ถ้วยใหญ่","แซนด์วิช"] }
+];
+var MENU_SINGLES = [
+  { names:["ซอยจุ๊","แจ่วฮ้อน","เนื้อเสือร้องไห้","หมูมะนาว","ไส้กรอกอีสาน","ไส้อั่ว","แคบหมู",
+    "น้ำพริกอ่อง","น้ำพริกปลาร้า","น้ำพริกกะปิผักสด","ผักสดจิ้มแจ่ว","ข้าวเหนียว","ข้าวสวย","ตับหวาน",
+    "หลู้หมู","หมูจุ่ม","เนื้อแดดเดียว","หมูแดดเดียว","ปลาส้มทอด","ไข่ป่าม","อ่องปู",
+    "ปีกไก่ทอด","ปีกไก่ทอดน้ำปลา","เอ็นข้อไก่ทอด","หนังไก่ทอด","นักเก็ตไก่","ไส้กรอกทอด","มันฝรั่งทอด",
+    "ปอเปี๊ยะทอด","เกี๊ยวทอด","ทอดมันปลากราย","ทอดมันกุ้ง","หมูทอดกระเทียม","หมูกรอบ","แคบหมูไร้มัน",
+    "กุ้งเผา","ปลาเผาเกลือ","ปลาทับทิมเผา","ข้าวโพดย่าง","ไส้ย่าง","ตับย่าง","หมูสามชั้นย่าง","ปลาหมึกไข่ย่าง",
+    "กั้งทอดกระเทียม","ปลาช่อนแป๊ะซะ","ปลานึ่งซีอิ๊ว","ทะเลเผา","กระเพาะปลาน้ำแดง","ต้มเล้ง","ต้มเลือดหมู",
+    "แกงจืดวุ้นเส้น","แกงเลียง","หน่อไม้ต้มจิ้มแจ่ว","ไข่ลูกเขย","ไข่พะโล้","ยำวุ้นเส้นทะเล",
+    "กิมจิ","ต๊อกบกกี","ข้าวยำเกาหลี","เกี๊ยวซ่า","ทาโกยากิ","ทงคัตสึ","แซลมอนซาซิมิ","ปูอัดชีส",
+    "เฟรนช์ฟรายส์","นาโช่ส์","ขาหมูเยอรมัน","ปีกไก่บาร์บีคิว","ชีสบอล","หัวหอมทอด",
+    "ข้าวเหนียวมะม่วง","บัวลอย","โรตีกล้วย","ทับทิมกรอบ","ลอดช่องน้ำกะทิ","เครปเค้ก","ชีสเค้ก","บราวนี่",
+    "วาฟเฟิล","ปังเย็น","ขนมปังสังขยา","เค้กช็อกโกแลต","ผลไม้รวม"] },
+  { names:["ข้าวมันไก่ต้ม","ข้าวหมกไก่","ข้าวซอยไก่","ผัดหมี่โคราช","ก๋วยจั๊บญวน","ก๋วยจั๊บน้ำข้น",
+    "โจ๊กหมู","ข้าวต้มหมู","ข้าวต้มปลา","ขนมปังปิ้ง","แซนด์วิช","เบอร์เกอร์ไก่","เบอร์เกอร์เนื้อ",
+    "โค้ก","เป๊ปซี่","สไปรท์","โซดา","นมสด","โกโก้เย็น","โอวัลตินเย็น","น้ำผลไม้ปั่น","สมูทตี้"] }
+];
+/* ตระกูล "วิธีปรุง × วัตถุดิบ" ที่ร้านไทยใช้จริง */
+var METHOD_FAMILIES = [
+  { base:"ผัดกระเทียม", variants:["หมู","ไก่","เนื้อ","หมูกรอบ","หมูสับ","กุ้ง","ปลาหมึก","ทะเล","ปลาดุก"] },
+  { base:"ผัดพริกไทยดำ", variants:["หมู","ไก่","เนื้อ","กุ้ง","ปลาหมึก","ทะเล","ปู"] },
+  { base:"ผัดพริกเกลือ", variants:["กุ้ง","ปลาหมึก","ทะเล","ปู","ปลาดุก","หมูกรอบ"] },
+  { base:"ผัดผงกะหรี่", variants:["ปู","กุ้ง","ปลาหมึก","ทะเล","ไก่"] },
+  { base:"ผัดน้ำพริกเผา", variants:["หอยลาย","กุ้ง","ปลาหมึก","ทะเล","หมู","ไก่"] },
+  { base:"ผัดเผ็ด", variants:["ปลาดุก","หมูป่า","เนื้อ","ไก่","ปลาหมึก","หน่อไม้หมู"] },
+  { base:"คั่วกลิ้ง", variants:["หมู","ไก่","เนื้อ","หมูกรอบ","ปลาดุก","ทะเล"] },
+  { base:"ฉู่ฉี่", variants:["ปลาทู","ปลาดุก","ปลาสำลี","กุ้ง","หมู"] },
+  { base:"แกงคั่ว", variants:["หอยขม","ไก่","หมู","สับปะรดกุ้ง","หน่อไม้"] },
+  { base:"สามรส", variants:["ปลากะพง","ปลานิล","กุ้ง","ปลาหมึก","หมูกรอบ","ไก่"] },
+  { base:"ราดพริก", variants:["ปลานิล","ปลากะพง","ปลาทับทิม","ปลาดุก","ไก่"] },
+  { base:"ทอดกระเทียม", variants:["หมู","ไก่","กุ้ง","ปลาหมึก","ปูนิ่ม","ปลา","เอ็นข้อไก่"] },
+  { base:"นึ่งมะนาว", variants:["ปลากะพง","ปลานิล","ปลาทับทิม","กุ้ง","ปลาหมึก","ปลาคัง"] },
+  { base:"นึ่งซีอิ๊ว", variants:["ปลากะพง","ปลานิล","ปลาช่อน","ปลาคัง"] },
+  { base:"ย่างจิ้มแจ่ว", variants:["เนื้อ","หมู","คอหมู","ไก่","ปลาหมึก","ซี่โครงหมู"] },
+  { base:"อบวุ้นเส้น", variants:["กุ้ง","ปู","ปลาหมึก","ทะเล"] },
+  { base:"ทอดน้ำปลา", variants:["ปีกไก่","ปลากะพง","คอหมู","ปลานิล","หมู"] },
+  { base:"ลวกจิ้ม", variants:["หอยแครง","กุ้ง","ปลาหมึก","เนื้อ","หมู"] },
+  { base:"แดดเดียว", variants:["เนื้อ","หมู","ปลาช่อน","ปลาดุก","ไก่"] },
+  { base:"ต้มส้ม", variants:["ปลา","ไก่","ปลากะพง"] },
+  { base:"ห่อหมก", variants:["ปลา","ทะเล","กุ้ง","ปลาช่อน"] },
+  { base:"ไข่ตุ๋น", variants:["หมูสับ","ทะเล","รวม"] },
+  { base:"หมูสามชั้น", variants:["ทอด","ย่าง","ทอดน้ำปลา","กระเทียม","คั่วพริกเกลือ"] },
+  { base:"ปีกไก่", variants:["ทอด","ย่าง","ทอดน้ำปลา","บาร์บีคิว","ซอสเกาหลี","ทอดกระเทียม"] },
+  { base:"เกี๊ยว", variants:["น้ำ","ทอด","กุ้ง","ปู","ซ่า"] },
+  { base:"เต้าหู้", variants:["ทอด","ผัดซอส","ทรงเครื่อง","นึ่งซีฟู้ด"] },
+  { base:"เห็ด", variants:["ทอด","ย่าง","ผัดน้ำมันหอย","อบเนย","ชุบแป้งทอด"] },
+  { base:"ข้าวเหนียว", variants:["หมูปิ้ง","ไก่ย่าง","มะม่วง","สังขยา","ทุเรียน"] },
+  { base:"โรตี", variants:["กล้วยไข่","นมข้น","ไข่","ช็อกโกแลต","กรอบ"] },
+  { base:"ขนมปัง", variants:["สังขยา","เนยน้ำตาล","ช็อกโกแลต","นมข้น","ปิ้งชุด"] },
+  { base:"ชานม", variants:["ไข่มุก","บุก","ชาไทย","ชาเขียว","ไต้หวัน"] },
+  { base:"สมูทตี้", variants:["มะม่วง","สตรอว์เบอร์รี","แตงโม","บลูเบอร์รี","เสาวรส"] },
+  { base:"น้ำปั่น", variants:["แตงโม","มะม่วง","สับปะรด","ฝรั่ง","ส้ม"] },
+  { base:"เบอร์เกอร์", variants:["ไก่","เนื้อ","หมู","ชีส","ไก่กรอบ"] },
+  { base:"หมูทอด", variants:["กระเทียม","สมุนไพร","งา","ซอสเกาหลี"] },
+  { base:"ปลาทอด", variants:["ราดพริก","กระเทียม","สมุนไพร","น้ำปลา","สามรส"] },
+  { base:"ซุป", variants:["หน่อไม้","ขนุน","มะเขือ","หน่อไม้ปลาร้า"] },
+  { base:"แกงเห็ด", variants:["รวม","เผาะ","ย่านาง"] },
+  { base:"ไก่", variants:["ผัดเม็ดมะม่วง","ทอดซอสมะขาม","อบซอส","ต้มขมิ้น","ย่างซอสเกาหลี"] },
+  { base:"เป็ด", variants:["ย่าง","ตุ๋นมะนาวดอง","พะโล้","ทอด"] },
+  { base:"สะเต๊ะ", variants:["หมู","ไก่","เนื้อ"] },
+  { base:"แกงจืด", variants:["เต้าหู้","วุ้นเส้น","ผักกาดขาว","สาหร่าย","ลูกชิ้นปลา"] },
+  { base:"หม้อไฟทะเล", variants:["ชุดเล็ก","ชุดใหญ่"] },
+  { base:"หอยทอด", variants:["กรอบ","นุ่ม","ชุดใหญ่"] }
+];
+var EXTRA_SINGLES = [
+  { names:["ปลาร้าบอง","แจ่วบอง","ปลาร้าสับ","ไข่มดแดงคั่ว","แมงดาปิ้ง","จิ้งหรีดทอด","ไข่เยี่ยวม้าทรงเครื่อง",
+    "ยำไข่เยี่ยวม้า","ผัดพริกขิงหมู","ปลาสลิดทอด","ปลาอินทรีย์เค็มทอด","กุนเชียงทอด","หมูยอทอด","แหนมทอด",
+    "ลูกชิ้นปิ้ง","ลูกชิ้นทอด","ปลาหมึกกรอบ","สาหร่ายทอด","เกี๊ยวกรอบน้ำจิ้มบ๊วย","เต้าหู้ทอดซอสถั่ว",
+    "สปริงโรลกุ้ง","ปอเปี๊ยะสด","ข้าวเกรียบปากหม้อ","ขนมจีบ","ซาลาเปาไส้หมู","ขนมกุยช่าย","หอยจ๊อ",
+    "ก๋วยเตี๋ยวหลอด","ขนมครก","กล้วยทอด","มันทอด","เผือกทอด","ทุเรียนทอด","ข้าวโพดคลุกเนย",
+    "ผลไม้ตามฤดูกาล","สับปะรดหั่น","แตงโมหั่น","ฝรั่งจิ้มพริกเกลือ","มะม่วงน้ำปลาหวาน","สลัดโรล"] },
+  { names:["นมเย็น","นมชมพู","โอเลี้ยง","ชาดำเย็น","น้ำแดงมะนาว","น้ำเขียว","น้ำลำไย","น้ำกระเจี๊ยบ",
+    "น้ำอ้อย","น้ำมะตูม","น้ำขิง","น้ำมะขาม","น้ำฝรั่ง","น้ำองุ่น","น้ำแอปเปิล","น้ำสไปรท์มะนาว",
+    "เบียร์ขวดใหญ่","เบียร์กระป๋อง","โซดาขวด","น้ำเปล่าขวดใหญ่","น้ำแข็งถัง"] }
+];
+
+function buildMenuLibrary(){
+  var out = [], seen = {};
+  function add(name){
+    var n = normText(name);
+    if (!n || seen[n]) return;
+    seen[n] = true;
+    out.push({ name:name, norm:n });
+  }
+  MENU_FAMILIES.concat(METHOD_FAMILIES).forEach(function(f){
+    add(f.base);
+    f.variants.forEach(function(v){ add(f.base+v); });
+  });
+  MENU_SINGLES.concat(EXTRA_SINGLES).forEach(function(g){
+    g.names.forEach(function(n){ add(n); });
+  });
+  return out;
+}
+var MENU_LIBRARY = [];
+var money = new Intl.NumberFormat("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
+function baht(v){ return money.format(v); }
+function esc(s){
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function nameOf(id){
+  for (var i=0;i<state.members.length;i++) if (state.members[i].id===id) return state.members[i].name;
+  return "";
+}
+function menusOf(memberId){
+  return state.menus.filter(function(m){ return m.eaters.indexOf(memberId) >= 0; });
+}
+var ICON_EDIT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+var ICON_DEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+var ICON_X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+var ICON_COPY='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
+
+/* =========================================================
+   3. บันทึกข้อมูล + สถานะ
+   ========================================================= */
+function serialize(){
+  return { members:state.members, menus:state.menus, shared:state.shared,
+           charges:state.charges, savedAt:new Date().toISOString() };
+}
+function setSave(next){
+  ui.save = next;
+  var chip = document.getElementById("saveChip");
+  var text = document.getElementById("saveChipText");
+  if (!chip || !text) return;
+  chip.dataset.state = next;
+  text.textContent = ({ loading:"กำลังโหลดข้อมูล", saving:"กำลังบันทึก",
+                        saved:"บันทึกแล้ว", error:"ยังไม่ได้บันทึก" })[next] || "";
+}
+async function commit(successMessage, source){
+  setSave("saving");
+  try {
+    await Store.save(serialize());
+    setSave("saved");
+    ui.saveFailedIn = null;
+    if (successMessage) toast(successMessage,"ok");
+    return true;
+  } catch(err){
+    setSave("error");
+    ui.saveFailedIn = source || "member";
+    toast("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ","error",{ label:"ลองอีกครั้ง", action:retrySave });
+    render();
+    return false;
+  }
+}
+function saveErrorNotice(){
+  return '<div class="notice error"><p>บันทึกลงเครื่องไม่สำเร็จ ข้อมูลที่เห็นยังอยู่ครบ แต่ถ้าปิดหน้านี้จะหาย</p>'+
+    '<button class="btn-quiet" id="retrySave">ลองบันทึกอีกครั้ง</button></div>';
+}
+async function retrySave(){
+  var ok = await commit();
+  if (ok) toast("บันทึกเรียบร้อยแล้ว","ok");
+  render();
+}
+
+/* =========================================================
+   4. การคำนวณ
+   ========================================================= */
+function compute(){
+  var n = state.members.length;
+  var known = {};
+  state.members.forEach(function(p){ known[p.id] = true; });
+
+  var cleaned = state.menus.map(function(m){
+    return { id:m.id, name:m.name, price:m.price, eaters:m.eaters.filter(function(id){ return known[id]; }) };
+  });
+  var valid = cleaned.filter(function(m){ return m.eaters.length > 0; });
+  var orphan = cleaned.length - valid.length;
+
+  var per = {};
+  state.members.forEach(function(p){
+    per[p.id] = { id:p.id, name:p.name, food:0, items:[], sharedShare:0, charge:0, total:0, rounded:0 };
+  });
+  valid.forEach(function(m){
+    var each = m.price / m.eaters.length;
+    m.eaters.forEach(function(pid){
+      if (!per[pid]) return;
+      per[pid].food += each;
+      per[pid].items.push({ name:m.name, amount:each, split:m.eaters.length });
+    });
+  });
+
+  var foodTotal = valid.reduce(function(a,m){ return a+m.price; },0);
+  var sharedTotal = state.shared.reduce(function(a,s){ return a+s.price; },0);
+  var sharedEach = n>0 ? sharedTotal/n : 0;
+  var rate = state.charges.reduce(function(a,c){ return a+(c.on?c.rate:0); },0)/100;
+
+  var list = state.members.map(function(p){
+    var row = per[p.id];
+    row.sharedShare = sharedEach;
+    var base = row.food + sharedEach;
+    row.charge = base*rate;
+    row.total = base + row.charge;
+    return row;
+  });
+
+  var chargeTotal = (foodTotal + sharedTotal) * rate;
+  var grand = foodTotal + sharedTotal + chargeTotal;
+
+  var target = Math.round(grand*100);
+  var cents = list.map(function(r){ return Math.floor(r.total*100 + 1e-7); });
+  var diff = target - cents.reduce(function(a,b){ return a+b; },0);
+  var order = list.map(function(r,i){
+    return { i:i, frac: r.total*100 - Math.floor(r.total*100 + 1e-7) };
+  }).sort(function(a,b){ return b.frac - a.frac; });
+  var k=0;
+  while (diff>0 && order.length>0){ cents[order[k % order.length].i]+=1; diff-=1; k+=1; }
+  k=0;
+  while (diff<0 && order.length>0){ cents[order[order.length-1-(k % order.length)].i]-=1; diff+=1; k+=1; }
+  list.forEach(function(r,i){ r.rounded = cents[i]/100; });
+
+  return { list:list, foodTotal:foodTotal, sharedTotal:sharedTotal, chargeTotal:chargeTotal,
+           grand:Math.round(grand*100)/100, rate:rate, orphan:orphan, n:n };
+}
+function hasData(){ return state.members.length>0 && (state.menus.length + state.shared.length)>0; }
+
+/* =========================================================
+   5. ใบเสร็จ
+   ========================================================= */
+function barcode(seed){
+  var bars="", x = Math.max(1, Math.round(seed*100)) % 9973;
+  for (var i=0;i<46;i++){
+    x = (x*1103515245 + 12345) % 2147483648;
+    bars += '<i style="width:'+(1+(x%4))+'px;height:'+(60+(x%41))+'%"></i>';
+  }
+  return '<div class="barcode" aria-hidden="true">'+bars+'</div>';
+}
+function receiptHTML(r, opts){
+  opts = opts || {};
+  var lines = r.list.map(function(p){
+    var opened = !!state.open[p.id];
+    var html = (opts.interactive
+      ? '<button class="r-line" data-toggle="'+p.id+'" aria-expanded="'+opened+'"><span class="caret">&#9654;</span>'
+      : '<div class="r-line"><span class="caret" style="visibility:hidden">&#9654;</span>')
+      + '<span class="who">'+esc(p.name)+'</span><span class="val">'+baht(p.rounded)+'</span>'
+      + (opts.interactive ? '</button>' : '</div>');
+    if (opts.interactive && opened){
+      var d = p.items.map(function(it){
+        return '<div><span class="dname">'+esc(it.name)+' ÷ '+it.split+'</span><span>'+baht(it.amount)+'</span></div>';
+      }).join("");
+      if (p.items.length===0) d = '<div><span class="dname">ไม่ได้สั่งเมนูส่วนตัว</span><span>0.00</span></div>';
+      if (r.sharedTotal>0) d += '<div><span class="dname">ค่าส่วนกลาง ÷ '+r.n+'</span><span>'+baht(p.sharedShare)+'</span></div>';
+      if (r.rate>0) d += '<div><span class="dname">ค่าบริการ + ภาษี '+(r.rate*100).toFixed(0)+'%</span><span>'+baht(p.charge)+'</span></div>';
+      html += '<div class="r-detail">'+d+'</div>';
+    }
+    return html;
+  }).join("");
+
+  var sums = '<div><span>ค่าอาหาร</span><span>'+baht(r.foodTotal)+'</span></div>';
+  if (r.sharedTotal>0) sums += '<div><span>ค่าส่วนกลาง</span><span>'+baht(r.sharedTotal)+'</span></div>';
+  if (r.chargeTotal>0) sums += '<div><span>ค่าบริการ + ภาษี</span><span>'+baht(r.chargeTotal)+'</span></div>';
+
+  return '<div class="receipt-wrap'+(opts.reveal?' reveal':'')+'"><div class="receipt">'+
+    '<div class="r-title">ใบสรุปยอด</div>'+
+    '<div class="r-meta">'+r.n+' คน · '+r.list.reduce(function(a,p){return a+p.items.length;},0)+' รายการที่แบ่งกัน</div>'+
+    lines+
+    '<div class="r-sum">'+sums+'</div>'+
+    '<div class="r-total"><span>รวมทั้งหมด</span><span>'+baht(r.grand)+' ฿</span></div>'+
+    barcode(r.grand)+
+  '</div><div class="receipt-edge"></div></div>';
+}
+function demoReceiptHTML(){
+  var rows = [["มาร์ค",106.75],["กิติภูมิ",117.46],["พูบ",73.41],["ชาเน่",37.41],
+              ["โบ",37.41],["ยูกะ",37.41],["โอชิ",73.41],["เจ้าสั่ว",136.74]];
+  var lines = rows.map(function(p){
+    return '<div class="r-line"><span class="caret" style="visibility:hidden">&#9654;</span>'+
+      '<span class="who">'+p[0]+'</span><span class="val">'+baht(p[1])+'</span></div>';
+  }).join("");
+  return '<div class="receipt-wrap reveal"><div class="receipt">'+
+    '<div class="r-title">ใบสรุปยอด</div>'+
+    '<div class="r-meta">8 คน · 5 เมนู · ร้านอาหารอีสาน</div>'+lines+
+    '<div class="r-sum"><div><span>ค่าอาหาร</span><span>475.00</span></div>'+
+    '<div><span>ค่าส่วนกลาง</span><span>145.00</span></div></div>'+
+    '<div class="r-total"><span>รวมทั้งหมด</span><span>620.00 ฿</span></div>'+
+    barcode(620)+'</div><div class="receipt-edge"></div></div>';
+}
+
+/* =========================================================
+   6. หน้าเว็บ
+   ========================================================= */
+function item(k,h,p){ return '<li><span class="k">'+k+'</span><div><h3>'+h+'</h3><p>'+p+'</p></div></li>'; }
+
+function pageHome(){
+  return ''+
+  '<section class="hero"><div class="wrap hero-grid">'+
+    '<div>'+
+      '<h1>จ่ายเท่าที่กิน<br>ไม่ใช่เท่าที่หาร</h1>'+
+      '<p class="lede">FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปออกมาเป็นบิลรายคนที่ส่งเข้ากลุ่มได้ทันที จบปัญหาคนกินน้อยต้องจ่ายเท่าคนกินเยอะ</p>'+
+      '<div class="btn-row"><a class="btn btn-main" href="#/split">เริ่มหารบิล</a>'+
+      '<a class="btn btn-line" href="#/how">ดูวิธีใช้</a></div>'+
+      '<p class="note"><span>ไม่ต้องสมัครสมาชิก</span> · เปิดใช้ได้ทันทีบนมือถือ · ข้อมูลเก็บอยู่ในเครื่องของคุณ</p>'+
+    '</div><div>'+demoReceiptHTML()+'</div>'+
+  '</div></section>'+
+
+  '<section><div class="wrap">'+
+    '<div class="sec-head"><h2>บิลใบเดียวกัน สองวิธีคิด</h2>'+
+    '<p>มื้อจริงจากการทดลองใช้: 8 คน 5 เมนู รวมค่าน้ำและข้าวเหนียว 620 บาท</p></div>'+
+    '<div class="compare">'+
+      '<div class="cmp bad"><h3>หารเท่ากันทั้งโต๊ะ</h3><div class="tag">620 ÷ 8 = ทุกคนจ่ายเท่ากัน</div>'+
+        '<ul><li><span>ชาเน่ — กิน 1 เมนู</span><span>77.50</span></li>'+
+        '<li><span>มาร์ค — กิน 4 เมนู</span><span>77.50</span></li>'+
+        '<li><span>เจ้าสั่ว — กิน 4 เมนูราคาสูง</span><span>77.50</span></li></ul>'+
+        '<p class="foot">ชาเน่จ่ายเกินไป 40.09 บาท ส่วนเจ้าสั่วจ่ายขาดไป 59.24 บาท ทั้งที่ไม่มีใครตั้งใจเอาเปรียบกัน</p></div>'+
+      '<div class="cmp good"><h3>หารด้วย FairDish</h3><div class="tag">คิดจากเมนูที่แต่ละคนกินจริง</div>'+
+        '<ul><li><span>ชาเน่ — กิน 1 เมนู</span><span>37.41</span></li>'+
+        '<li><span>มาร์ค — กิน 4 เมนู</span><span>106.75</span></li>'+
+        '<li><span>เจ้าสั่ว — กิน 4 เมนูราคาสูง</span><span>136.74</span></li></ul>'+
+        '<p class="foot">ยอดรายคนรวมกันได้ 620.00 บาทพอดี ไม่มีเศษสตางค์หาย และทุกคนกดดูได้ว่ายอดของตัวเองมาจากเมนูไหน</p></div>'+
+    '</div>'+
+  '</div></section>'+
+
+  '<section><div class="wrap">'+
+    '<div class="sec-head"><h2>สิ่งที่ FairDish ทำให้</h2><p>ทุกอย่างอยู่ในหน้าเดียว ไล่จากบนลงล่างแล้วได้บิลเลย</p></div>'+
+    '<ul class="bill-list">'+
+      item("01","เพิ่มคนในโต๊ะ","ใส่ชื่อสมาชิกที่ร่วมมื้อนี้ แก้ชื่อหรือลบออกได้ตลอด พร้อมเลิกทำถ้าลบผิดคน")+
+      item("02","ใส่เมนูและราคา","พิมพ์ไม่กี่ตัวอักษรก็มีเมนูแนะนำกว่า 1,000 รายการขึ้นมาให้เลือก และเมนูที่คุณสั่งเองระบบจำไว้ให้พร้อมราคาครั้งก่อน")+
+      item("03","เลือกคนที่กินแต่ละเมนู","แตะชื่อคนที่กินจานนั้น ระบบหารเฉพาะคนที่แตะไว้ ไม่ใช่ทั้งโต๊ะ")+
+      item("04","บวกค่าส่วนกลางอัตโนมัติ","ค่าบริการ 10% VAT 7% หรือกำหนดเปอร์เซ็นต์เอง ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน")+
+      item("05","สรุปยอดเป็นบิลรายคน","แตะชื่อใครก็เห็นทันทีว่ายอดนั้นมาจากเมนูไหนบ้าง กี่บาท หารกี่คน")+
+      item("06","คัดลอกส่งเข้ากลุ่ม","กดปุ่มเดียวได้ข้อความสรุปพร้อมวางในแชทกลุ่ม ไม่ต้องพิมพ์ตามทีละคน")+
+      item("07","ตรวจสอบและแก้ไขได้ตลอด","แก้เมนู ราคา หรือคนกินได้ทุกเมื่อ บิลคำนวณใหม่ให้ทันทีโดยไม่ต้องเริ่มใหม่")+
+    '</ul>'+
+  '</div></section>'+
+
+  '<section><div class="wrap"><div class="cta-box">'+
+    '<h2>มื้อหน้าไม่ต้องกดเครื่องคิดเลขแล้ว</h2>'+
+    '<p>เปิด FairDish ตอนบิลมาถึงโต๊ะ ใส่ชื่อกับเมนู แล้วส่งยอดเข้ากลุ่มก่อนจะลุกจากร้าน</p>'+
+    '<div class="btn-row"><a class="btn btn-main" href="#/split">เริ่มหารบิล</a>'+
+    '<a class="btn btn-line" href="#/about">ที่มาของโปรเจกต์</a></div>'+
+  '</div></div></section>';
+}
+
+function pageSplit(){
+  return '<div class="page"><div class="wrap app-col">'+
+    '<div class="page-head" style="margin-bottom:var(--s5)">'+
+      '<h1>หารบิล</h1>'+
+      '<p>ไล่ทีละขั้นจาก 1 ถึง 4 ระบบบันทึกให้อัตโนมัติทุกครั้งที่แก้ข้อมูล</p>'+
+    '</div>'+
+
+    '<section class="step-card" aria-labelledby="h-members">'+
+      '<div class="step-head"><span class="step-num">1</span><h2 id="h-members">ใครกินบ้าง</h2>'+
+      '<span class="aside" id="memberCount"></span></div>'+
+      '<div class="field-row">'+
+        '<div>'+
+          '<label class="sr-only" for="memberInput">ชื่อคนที่ร่วมมื้อนี้</label>'+
+          '<input type="text" id="memberInput" placeholder="พิมพ์ชื่อ เช่น มาร์ค" autocomplete="off" maxlength="'+MAX_NAME+'" aria-describedby="memberMsg">'+
+        '</div>'+
+        '<button class="btn-sm" id="memberAdd">เพิ่ม</button>'+
+      '</div>'+
+      '<p class="field-msg muted" id="memberMsg" aria-live="polite"></p>'+
+      '<div id="memberList"></div>'+
+      '<div id="memberExtra"></div>'+
+    '</section>'+
+
+    '<section class="step-card" aria-labelledby="h-menus"><div class="step-head"><span class="step-num">2</span><h2 id="h-menus">รายการอาหาร</h2>'+
+      '<span class="aside" id="menuMeta"></span></div>'+
+      '<div id="menuList"></div><div id="menuFormSlot"></div></section>'+
+
+    '<section class="step-card"><div class="step-head"><span class="step-num">3</span><h2>ค่าส่วนกลาง</h2></div>'+
+      '<p class="hint">คิดเป็น % จากยอดของแต่ละคน</p>'+
+      '<div class="pick" id="chargeList"></div><div id="chargeFormSlot"></div>'+
+      '<p class="sub-head">หารเท่ากันทุกคน</p>'+
+      '<div id="sharedList"></div><div id="sharedFormSlot"></div></section>'+
+
+    '<section class="step-card"><div class="step-head"><span class="step-num">4</span><h2>สรุปยอด</h2>'+
+      '<span class="aside" id="summaryAside"></span></div>'+
+      '<div id="summary" aria-live="polite"></div></section>'+
+
+    '<div class="app-foot"><button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button>'+
+    '<button id="resetBtn">ล้างข้อมูลทั้งหมด</button></div>'+
+  '</div></div>';
+}
+
+function pageBill(){
+  var head = '<div class="page"><div class="wrap">'+
+    '<a class="crumb" href="#/split">← กลับไปแก้บิล</a>'+
+    '<div class="page-head"><h1>ใบสรุปยอด</h1>'+
+    '<p>ยอดที่แต่ละคนต้องจ่าย พร้อมที่มาของทุกบาท กางให้ทั้งโต๊ะดูหรือคัดลอกส่งเข้ากลุ่มได้เลย</p></div>';
+  if (ui.loading) return head + '<div class="empty" style="max-width:540px">กำลังโหลดข้อมูลบิล…</div></div></div>';
+  if (!hasData()){
+    return head + '<div class="empty" style="max-width:540px">ยังไม่มีข้อมูลบิล เริ่มจากใส่ชื่อคนกินและเมนูในหน้าหารบิลก่อน<br><br>'+
+      '<a class="btn btn-main" href="#/split">ไปหน้าหารบิล</a></div></div></div>';
+  }
+  var r = compute();
+  return head + '<div class="app-col">'+
+      (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' เมนูที่ยังไม่ได้เลือกคนกิน จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
+      receiptHTML(r,{interactive:true})+
+      '<button class="btn-sm btn-block" id="copyBtn" style="margin-top:var(--s5)">คัดลอกสรุปยอด</button>'+
+      '<div class="app-foot"><a href="#/split">แก้ไขรายการ</a></div>'+
+    '</div></div></div>';
+}
+
+function pageHow(){
+  return '<div class="page"><div class="wrap">'+
+    '<div class="page-head"><h1>วิธีใช้ 4 ขั้น</h1>'+
+    '<p>ออกแบบให้ทำเสร็จภายในเวลาที่พนักงานเดินไปเก็บเงินอีกโต๊ะ</p></div>'+
+    '<div class="steps">'+
+      '<div class="stp"><b>1</b><h3>ใครกินบ้าง</h3><p>พิมพ์ชื่อทุกคนที่ร่วมโต๊ะ กดเพิ่มทีละคน ชื่อเล่นสั้น ๆ อ่านง่ายที่สุดตอนดูบิล</p></div>'+
+      '<div class="stp"><b>2</b><h3>รายการอาหาร</h3><p>ใส่ชื่อเมนูกับราคาต่อจาน แล้วแตะเลือกคนที่กินจานนั้น ถ้าทั้งโต๊ะกินกดปุ่มทุกคนได้เลย</p></div>'+
+      '<div class="stp"><b>3</b><h3>ค่าส่วนกลาง</h3><p>เปิดค่าบริการหรือ VAT ตามที่ร้านคิด ส่วนน้ำเปล่า น้ำแข็ง ข้าวเหนียว ใส่เป็นรายการหารเท่ากัน</p></div>'+
+      '<div class="stp"><b>4</b><h3>สรุปยอด</h3><p>บิลขึ้นเองทันที แตะชื่อใครก็ดูที่มาของยอดได้ แล้วกดคัดลอกส่งเข้ากลุ่ม</p></div>'+
+    '</div>'+
+    '<section><div class="sec-head"><h2>สามคำถามที่ถูกถามบ่อย</h2></div>'+
+      '<div class="split2">'+
+        '<div class="panel"><h3>เศษสตางค์หายไปไหน</h3><p>ไม่หาย FairDish กระจายเศษสตางค์ให้ยอดรายคนรวมกันเท่ากับยอดบิลเป๊ะเสมอ ไม่ต้องมีใครควักเพิ่มทีหลัง</p></div>'+
+        '<div class="panel"><h3>ค่าบริการคิดยังไง</h3><p>คิดเป็นเปอร์เซ็นต์จากยอดของแต่ละคนหลังรวมส่วนแบ่งค่าส่วนกลางแล้ว เหมือนที่ร้านคิดจากยอดบิลรวม</p></div>'+
+        '<div class="panel"><h3>ปิดหน้าเว็บแล้วข้อมูลหายไหม</h3><p>ไม่หาย ระบบบันทึกบิลไว้ในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล เปิดกลับมาก็ทำต่อได้จากจุดเดิม</p></div>'+
+      '</div>'+
+    '</section>'+
+    '<section><div class="cta-box"><h2>พร้อมลองแล้ว</h2>'+
+      '<p>มีข้อมูลตัวอย่างให้กดใส่ในหน้าหารบิล ลองดูผลก่อนใช้จริงได้</p>'+
+      '<div class="btn-row"><a class="btn btn-main" href="#/split">เริ่มหารบิล</a></div></div></section>'+
+  '</div></div>';
+}
+
+function pageAbout(){
+  return '<div class="page"><div class="wrap">'+
+    '<div class="page-head"><h1>เกี่ยวกับ FairDish</h1>'+
+    '<p>โปรเจกต์ที่เริ่มจากคำถามง่าย ๆ ว่าทำไมคนสั่งน้ำเปล่าแก้วเดียวต้องจ่ายเท่าคนสั่งสเต๊ก</p></div>'+
+    '<div class="split2">'+
+      '<div class="panel"><h3>ปัญหาที่ต้องการแก้</h3>'+
+        '<p>การกินข้าวเป็นกลุ่มมักจบด้วยการหารเท่ากันทั้งโต๊ะ เพราะเร็วและไม่ต้องคิดมาก แต่คนที่กินน้อยหรือไม่ได้กินบางเมนูก็ต้องจ่ายมากกว่าที่ควร ความรู้สึกไม่เป็นธรรมสะสมจนกลายเป็นความขัดแย้งในกลุ่ม และการคิดเองก็ผิดพลาดง่ายเมื่อมีค่าบริการกับ VAT เข้ามา</p></div>'+
+      '<div class="panel"><h3>ผู้ใช้ที่เราออกแบบให้</h3><dl class="dl">'+
+          '<div><dt>ตัวแทนผู้ใช้</dt><dd>นายสมภูมิ อายุ 22 ปี นักศึกษา</dd></div>'+
+          '<div><dt>สถานการณ์</dt><dd>กินข้าวกับเพื่อนเป็นกลุ่ม แต่ละคนสั่งไม่เท่ากัน</dd></div>'+
+          '<div><dt>สิ่งที่ต้องการ</dt><dd>หารค่าอาหารให้ลงตัวโดยไม่ต้องเถียงกัน</dd></div>'+
+          '<div><dt>สิ่งที่คาดหวัง</dt><dd>คำนวณถูกต้อง ครบถ้วน และอธิบายที่มาของยอดได้</dd></div>'+
+      '</dl></div>'+
+    '</div>'+
+    '<section><div class="sec-head"><h2>ขอบเขตของเวอร์ชันนี้</h2>'+
+      '<p>FairDish มีผู้ใช้ประเภทเดียว ทุกคนที่เปิดแอปทำสิ่งเดียวกันได้ทั้งหมด จึงไม่มีระบบสมาชิกหรือสิทธิ์แอดมินให้ต้องจำรหัสผ่าน</p></div>'+
+      '<ul class="bill-list">'+
+        item("✓","ใช้ได้ทันทีโดยไม่ต้องล็อกอิน","เปิดแล้วใช้เลย ไม่เก็บข้อมูลส่วนตัว ไม่ต้องรอโหลดบัญชี")+
+        item("✓","บันทึกบิลไว้ในเครื่องให้อัตโนมัติ","แก้อะไรก็บันทึกทันที ปิดแล้วเปิดใหม่ยังทำต่อได้ และไม่มีข้อมูลออกนอกเครื่อง")+
+        item("—","ยังไม่มีประวัติบิลย้อนหลัง","เก็บได้ครั้งละหนึ่งบิล เป็นสิ่งที่จะต่อยอดในเวอร์ชันถัดไป พร้อมการแชร์ลิงก์ให้เพื่อนกดยืนยันเมนูของตัวเอง")+
+      '</ul>'+
+    '</section>'+
+    '<section><div class="cta-box"><h2>ลองใช้ดูก่อนตัดสิน</h2>'+
+      '<p>กดใส่ข้อมูลตัวอย่างในหน้าหารบิล แล้วดูว่าบิลรายคนออกมาหน้าตาเป็นยังไง</p>'+
+      '<div class="btn-row"><a class="btn btn-main" href="#/split">เริ่มหารบิล</a>'+
+      '<a class="btn btn-line" href="#/how">อ่านวิธีใช้</a></div></div></section>'+
+  '</div></div>';
+}
+
+/* =========================================================
+   7. แสดงผลหน้าแอป
+   ========================================================= */
+function render(){
+  renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
+}
+
+/* ---- ฟีเจอร์ที่ 1: จัดการสมาชิก ---- */
+function renderMembers(){
+  var box = document.getElementById("memberList");
+  var extra = document.getElementById("memberExtra");
+  var count = document.getElementById("memberCount");
+  var input = document.getElementById("memberInput");
+  var addBtn = document.getElementById("memberAdd");
+  var msg = document.getElementById("memberMsg");
+  if (!box) return;
+
+  if (count) count.textContent = state.members.length ? state.members.length + " คนในโต๊ะ" : "";
+  if (addBtn){
+    addBtn.disabled = ui.savingMember;
+    addBtn.innerHTML = ui.savingMember ? '<span class="spinner" aria-hidden="true"></span>กำลังบันทึก' : "เพิ่ม";
+  }
+  if (input) input.setAttribute("aria-invalid", ui.memberError ? "true" : "false");
+  if (msg){
+    msg.className = "field-msg " + (ui.memberError ? "error" : "muted");
+    msg.textContent = ui.memberError
+      || (state.members.length ? "แตะดินสอเพื่อแก้ชื่อ หรือกากบาทเพื่อลบออก"
+                               : "ใส่ได้ทั้งชื่อจริงและชื่อเล่น สั้น ๆ อ่านง่ายที่สุด");
+  }
+
+  if (ui.loading){
+    box.innerHTML = '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
+    if (extra) extra.innerHTML = "";
+    return;
+  }
+
+  if (state.members.length === 0){
+    box.innerHTML = '<p class="empty" style="margin-top:var(--s3)">ยังไม่มีใครในโต๊ะ — ใส่ชื่อคนแรกได้เลย</p>';
+  } else {
+    box.innerHTML = '<div class="chips">' + state.members.map(function(p){
+      if (ui.editingMember === p.id){
+        return '<span class="chip editing">'+
+          '<label class="sr-only" for="editMemberInput">แก้ชื่อ '+esc(p.name)+'</label>'+
+          '<input type="text" id="editMemberInput" value="'+esc(p.name)+'" maxlength="'+MAX_NAME+'" autocomplete="off">'+
+          '<button class="act" data-save-member="'+p.id+'" aria-label="บันทึกชื่อใหม่">✓</button>'+
+          '<button class="act del" data-cancel-edit="1" aria-label="ยกเลิกการแก้ชื่อ">'+ICON_X+'</button>'+
+        '</span>';
+      }
+      var eaten = menusOf(p.id).length;
+      return '<span class="chip">'+
+        '<span class="nm">'+esc(p.name)+'</span>'+
+        (eaten ? '<span class="count" title="อยู่ใน '+eaten+' เมนู">'+eaten+'</span>' : '')+
+        '<button class="act" data-edit-member="'+p.id+'" aria-label="แก้ชื่อ '+esc(p.name)+'">'+ICON_EDIT+'</button>'+
+        '<button class="act del" data-del-member="'+p.id+'" aria-label="ลบ '+esc(p.name)+'">'+ICON_X+'</button>'+
+      '</span>';
+    }).join("") + '</div>';
+  }
+
+  if (!extra) return;
+  var html = "";
+  if (ui.editError) html += '<div class="notice error"><p>'+esc(ui.editError)+'</p></div>';
+  if (ui.save === "error" && ui.saveFailedIn !== "menu") html += saveErrorNotice();
+  if (ui.confirmMember){
+    var m = state.members.filter(function(p){ return p.id === ui.confirmMember; })[0];
+    if (m){
+      var n = menusOf(m.id).length;
+      html += '<div class="confirm" role="alertdialog" aria-label="ยืนยันการลบสมาชิก">'+
+        '<h3>ลบ '+esc(m.name)+' ออกจากโต๊ะ?</h3>'+
+        '<p>'+esc(m.name)+' อยู่ใน '+n+' เมนู ระบบจะนำชื่อออกจากเมนูเหล่านั้นแล้วคิดยอดใหม่ให้เฉพาะคนที่เหลือ</p>'+
+        '<div class="btn-row"><button class="btn-quiet" data-cancel-del="1">ยกเลิก</button>'+
+        '<button class="btn-danger" data-confirm-del="'+m.id+'">ลบออก</button></div></div>';
+    }
+  }
+  extra.innerHTML = html;
+}
+
+function renderMenus(){
+  var list = document.getElementById("menuList");
+  var slot = document.getElementById("menuFormSlot");
+  var meta = document.getElementById("menuMeta");
+  if (!list || !slot) return;
+
+  if (ui.loading){
+    if (meta) meta.textContent = "";
+    list.innerHTML = '<div class="skeleton" aria-hidden="true"><i style="width:100%"></i></div>';
+    slot.innerHTML = "";
+    return;
+  }
+
+  var total = state.menus.reduce(function(a,m){ return a+m.price; },0);
+  if (meta) meta.innerHTML = state.menus.length
+    ? state.menus.length+' เมนู<br>รวม '+baht(total)+' บาท'
+    : 'ใส่ราคาต่อจาน<br>แล้วเลือกคนที่กินเมนูนั้น';
+
+  if (state.menus.length===0 && !state.menuForm){
+    list.innerHTML = '<p class="empty">ยังไม่มีเมนู — เพิ่มจานแรกแล้วเลือกว่าใครกิน</p>';
+  } else {
+    list.innerHTML = state.menus.map(function(m){
+      var known = m.eaters.filter(function(id){ return !!nameOf(id); });
+      var who = known.length
+        ? known.map(function(id){ return esc(nameOf(id)); }).join(" · ")+' · คนละ '+baht(m.price/known.length)
+        : "ยังไม่ได้เลือกคนกิน — เมนูนี้ยังไม่ถูกนำไปคำนวณ";
+      var editing = state.menuForm && state.menuForm.id===m.id;
+      return '<div class="row-item'+(known.length?"":" warn")+(editing?" editing":"")+'">'+
+        '<button class="row-tap" data-edit-menu="'+m.id+'" aria-label="แก้ไข '+esc(m.name)+'">'+
+          '<span class="body"><span class="name">'+esc(m.name)+'</span><span class="sub">'+who+'</span></span>'+
+          '<span class="amt">'+baht(m.price)+'</span>'+
+        '</button>'+
+        '<span class="acts">'+
+          '<button class="icon-btn" data-dup-menu="'+m.id+'" aria-label="เพิ่ม '+esc(m.name)+' อีกจาน">'+ICON_COPY+'</button>'+
+          '<button class="icon-btn" data-del-menu="'+m.id+'" aria-label="ลบ '+esc(m.name)+'">'+ICON_DEL+'</button>'+
+        '</span></div>';
+    }).join("");
+  }
+
+  var notice = (ui.save === "error" && ui.saveFailedIn === "menu") ? saveErrorNotice() : "";
+
+  if (!state.menuForm){
+    slot.innerHTML = '<button class="add-slot" id="menuOpen">+ เพิ่มเมนู</button>'+notice;
+    return;
+  }
+
+  var f = state.menuForm;
+  var e = ui.menuErr || {};
+  var all = state.members.length>0 && f.eaters.length===state.members.length;
+  var picks = state.members.length
+    ? '<div class="pick"><button class="all" data-eat-all="1" aria-pressed="'+all+'">ทุกคน</button>'+
+      state.members.map(function(p){
+        return '<button data-eat="'+p.id+'" aria-pressed="'+(f.eaters.indexOf(p.id)>=0)+'">'+esc(p.name)+'</button>';
+      }).join("")+'</div>'
+    : '';
+  var preview = menuPreviewText(f);
+
+  slot.innerHTML =
+    '<div class="form-box" role="group" aria-label="'+(f.id?"แก้ไขเมนู":"เพิ่มเมนูใหม่")+'">'+
+      '<div class="form-title">'+(f.id?"แก้ไขเมนู":"เพิ่มเมนูใหม่")+'</div>'+
+      '<div><label class="sr-only" for="mName">ชื่อเมนู</label>'+
+        '<input type="text" id="mName" placeholder="พิมพ์ชื่อเมนู เช่น ต้มยำ แล้วเลือกจากรายการแนะนำ" value="'+esc(f.name)+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-describedby="mNameMsg" role="combobox" aria-expanded="false" aria-controls="mSuggestList" aria-autocomplete="list" aria-invalid="'+(e.name?"true":"false")+'">'+
+        '<div id="mSuggest"></div>'+
+        '<p class="field-msg '+(e.name?"error":"muted")+'" id="mNameMsg" aria-live="polite">'+(e.name?esc(e.name):"")+'</p></div>'+
+      '<div><label class="sr-only" for="mPrice">ราคาต่อจาน เป็นบาท</label>'+
+        '<input type="number" id="mPrice" inputmode="decimal" step="0.01" min="0" placeholder="ราคาต่อจาน (บาท)" value="'+(f.price===""?"":esc(f.price))+'" aria-describedby="mPriceMsg" aria-invalid="'+(e.price?"true":"false")+'">'+
+        '<p class="field-msg '+(e.price?"error":"muted")+'" id="mPriceMsg" aria-live="polite">'+(e.price?esc(e.price):"")+'</p></div>'+
+      '<div class="label">ใครกินเมนูนี้บ้าง</div>'+picks+
+      (e.eaters
+        ? '<p class="field-msg error" aria-live="polite">'+esc(e.eaters)+'</p>'
+        : '<p class="form-preview" id="mPreview" aria-live="polite">'+preview+'</p>')+
+      '<div class="form-actions">'+
+        '<button class="btn-quiet" id="mCancel">ยกเลิก</button>'+
+        '<button class="btn-sm" id="mSave"'+(ui.savingMenu?" disabled":"")+'>'+
+          (ui.savingMenu ? '<span class="spinner" aria-hidden="true"></span>กำลังบันทึก' : (f.id?"บันทึก":"เพิ่มเมนู"))+
+        '</button>'+
+      '</div>'+
+    '</div>'+notice;
+
+  if (ui.suggest.open) renderSuggestions();
+
+  if (ui.focusMenuField){
+    var target = document.getElementById(ui.focusMenuField);
+    ui.focusMenuField = null;
+    if (target) target.focus();
+  }
+}
+
+function renderCharges(){
+  var box = document.getElementById("chargeList");
+  if (!box) return;
+  box.innerHTML = state.charges.map(function(c){
+    return '<button data-charge="'+c.id+'" aria-pressed="'+c.on+'">'+esc(c.label)+' '+c.rate+' %'+
+      (c.fixed?"":' <span data-del-charge="'+c.id+'" style="margin-left:var(--s2);opacity:.75">×</span>')+'</button>';
+  }).join("") + '<button class="all" id="chargeOpen">+ กำหนดเอง</button>';
+
+  var slot = document.getElementById("chargeFormSlot");
+  if (!state.chargeForm){ slot.innerHTML = ""; return; }
+  slot.innerHTML =
+    '<div class="form-box" style="margin-top:var(--s2)">'+
+      '<input type="text" id="cLabel" placeholder="ชื่อค่าใช้จ่าย เช่น ค่าเปิดขวด" autocomplete="off">'+
+      '<input type="number" id="cRate" inputmode="decimal" step="0.1" min="0" placeholder="เปอร์เซ็นต์ (%)">'+
+      '<div class="form-actions"><button class="btn-quiet" id="cCancel">ยกเลิก</button>'+
+      '<button class="btn-sm" id="cSave">เพิ่ม</button></div>'+
+    '</div>';
+  document.getElementById("cLabel").focus();
+}
+
+function renderShared(){
+  var list = document.getElementById("sharedList");
+  var slot = document.getElementById("sharedFormSlot");
+  if (!list || !slot) return;
+  list.innerHTML = state.shared.map(function(s){
+    return '<div class="row-item"><div class="body"><div class="name">'+esc(s.name)+'</div></div>'+
+      '<span class="amt">'+baht(s.price)+'</span>'+
+      '<span class="acts"><button class="icon-btn" data-del-shared="'+s.id+'" aria-label="ลบ '+esc(s.name)+'">'+ICON_DEL+'</button></span></div>';
+  }).join("");
+  if (!state.sharedForm){
+    slot.innerHTML = '<button class="add-slot" id="sharedOpen">+ เพิ่มรายการ เช่น น้ำแข็ง น้ำเปล่า</button>';
+    return;
+  }
+  slot.innerHTML =
+    '<div class="form-box">'+
+      '<input type="text" id="sName" placeholder="ชื่อรายการ เช่น ข้าวเหนียว" autocomplete="off">'+
+      '<input type="number" id="sPrice" inputmode="decimal" step="0.01" min="0" placeholder="ราคา (บาท)">'+
+      '<div class="form-actions"><button class="btn-quiet" id="sCancel">ยกเลิก</button>'+
+      '<button class="btn-sm" id="sSave">เพิ่ม</button></div>'+
+    '</div>';
+  document.getElementById("sName").focus();
+}
+
+function renderSummary(){
+  var box = document.getElementById("summary");
+  var aside = document.getElementById("summaryAside");
+  if (!box) return;
+  if (ui.loading){ box.innerHTML = '<p class="empty">กำลังโหลดข้อมูล…</p>'; return; }
+  if (!hasData()){
+    if (aside) aside.textContent = "";
+    box.innerHTML = '<p class="empty">ใส่ชื่อคนกินและรายการอาหารก่อน แล้วบิลจะขึ้นตรงนี้</p>';
+    return;
+  }
+  var r = compute();
+  if (aside) aside.textContent = "แตะชื่อเพื่อดูรายละเอียด";
+  box.innerHTML =
+    (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' เมนูที่ยังไม่ได้เลือกคนกิน จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
+    receiptHTML(r,{interactive:true})+
+    '<button class="btn-sm btn-block" id="copyBtn" style="margin-top:var(--s4)">คัดลอกสรุปยอด</button>'+
+    '<a href="#/bill" class="add-slot" style="display:flex;align-items:center;justify-content:center;margin-top:var(--s2)">เปิดใบสรุปยอดเต็มหน้า</a>';
+}
+
+/* =========================================================
+   8. การกระทำ
+   ========================================================= */
+function toast(message, kind, action){
+  var t = document.getElementById("toast");
+  t.dataset.kind = kind === "error" ? "error" : "ok";
+  t.innerHTML = '<span class="msg">'+esc(message)+'</span>';
+  if (action){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = action.label;
+    b.addEventListener("click", function(){ hideToast(); action.action(); });
+    t.appendChild(b);
+  }
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(hideToast, action ? 7000 : 2600);
+}
+function hideToast(){
+  var t = document.getElementById("toast");
+  t.classList.remove("show");
+  clearTimeout(t._timer);
+}
+
+function validateName(name, ignoreId){
+  if (!name) return "ยังไม่ได้พิมพ์ชื่อ";
+  if (name.length > MAX_NAME) return "ชื่อยาวเกิน "+MAX_NAME+" ตัวอักษร";
+  var dup = state.members.some(function(p){
+    return p.id !== ignoreId && p.name.toLowerCase() === name.toLowerCase();
+  });
+  if (dup) return "มีชื่อ " + name + " ในโต๊ะแล้ว ลองเติมนามสกุลหรือชื่อเล่นให้ต่างกัน";
+  return "";
+}
+
+async function addMember(){
+  var input = document.getElementById("memberInput");
+  if (!input || ui.savingMember) return;
+  var name = input.value.trim().replace(/\s+/g," ");
+  var problem = validateName(name, null);
+  if (problem){
+    ui.memberError = problem;
+    renderMembers();
+    input.focus();
+    return;
+  }
+  ui.memberError = "";
+  ui.savingMember = true;
+  renderMembers();
+
+  state.members.push({ id:nid(), name:name });
+  var ok = await commit("เพิ่ม "+name+" แล้ว");
+
+  ui.savingMember = false;
+  if (ok) input.value = "";
+  render();
+  var again = document.getElementById("memberInput");
+  if (again) again.focus();
+}
+
+function startEdit(id){
+  ui.editingMember = id;
+  ui.editError = "";
+  ui.memberError = "";
+  renderMembers();
+  var el = document.getElementById("editMemberInput");
+  if (el){ el.focus(); el.select(); }
+}
+async function saveEdit(id){
+  var el = document.getElementById("editMemberInput");
+  if (!el) return;
+  var name = el.value.trim().replace(/\s+/g," ");
+  var problem = validateName(name, id);
+  if (problem){ ui.editError = problem; renderMembers(); return; }
+  if (name === nameOf(id)){ ui.editingMember=null; ui.editError=""; return renderMembers(); }
+  state.members.forEach(function(p){ if (p.id === id) p.name = name; });
+  ui.editingMember = null;
+  ui.editError = "";
+  render();
+  await commit("เปลี่ยนชื่อเป็น "+name+" แล้ว");
+  render();
+}
+
+function askDelete(id){
+  if (menusOf(id).length > 0){ ui.confirmMember = id; return renderMembers(); }
+  removeMember(id);
+}
+async function removeMember(id){
+  var index = -1;
+  state.members.forEach(function(p,i){ if (p.id===id) index = i; });
+  if (index < 0) return;
+  var member = state.members[index];
+  var affected = menusOf(id).map(function(m){ return m.id; });
+
+  ui.undo = { kind:"member", member:member, index:index, menuIds:affected };
+  state.members.splice(index,1);
+  state.menus.forEach(function(m){
+    m.eaters = m.eaters.filter(function(e){ return e !== id; });
+  });
+  delete state.open[id];
+  ui.confirmMember = null;
+  render();
+  await commit(null,"member");
+  render();
+
+  clearTimeout(ui.undoTimer);
+  ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
+  toast("ลบ "+member.name+" แล้ว","ok",{ label:"เลิกทำ", action:undoRemove });
+}
+async function undoRemove(){
+  if (!ui.undo) return;
+  var u = ui.undo;
+  ui.undo = null;
+  clearTimeout(ui.undoTimer);
+
+  if (u.kind === "menu"){
+    state.menus.splice(Math.min(u.index, state.menus.length), 0, u.menu);
+    render();
+    await commit("คืนเมนู "+u.menu.name+" กลับมาแล้ว","menu");
+    return render();
+  }
+
+  state.members.splice(Math.min(u.index, state.members.length), 0, u.member);
+  state.menus.forEach(function(m){
+    if (u.menuIds.indexOf(m.id) >= 0 && m.eaters.indexOf(u.member.id) < 0) m.eaters.push(u.member.id);
+  });
+  render();
+  await commit("คืนชื่อ "+u.member.name+" กลับมาแล้ว","member");
+  render();
+}
+
+/* ---- v1.4: เมนูแนะนำระหว่างพิมพ์ + จำเมนูที่เคยสั่งให้เอง ---- */
+var SUGGEST_LIMIT = 8;
+
+function menuSuggestions(query){
+  var q = normText(query);
+  var seen = {}, hits = [];
+  function consider(name, norm, price, remembered, tierBase){
+    if (seen[norm]) return;
+    var pos = q ? norm.indexOf(q) : 0;
+    if (q && pos < 0) return;
+    seen[norm] = true;
+    hits.push({
+      name:name, price:(price===undefined?null:price), remembered:!!remembered,
+      tier:tierBase + (pos===0 ? 0 : 1), len:name.length
+    });
+  }
+  var mem = state.menuMemory.slice().sort(function(a,b){
+    return (b.count||0)-(a.count||0) || (b.at||0)-(a.at||0);
+  });
+
+  if (!q){
+    // ยังไม่พิมพ์อะไร = เสนอเมนูที่ผู้ใช้สั่งบ่อยก่อน
+    mem.slice(0,6).forEach(function(m){
+      consider(m.name, normText(m.name), m.price, true, 0);
+    });
+    return { items:hits, total:mem.length };
+  }
+
+  mem.forEach(function(m){
+    consider(m.name, normText(m.name), m.price, true, 0);
+  });
+  MENU_LIBRARY.forEach(function(l){
+    consider(l.name, l.norm, null, false, 2);
+  });
+  hits.sort(function(a,b){
+    return a.tier - b.tier || a.len - b.len || a.name.localeCompare(b.name, "th");
+  });
+  return { items:hits.slice(0, SUGGEST_LIMIT), total:hits.length };
+}
+
+function highlight(name, query){
+  var q = String(query||"").trim();
+  if (!q) return esc(name);
+  var i = normText(name).indexOf(normText(q));
+  if (i < 0) return esc(name);
+  return esc(name.slice(0,i))+"<b>"+esc(name.slice(i,i+q.length))+"</b>"+esc(name.slice(i+q.length));
+}
+
+function renderSuggestions(){
+  var box = document.getElementById("mSuggest");
+  var input = document.getElementById("mName");
+  if (!box || !input) return;
+  var query = input.value;
+  var found = ui.suggest.open ? menuSuggestions(query) : { items:[], total:0 };
+  var items = found.items;
+  ui.suggest.items = items;
+  ui.suggest.total = found.total;
+  if (ui.suggest.active >= items.length) ui.suggest.active = -1;
+
+  if (!items.length){
+    box.innerHTML = "";
+    input.setAttribute("aria-expanded","false");
+    return;
+  }
+  var head = String(query||"").trim()
+    ? (found.total > items.length
+        ? "เมนูแนะนำ "+items.length+" จาก "+found.total+" รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง"
+        : "เมนูแนะนำ "+items.length+" รายการ")
+    : "เมนูที่คุณสั่งบ่อย";
+  box.innerHTML = '<div class="suggest" id="mSuggestList" role="listbox" aria-label="เมนูแนะนำ">'+
+    '<div class="s-head">'+head+'</div>'+
+    items.map(function(it,i){
+      return '<button type="button" role="option" id="mSuggest'+i+'" data-suggest="'+i+'" aria-selected="'+(i===ui.suggest.active)+'">'+
+        '<span class="s-name">'+highlight(it.name, query)+'</span>'+
+        (it.remembered ? '<span class="s-tag">เคยสั่ง</span>' : '')+
+        (it.price!=null ? '<span class="s-price">'+baht(it.price)+'</span>' : '')+
+      '</button>';
+    }).join("")+
+  '</div>';
+  input.setAttribute("aria-expanded","true");
+  var active = items[ui.suggest.active];
+  input.setAttribute("aria-activedescendant", active ? ("mSuggest"+ui.suggest.active) : "");
+}
+
+function moveSuggestion(step){
+  var n = ui.suggest.items.length;
+  if (!n) return;
+  var next = ui.suggest.active + step;
+  if (next < 0) next = n - 1;
+  if (next >= n) next = 0;
+  ui.suggest.active = next;
+  renderSuggestions();
+}
+
+function closeSuggestions(){
+  ui.suggest = { open:false, items:[], active:-1, total:0 };
+  var box = document.getElementById("mSuggest");
+  if (box) box.innerHTML = "";
+  var input = document.getElementById("mName");
+  if (input){ input.setAttribute("aria-expanded","false"); input.setAttribute("aria-activedescendant",""); }
+}
+
+function pickSuggestion(i){
+  var it = ui.suggest.items[i];
+  if (!it || !state.menuForm) return;
+  var nameEl = document.getElementById("mName");
+  var priceEl = document.getElementById("mPrice");
+  if (nameEl) nameEl.value = it.name;
+  if (priceEl && it.price!=null && !String(priceEl.value).trim()) priceEl.value = it.price;
+  syncMenuForm();
+  ui.menuErr.name = "";
+  if (priceEl && String(priceEl.value).trim()) ui.menuErr.price = "";
+  closeSuggestions();
+  ui.focusMenuField = "mPrice";
+  renderMenus();
+}
+
+/** จำเมนูที่เพิ่งบันทึกไว้ใช้ครั้งต่อไป — ล้มเหลวก็ไม่กระทบบิลที่บันทึกแล้ว */
+async function rememberMenu(name, price){
+  var key = normText(name);
+  var found = null;
+  state.menuMemory.forEach(function(m){ if (normText(m.name)===key) found = m; });
+  if (found){
+    found.name = name;
+    found.price = price;
+    found.count = (found.count||1) + 1;
+    found.at = Date.now();
+  } else {
+    state.menuMemory.push({ name:name, price:price, count:1, at:Date.now() });
+  }
+  state.menuMemory.sort(function(a,b){
+    return (b.count||0)-(a.count||0) || (b.at||0)-(a.at||0);
+  });
+  if (state.menuMemory.length > MENU_MEMORY_LIMIT) state.menuMemory = state.menuMemory.slice(0, MENU_MEMORY_LIMIT);
+  try { await Store.saveMenus(state.menuMemory); } catch(e){}
+}
+
+/* ---- ฟีเจอร์ที่ 2: รายการอาหารและราคา ---- */
+function syncMenuForm(){
+  var f = state.menuForm;
+  if (!f) return;
+  var n = document.getElementById("mName");
+  var p = document.getElementById("mPrice");
+  if (n) f.name = n.value;
+  if (p) f.price = p.value;
+}
+function menuPreviewText(f){
+  if (!f || !f.eaters.length) return "";
+  var price = parseFloat(String(f.price));
+  if (isNaN(price) || price < 0) return "หาร "+f.eaters.length+" คน · ใส่ราคาแล้วจะคิดให้ทันที";
+  return "หาร "+f.eaters.length+" คน · คนละ "+baht(price/f.eaters.length)+" บาท";
+}
+function updateMenuPreview(){
+  var el = document.getElementById("mPreview");
+  if (!el || !state.menuForm) return;
+  syncMenuForm();
+  el.textContent = menuPreviewText(state.menuForm);
+}
+function validateMenuForm(f){
+  var errs = { name:"", price:"", eaters:"" };
+  var name = String(f.name||"").trim();
+  if (!name) errs.name = "ยังไม่ได้ใส่ชื่อเมนู";
+  else if (name.length > MAX_MENU_NAME) errs.name = "ชื่อเมนูยาวเกิน "+MAX_MENU_NAME+" ตัวอักษร";
+
+  var raw = String(f.price===undefined?"":f.price).trim();
+  var price = parseFloat(raw);
+  if (raw === "") errs.price = "ยังไม่ได้ใส่ราคา";
+  else if (isNaN(price)) errs.price = "ราคาต้องเป็นตัวเลข เช่น 60 หรือ 60.50";
+  else if (price < 0) errs.price = "ราคาต้องไม่ติดลบ";
+  else if (price > MAX_PRICE) errs.price = "ราคาสูงเกินจริง ลองตรวจจำนวนศูนย์อีกครั้ง";
+
+  if (state.members.length === 0) errs.eaters = "ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในขั้นที่ 1 ก่อน";
+  else if (f.eaters.length === 0) errs.eaters = "เลือกคนที่กินเมนูนี้อย่างน้อย 1 คน";
+  return errs;
+}
+async function saveMenuForm(){
+  var f = state.menuForm;
+  if (!f || ui.savingMenu) return;
+  syncMenuForm();
+  ui.menuErr = validateMenuForm(f);
+  if (ui.menuErr.name || ui.menuErr.price || ui.menuErr.eaters){
+    ui.focusMenuField = ui.menuErr.name ? "mName" : (ui.menuErr.price ? "mPrice" : null);
+    return renderMenus();
+  }
+  var name = String(f.name).trim().replace(/\s+/g," ");
+  var price = parseFloat(String(f.price));
+  var editing = !!f.id;
+
+  ui.savingMenu = true;
+  renderMenus();
+
+  if (editing){
+    state.menus.forEach(function(x){
+      if (x.id===f.id){ x.name=name; x.price=price; x.eaters=f.eaters.slice(); }
+    });
+  } else {
+    state.menus.push({ id:nid(), name:name, price:price, eaters:f.eaters.slice() });
+  }
+  state.menuForm = null;
+  ui.menuErr = {};
+
+  closeSuggestions();
+  await commit(editing ? "บันทึก "+name+" แล้ว" : "เพิ่ม "+name+" "+baht(price)+" บาท แล้ว", "menu");
+  await rememberMenu(name, price);
+  ui.savingMenu = false;
+  render();
+}
+async function duplicateMenu(id){
+  var index = -1;
+  state.menus.forEach(function(m,i){ if (m.id===id) index = i; });
+  if (index < 0) return;
+  var src = state.menus[index];
+  state.menus.splice(index+1, 0, { id:nid(), name:src.name, price:src.price, eaters:src.eaters.slice() });
+  render();
+  await commit("เพิ่ม "+src.name+" อีกจานแล้ว","menu");
+  render();
+}
+async function removeMenu(id){
+  var index = -1;
+  state.menus.forEach(function(m,i){ if (m.id===id) index = i; });
+  if (index < 0) return;
+  var menu = state.menus[index];
+  ui.undo = { kind:"menu", menu:menu, index:index };
+  state.menus.splice(index,1);
+  if (state.menuForm && state.menuForm.id===id){ state.menuForm=null; ui.menuErr={}; }
+  render();
+  await commit(null,"menu");
+  render();
+  clearTimeout(ui.undoTimer);
+  ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
+  toast("ลบ "+menu.name+" แล้ว","ok",{ label:"เลิกทำ", action:undoRemove });
+}
+
+function summaryText(){
+  var r = compute();
+  var lines = ["FairDish"];
+  r.list.forEach(function(p){ lines.push(p.name+"  "+baht(p.rounded)+" บาท"); });
+  lines.push("—");
+  lines.push("รวมทั้งหมด  "+baht(r.grand)+" บาท");
+  return lines.join("\n");
+}
+function copySummary(){
+  var text = summaryText();
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast("คัดลอกสรุปยอดแล้ว","ok"); }
+    catch(e){ toast("คัดลอกไม่สำเร็จ ลองเลือกข้อความในบิลแล้วคัดลอกเอง","error"); }
+    document.body.removeChild(ta);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ toast("คัดลอกสรุปยอดแล้ว","ok"); }, fallback);
+  } else fallback();
+}
+
+async function loadDemo(){
+  state.members=[]; state.menus=[]; state.shared=[];
+  ["มาร์ค","กิติภูมิ","พูบ","ชาเน่","โบ","ยูกะ","โอชิ","เจ้าสั่ว"].forEach(function(n){
+    state.members.push({ id:nid(), name:n });
+  });
+  function ids(){
+    return Array.prototype.slice.call(arguments).map(function(n){
+      var f = state.members.filter(function(m){ return m.name===n; })[0];
+      return f ? f.id : null;
+    }).filter(Boolean);
+  }
+  state.menus = [
+    { id:nid(), name:"ตำซั่ว", price:60, eaters:ids("มาร์ค","พูบ","โอชิ") },
+    { id:nid(), name:"ไก่ย่างเขาสวนกวาง", price:135, eaters:ids("พูบ","ชาเน่","โบ","ยูกะ","มาร์ค","โอชิ","เจ้าสั่ว") },
+    { id:nid(), name:"ลาบคั่ว", price:80, eaters:ids("มาร์ค","โอชิ","พูบ","กิติภูมิ","เจ้าสั่ว") },
+    { id:nid(), name:"ซอยจุ๊", price:100, eaters:ids("กิติภูมิ","เจ้าสั่ว") },
+    { id:nid(), name:"เนื้อเสือร้องไห้", price:100, eaters:ids("มาร์ค","กิติภูมิ","เจ้าสั่ว") }
+  ];
+  state.shared = [
+    { id:nid(), name:"น้ำโค้ก", price:45 },
+    { id:nid(), name:"น้ำเปล่า", price:20 },
+    { id:nid(), name:"ข้าวเหนียว", price:80 }
+  ];
+  state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
+  ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
+  render();
+  await commit("ใส่ข้อมูลตัวอย่างแล้ว");
+  render();
+}
+
+/* =========================================================
+   9. เส้นทางหน้า
+   ========================================================= */
+var routes = {
+  "/":      { title:"FairDish — จ่ายเท่าที่กิน ไม่ใช่เท่าที่หาร", view:pageHome },
+  "/split": { title:"หารบิล · FairDish", view:pageSplit },
+  "/bill":  { title:"ใบสรุปยอด · FairDish", view:pageBill },
+  "/how":   { title:"วิธีใช้ · FairDish", view:pageHow },
+  "/about": { title:"เกี่ยวกับ · FairDish", view:pageAbout }
+};
+function currentPath(){
+  var h = location.hash.replace(/^#/,"");
+  return routes[h] ? h : "/";
+}
+function route(){
+  var path = currentPath();
+  var r = routes[path];
+  document.title = r.title;
+  document.getElementById("view").innerHTML = r.view();
+  Array.prototype.forEach.call(document.querySelectorAll("[data-nav]"), function(a){
+    a.classList.toggle("on", a.getAttribute("data-nav")===path);
+  });
+  document.getElementById("sheet").classList.remove("open");
+  document.getElementById("burger").setAttribute("aria-expanded","false");
+  if (path==="/split") render();
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", route);
+
+/* =========================================================
+   10. เหตุการณ์
+   ========================================================= */
+document.getElementById("burger").addEventListener("click", function(){
+  var s = document.getElementById("sheet");
+  var open = s.classList.toggle("open");
+  this.setAttribute("aria-expanded", open ? "true" : "false");
+});
+
+document.addEventListener("keydown", function(e){
+  if (!e.target) return;
+  if (e.target.id === "mName" && ui.suggest.open){
+    if (e.key === "ArrowDown"){ e.preventDefault(); return moveSuggestion(1); }
+    if (e.key === "ArrowUp"){ e.preventDefault(); return moveSuggestion(-1); }
+    if (e.key === "Escape"){ e.preventDefault(); return closeSuggestions(); }
+    if (e.key === "Enter" && ui.suggest.active >= 0){ e.preventDefault(); return pickSuggestion(ui.suggest.active); }
+  }
+  if (e.key !== "Enter") return;
+  if (e.target.id === "memberInput"){ e.preventDefault(); addMember(); }
+  if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
+  if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
+});
+document.addEventListener("input", function(e){
+  if (e.target && (e.target.id === "mName" || e.target.id === "mPrice")){
+    var key = e.target.id === "mName" ? "name" : "price";
+    if (ui.menuErr && ui.menuErr[key]){
+      ui.menuErr[key] = "";
+      var box = document.getElementById(e.target.id+"Msg");
+      if (box){ box.className = "field-msg muted"; box.textContent = ""; }
+      e.target.setAttribute("aria-invalid","false");
+    }
+    if (e.target.id === "mPrice") updateMenuPreview();
+    if (e.target.id === "mName"){
+      ui.suggest.open = true;
+      ui.suggest.active = -1;
+      renderSuggestions();
+    }
+  }
+  if (e.target && e.target.id === "memberInput" && ui.memberError){
+    ui.memberError = "";
+    var value = e.target.value;
+    renderMembers();
+    var el = document.getElementById("memberInput");
+    if (el){ el.value = value; el.focus(); }
+  }
+});
+
+document.addEventListener("click", async function(e){
+  if (ui.suggest.open && e.target.closest && !e.target.closest("#mSuggest") && e.target.id !== "mName"){
+    closeSuggestions();
+  }
+  var sel = "[data-del-member],[data-edit-member],[data-save-member],[data-cancel-edit],[data-confirm-del],[data-cancel-del],"+
+            "[data-edit-menu],[data-dup-menu],[data-del-menu],[data-eat],[data-eat-all],[data-suggest],"+
+            "[data-charge],[data-del-charge],[data-del-shared],[data-toggle],"+
+            "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
+            "#copyBtn,#demoBtn,#resetBtn,#memberAdd,#retrySave";
+  var t = e.target.closest ? e.target.closest(sel) : null;
+  if (!t) return;
+  var v;
+
+  /* ฟีเจอร์ที่ 1 */
+  if (t.id==="memberAdd") return addMember();
+  if (t.id==="retrySave") return retrySave();
+  if ((v = t.getAttribute("data-edit-member"))) return startEdit(v);
+  if ((v = t.getAttribute("data-save-member"))) return saveEdit(v);
+  if (t.getAttribute("data-cancel-edit")){ ui.editingMember=null; ui.editError=""; return renderMembers(); }
+  if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
+  if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
+  if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
+
+  /* ส่วนอื่นของแอป */
+  if (t.id==="demoBtn") return loadDemo();
+  if (t.id==="resetBtn"){
+    if (!confirm("ล้างข้อมูลทั้งหมดในบิลนี้?")) return;
+    state.members=[]; state.menus=[]; state.shared=[];
+    state.charges = state.charges.filter(function(c){ return c.fixed; });
+    state.charges.forEach(function(c){ c.on=false; });
+    state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
+    ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
+    render();
+    await commit("ล้างข้อมูลแล้ว");
+    return render();
+  }
+
+  if (t.id==="menuOpen"){
+    state.menuForm={ id:null, name:"", price:"", eaters:[] };
+    ui.menuErr={}; ui.focusMenuField="mName";
+    ui.suggest={ open:true, items:[], active:-1, total:0 };
+    return renderMenus();
+  }
+  if ((v = t.getAttribute("data-suggest")) !== null) return pickSuggestion(parseInt(v,10));
+  if ((v = t.getAttribute("data-edit-menu"))){
+    var m = state.menus.filter(function(x){ return x.id===v; })[0];
+    if (m){ state.menuForm={ id:m.id, name:m.name, price:m.price, eaters:m.eaters.slice() }; ui.menuErr={}; }
+    closeSuggestions();
+    return renderMenus();
+  }
+  if ((v = t.getAttribute("data-dup-menu"))) return duplicateMenu(v);
+  if ((v = t.getAttribute("data-del-menu"))) return removeMenu(v);
+  if ((v = t.getAttribute("data-eat"))){
+    syncMenuForm();
+    var f = state.menuForm;
+    var i = f.eaters.indexOf(v);
+    if (i>=0) f.eaters.splice(i,1); else f.eaters.push(v);
+    if (f.eaters.length) ui.menuErr.eaters = "";
+    return renderMenus();
+  }
+  if (t.getAttribute("data-eat-all")){
+    syncMenuForm();
+    var ff = state.menuForm;
+    ff.eaters = ff.eaters.length===state.members.length ? [] : state.members.map(function(p){ return p.id; });
+    if (ff.eaters.length) ui.menuErr.eaters = "";
+    return renderMenus();
+  }
+  if (t.id==="mCancel"){ state.menuForm=null; ui.menuErr={}; closeSuggestions(); return renderMenus(); }
+  if (t.id==="mSave") return saveMenuForm();
+
+  if ((v = t.getAttribute("data-del-charge"))){
+    e.stopPropagation();
+    state.charges = state.charges.filter(function(c){ return c.id!==v; });
+    render();
+    await commit("ลบค่าใช้จ่ายแล้ว");
+    return render();
+  }
+  if ((v = t.getAttribute("data-charge"))){
+    state.charges.forEach(function(c){ if (c.id===v) c.on = !c.on; });
+    render();
+    await commit();
+    return render();
+  }
+  if (t.id==="chargeOpen"){ state.chargeForm={}; return renderCharges(); }
+  if (t.id==="cCancel"){ state.chargeForm=null; return renderCharges(); }
+  if (t.id==="cSave"){
+    var cl = document.getElementById("cLabel").value.trim();
+    var cr = parseFloat(document.getElementById("cRate").value);
+    if (!cl) return toast("ใส่ชื่อค่าใช้จ่ายก่อน","error");
+    if (!(cr>=0)) return toast("ใส่เปอร์เซ็นต์เป็นตัวเลข","error");
+    state.charges.push({ id:nid(), label:cl, rate:cr, on:true, fixed:false });
+    state.chargeForm=null;
+    render();
+    await commit("เพิ่มค่าใช้จ่ายแล้ว");
+    return render();
+  }
+
+  if (t.id==="sharedOpen"){ state.sharedForm={}; return renderShared(); }
+  if (t.id==="sCancel"){ state.sharedForm=null; return renderShared(); }
+  if (t.id==="sSave"){
+    var sn = document.getElementById("sName").value.trim();
+    var sp = parseFloat(document.getElementById("sPrice").value);
+    if (!sn) return toast("ใส่ชื่อรายการก่อน","error");
+    if (!(sp>=0)) return toast("ใส่ราคาเป็นตัวเลข","error");
+    state.shared.push({ id:nid(), name:sn, price:sp });
+    state.sharedForm=null;
+    render();
+    await commit("เพิ่มค่าส่วนกลางแล้ว");
+    return render();
+  }
+  if ((v = t.getAttribute("data-del-shared"))){
+    state.shared = state.shared.filter(function(s){ return s.id!==v; });
+    render();
+    await commit("ลบรายการแล้ว");
+    return render();
+  }
+
+  if ((v = t.getAttribute("data-toggle"))){
+    if (state.open[v]) delete state.open[v]; else state.open[v]=true;
+    if (currentPath()==="/bill") document.getElementById("view").innerHTML = pageBill();
+    else renderSummary();
+    return;
+  }
+  if (t.id==="copyBtn") return copySummary();
+});
+
+/* =========================================================
+   11. เริ่มทำงาน
+   ========================================================= */
+async function boot(){
+  MENU_LIBRARY = buildMenuLibrary();
+  route();
+  await Store.init();
+  try {
+    var saved = await Store.load();
+    if (saved && saved.members){
+      state.members = saved.members || [];
+      state.menus = (saved.menus || []).map(function(m){
+        return { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
+      });
+      state.shared = saved.shared || [];
+      if (saved.charges && saved.charges.length) state.charges = saved.charges;
+      var maxId = 0;
+      state.members.concat(state.menus, state.shared).forEach(function(x){
+        var num = parseInt(String(x.id).replace(/^i/,""),10);
+        if (!isNaN(num) && num > maxId) maxId = num;
+      });
+      uid = maxId;
+    }
+    try { state.menuMemory = await Store.loadMenus(); } catch(e){ state.menuMemory = []; }
+    ui.loading = false;
+    setSave("saved");
+  } catch(err){
+    ui.loading = false;
+    setSave("error");
+    toast("โหลดข้อมูลเดิมไม่สำเร็จ เริ่มบิลใหม่ได้เลย","error");
+  }
+  if (currentPath()==="/split") render();
+  if (currentPath()==="/bill") document.getElementById("view").innerHTML = pageBill();
+}
+boot();
+</script>
+</body>
+</html>
