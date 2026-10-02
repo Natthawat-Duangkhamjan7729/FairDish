@@ -131,8 +131,7 @@ body::after{content:"";position:fixed;right:-90px;bottom:-80px;width:280px;heigh
 .nav{position:sticky;top:0;z-index:50 !important;background:rgba(255,250,240,.72);backdrop-filter:blur(14px)}
 .nav-in{display:flex;align-items:center;gap:var(--s3);min-height:64px}
 .logo{display:flex;align-items:center;gap:var(--s2);margin-right:auto}
-.logo-mark{width:42px;height:42px;border-radius:14px;flex:0 0 auto;background:var(--coral-grad);display:grid;place-items:center;color:#FFF;box-shadow:0 5px 0 #E0525F,0 12px 20px -10px rgba(255,109,122,.7)}
-.logo-mark svg{width:20px;height:20px}
+.logo-mark{width:48px;height:48px;border-radius:14px;flex:0 0 auto;display:block;object-fit:cover;border:1px solid var(--line);box-shadow:var(--shadow)}
 .logo b{font-size:var(--fs-title);font-weight:600;letter-spacing:-.2px}
 .nav-links{display:none;gap:var(--s5);align-items:center}
 .nav-links a{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);min-height:var(--tap);display:inline-flex;align-items:center}
