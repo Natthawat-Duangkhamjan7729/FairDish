@@ -389,7 +389,7 @@ function copySummary(){
 
 async function loadDemo(){
   state.members=[]; state.menus=[]; state.shared=[];
-  ["มาร์ค","กิติภูมิ","พูบ","ชาเน่","โบ","ยูกะ","โอชิ","เจ้าสั่ว"].forEach(function(n){
+  ["มาร์ค","พูม","ไอซ์","ชาเน่","โม","ยูกะ","โฟรค์","เจ้าสัว"].forEach(function(n){
     state.members.push({ id:nid(), name:n });
   });
   function ids(){
@@ -399,18 +399,18 @@ async function loadDemo(){
     }).filter(Boolean);
   }
   // มื้ออีสานร้านหน้ามอ 8 คน — แต่ละคนกินไม่เท่ากันแบบที่เกิดจริง
-  var all = ["มาร์ค","กิติภูมิ","พูบ","ชาเน่","โบ","ยูกะ","โอชิ","เจ้าสั่ว"];
+  var all = ["มาร์ค","พูม","ไอซ์","ชาเน่","โม","ยูกะ","โฟรค์","เจ้าสัว"];
   state.menus = [
-    { id:nid(), name:"ตำไทย", price:50, eaters:ids("ชาเน่","โบ","ยูกะ") },
-    { id:nid(), name:"ตำปูปลาร้า", price:50, eaters:ids("มาร์ค","พูบ","โอชิ","เจ้าสั่ว") },
-    { id:nid(), name:"ตำซั่ว", price:60, eaters:ids("มาร์ค","กิติภูมิ","พูบ") },
+    { id:nid(), name:"ตำไทย", price:50, eaters:ids("ชาเน่","โม","ยูกะ") },
+    { id:nid(), name:"ตำปูปลาร้า", price:50, eaters:ids("มาร์ค","พูม","โฟรค์","เจ้าสัว") },
+    { id:nid(), name:"ตำซั่ว", price:60, eaters:ids("มาร์ค","ไอซ์","พูม") },
     { id:nid(), name:"ไก่ย่างเขาสวนกวาง", price:180, eaters:ids.apply(null, all) },
-    { id:nid(), name:"คอหมูย่าง", price:120, eaters:ids("มาร์ค","กิติภูมิ","พูบ","โอชิ","เจ้าสั่ว") },
-    { id:nid(), name:"ลาบหมู", price:80, eaters:ids("มาร์ค","กิติภูมิ","พูบ","ชาเน่","โบ","โอชิ","เจ้าสั่ว") },
-    { id:nid(), name:"ต้มแซ่บกระดูกอ่อน", price:120, eaters:ids("กิติภูมิ","ชาเน่","โบ","เจ้าสั่ว") },
-    { id:nid(), name:"ไส้กรอกอีสาน", price:60, eaters:ids("ชาเน่","โบ","ยูกะ") },
+    { id:nid(), name:"คอหมูย่าง", price:120, eaters:ids("มาร์ค","ไอซ์","พูม","โฟรค์","เจ้าสัว") },
+    { id:nid(), name:"ลาบหมู", price:80, eaters:ids("มาร์ค","ไอซ์","พูม","ชาเน่","โม","โฟรค์","เจ้าสัว") },
+    { id:nid(), name:"ต้มแซ่บกระดูกอ่อน", price:120, eaters:ids("ไอซ์","ชาเน่","โม","เจ้าสัว") },
+    { id:nid(), name:"ไส้กรอกอีสาน", price:60, eaters:ids("ชาเน่","โม","ยูกะ") },
     { id:nid(), name:"ไข่เจียวหมูสับ", price:60, eaters:ids("ยูกะ","ชาเน่") },
-    { id:nid(), name:"ซอยจุ๊", price:150, eaters:ids("กิติภูมิ","เจ้าสั่ว") }
+    { id:nid(), name:"ซอยจุ๊", price:150, eaters:ids("ไอซ์","เจ้าสัว") }
   ];
   state.shared = [
     { id:nid(), name:"ข้าวเหนียว 4 กระติ๊บ", price:60 },
