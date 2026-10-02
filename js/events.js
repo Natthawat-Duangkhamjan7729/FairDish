@@ -1,0 +1,189 @@
+/* FairDish — ตัวจับเหตุการณ์ของทั้งหน้า */
+"use strict";
+
+/* =========================================================
+   10. เหตุการณ์
+   ========================================================= */
+document.getElementById("burger").addEventListener("click", function(){
+  var s = document.getElementById("sheet");
+  var open = s.classList.toggle("open");
+  this.setAttribute("aria-expanded", open ? "true" : "false");
+});
+
+document.addEventListener("keydown", function(e){
+  if (!e.target) return;
+  if (e.target.id === "mName" && ui.suggest.open){
+    if (e.key === "ArrowDown"){ e.preventDefault(); return moveSuggestion(1); }
+    if (e.key === "ArrowUp"){ e.preventDefault(); return moveSuggestion(-1); }
+    if (e.key === "Escape"){ e.preventDefault(); return closeSuggestions(); }
+    if (e.key === "Enter" && ui.suggest.active >= 0){ e.preventDefault(); return pickSuggestion(ui.suggest.active); }
+  }
+  if (e.key !== "Enter") return;
+  if (e.target.id === "memberInput"){ e.preventDefault(); addMember(); }
+  if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
+  if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
+});
+document.addEventListener("input", function(e){
+  if (e.target && (e.target.id === "mName" || e.target.id === "mPrice")){
+    var key = e.target.id === "mName" ? "name" : "price";
+    if (ui.menuErr && ui.menuErr[key]){
+      ui.menuErr[key] = "";
+      var box = document.getElementById(e.target.id+"Msg");
+      if (box){ box.className = "field-msg muted"; box.textContent = ""; }
+      e.target.setAttribute("aria-invalid","false");
+    }
+    if (e.target.id === "mPrice") updateMenuPreview();
+    if (e.target.id === "mName"){
+      ui.suggest.open = true;
+      ui.suggest.active = -1;
+      renderSuggestions();
+    }
+  }
+  if (e.target && e.target.id === "memberInput" && ui.memberError){
+    ui.memberError = "";
+    var value = e.target.value;
+    renderMembers();
+    var el = document.getElementById("memberInput");
+    if (el){ el.value = value; el.focus(); }
+  }
+});
+
+document.addEventListener("click", async function(e){
+  if (ui.suggest.open && e.target.closest && !e.target.closest("#mSuggest") && e.target.id !== "mName"){
+    closeSuggestions();
+  }
+  var toggle = e.target.closest ? e.target.closest("[data-toggle]") : null;
+  if (toggle){
+    var toggleId = toggle.getAttribute("data-toggle");
+    if (state.open[toggleId]) delete state.open[toggleId]; else state.open[toggleId] = true;
+    if (currentPath()==="/bill") document.getElementById("view").innerHTML = pageBill();
+    else renderSummary();
+    return;
+  }
+
+  var sel = "[data-del-member],[data-edit-member],[data-save-member],[data-cancel-edit],[data-confirm-del],[data-cancel-del],"+
+            "[data-edit-menu],[data-dup-menu],[data-del-menu],[data-eat],[data-eat-all],[data-suggest],"+
+            "[data-charge],[data-del-charge],[data-del-shared],"+
+            "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
+            "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave";
+  var t = e.target.closest ? e.target.closest(sel) : null;
+  if (!t) return;
+  var v;
+
+  /* ฟีเจอร์ที่ 1 */
+  if (t.id==="memberAdd") return addMember();
+  if (t.id==="retrySave") return retrySave();
+  if ((v = t.getAttribute("data-edit-member"))) return startEdit(v);
+  if ((v = t.getAttribute("data-save-member"))) return saveEdit(v);
+  if (t.getAttribute("data-cancel-edit")){ ui.editingMember=null; ui.editError=""; return renderMembers(); }
+  if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
+  if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
+  if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
+
+  /* ส่วนอื่นของแอป */
+  if (t.id==="demoBtn") return loadDemo();
+  if (t.id==="resetBtn"){
+    ui.confirmReset = true;
+    document.getElementById("view").innerHTML = pageSplit();
+    return render();
+  }
+  if (t.id==="cancelReset"){
+    ui.confirmReset = false;
+    document.getElementById("view").innerHTML = pageSplit();
+    return render();
+  }
+  if (t.id==="confirmReset"){
+    ui.confirmReset = false;
+    state.members=[]; state.menus=[]; state.shared=[];
+    state.charges = state.charges.filter(function(c){ return c.fixed; });
+    state.charges.forEach(function(c){ c.on=false; });
+    state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
+    ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
+    document.getElementById("view").innerHTML = pageSplit();
+    render();
+    await commit("ล้างข้อมูลแล้ว");
+    return render();
+  }
+
+  if (t.id==="menuOpen"){
+    state.menuForm={ id:null, name:"", price:"", eaters:[] };
+    ui.menuErr={}; ui.focusMenuField="mName";
+    ui.suggest={ open:true, items:[], active:-1, total:0 };
+    return renderMenus();
+  }
+  if ((v = t.getAttribute("data-suggest")) !== null) return pickSuggestion(parseInt(v,10));
+  if ((v = t.getAttribute("data-edit-menu"))){
+    var m = state.menus.filter(function(x){ return x.id===v; })[0];
+    if (m){ state.menuForm={ id:m.id, name:m.name, price:m.price, eaters:m.eaters.slice() }; ui.menuErr={}; }
+    closeSuggestions();
+    return renderMenus();
+  }
+  if ((v = t.getAttribute("data-dup-menu"))) return duplicateMenu(v);
+  if ((v = t.getAttribute("data-del-menu"))) return removeMenu(v);
+  if ((v = t.getAttribute("data-eat"))){
+    syncMenuForm();
+    var f = state.menuForm;
+    var i = f.eaters.indexOf(v);
+    if (i>=0) f.eaters.splice(i,1); else f.eaters.push(v);
+    if (f.eaters.length) ui.menuErr.eaters = "";
+    return renderMenus();
+  }
+  if (t.getAttribute("data-eat-all")){
+    syncMenuForm();
+    var ff = state.menuForm;
+    ff.eaters = ff.eaters.length===state.members.length ? [] : state.members.map(function(p){ return p.id; });
+    if (ff.eaters.length) ui.menuErr.eaters = "";
+    return renderMenus();
+  }
+  if (t.id==="mCancel"){ state.menuForm=null; ui.menuErr={}; closeSuggestions(); return renderMenus(); }
+  if (t.id==="mSave") return saveMenuForm();
+
+  if ((v = t.getAttribute("data-del-charge"))){
+    e.stopPropagation();
+    state.charges = state.charges.filter(function(c){ return c.id!==v; });
+    render();
+    await commit("ลบค่าใช้จ่ายแล้ว");
+    return render();
+  }
+  if ((v = t.getAttribute("data-charge"))){
+    state.charges.forEach(function(c){ if (c.id===v) c.on = !c.on; });
+    render();
+    await commit();
+    return render();
+  }
+  if (t.id==="chargeOpen"){ state.chargeForm={}; return renderCharges(); }
+  if (t.id==="cCancel"){ state.chargeForm=null; return renderCharges(); }
+  if (t.id==="cSave"){
+    var cl = document.getElementById("cLabel").value.trim();
+    var cr = parseFloat(document.getElementById("cRate").value);
+    if (!cl) return toast("ใส่ชื่อค่าใช้จ่ายก่อน","error");
+    if (!(cr>=0)) return toast("ใส่เปอร์เซ็นต์เป็นตัวเลข","error");
+    state.charges.push({ id:nid(), label:cl, rate:cr, on:true, fixed:false });
+    state.chargeForm=null;
+    render();
+    await commit("เพิ่มค่าใช้จ่ายแล้ว");
+    return render();
+  }
+
+  if (t.id==="sharedOpen"){ state.sharedForm={}; return renderShared(); }
+  if (t.id==="sCancel"){ state.sharedForm=null; return renderShared(); }
+  if (t.id==="sSave"){
+    var sn = document.getElementById("sName").value.trim();
+    var sp = parseFloat(document.getElementById("sPrice").value);
+    if (!sn) return toast("ใส่ชื่อรายการก่อน","error");
+    if (!(sp>=0)) return toast("ใส่ราคาเป็นตัวเลข","error");
+    state.shared.push({ id:nid(), name:sn, price:sp });
+    state.sharedForm=null;
+    render();
+    await commit("เพิ่มค่าส่วนกลางแล้ว");
+    return render();
+  }
+  if ((v = t.getAttribute("data-del-shared"))){
+    state.shared = state.shared.filter(function(s){ return s.id!==v; });
+    render();
+    await commit("ลบรายการแล้ว");
+    return render();
+  }
+
+  if (t.id==="copyBtn") return copySummary();
+});
