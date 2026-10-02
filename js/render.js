@@ -196,16 +196,21 @@ function renderShared(){
   }).join("");
   if (!state.sharedForm){
     slot.innerHTML = '<button class="add-slot" id="sharedOpen">+ เพิ่มรายการ เช่น น้ำแข็ง น้ำเปล่า</button>';
+    ui.sharedSuggest = { open:false, items:[], active:-1 };
     return;
   }
   slot.innerHTML =
     '<div class="form-box">'+
-      '<input type="text" id="sName" placeholder="ชื่อรายการ เช่น ข้าวเหนียว" autocomplete="off">'+
+      '<input type="text" id="sName" placeholder="พิมพ์ชื่อรายการ เช่น น้ำแข็ง แล้วเลือกจากรายการแนะนำ" autocomplete="off" '+
+        'role="combobox" aria-autocomplete="list" aria-controls="sSuggest" aria-expanded="false">'+
+      '<div id="sSuggest"></div>'+
       '<input type="number" id="sPrice" inputmode="decimal" step="0.01" min="0" placeholder="ราคา (บาท)">'+
       '<div class="form-actions"><button class="btn-quiet" id="sCancel">ยกเลิก</button>'+
       '<button class="btn-sm" id="sSave">เพิ่ม</button></div>'+
     '</div>';
   document.getElementById("sName").focus();
+  ui.sharedSuggest = { open:true, items:[], active:-1 };
+  renderSharedSuggestions();
 }
 
 function renderSummary(){

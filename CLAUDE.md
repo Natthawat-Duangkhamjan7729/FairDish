@@ -15,6 +15,7 @@
 | `store.js` | ชั้นเก็บข้อมูล (localStorage) |
 | `state.js` | `state`, `ui`, ค่าคงที่, `APP_VERSION` |
 | `menu-library.js` | คลังเมนูแนะนำ |
+| `shared-library.js` | รายการแนะนำค่าส่วนกลาง (แยกจากคลังเมนู) |
 | `utils.js` | `baht`, `esc`, ไอคอน |
 | `save.js` | `commit()` บันทึกข้อมูล |
 | `calc.js` | `compute()` คำนวณเงิน — **ห้ามแตะ DOM** |
