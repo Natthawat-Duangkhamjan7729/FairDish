@@ -41,3 +41,9 @@ npx serve .                 # เปิดเว็บที่ http://localhost
 
 แนะนำให้ติดตั้ง skill `scrutinize` และ `debug-mantra` จาก `npx skills add thananon/9arm-skills`
 แล้วใช้ `scrutinize` รีวิวงานตัวเองก่อน push และใช้ `debug-mantra` เวลาไล่บั๊ก
+
+## Vercel
+
+- เว็บจริง: https://fairdish.vercel.app — push ขึ้น branch `claude/upload-website-wtcq0p` แล้ว Vercel deploy ให้อัตโนมัติ
+- เรียก Vercel API ผ่าน `scripts/vercel-api.sh <path>` เสมอ (ลองซ้ำให้เอง เพราะคำขอแรกของ session บนคลาวด์อาจได้ 502)
+  token ถูกใส่ให้โดย API credentials ของ environment ห้ามพิมพ์หรือ log token
