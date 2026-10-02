@@ -398,18 +398,27 @@ async function loadDemo(){
       return f ? f.id : null;
     }).filter(Boolean);
   }
+  // มื้ออีสานร้านหน้ามอ 8 คน — แต่ละคนกินไม่เท่ากันแบบที่เกิดจริง
+  var all = ["มาร์ค","กิติภูมิ","พูบ","ชาเน่","โบ","ยูกะ","โอชิ","เจ้าสั่ว"];
   state.menus = [
-    { id:nid(), name:"ตำซั่ว", price:60, eaters:ids("มาร์ค","พูบ","โอชิ") },
-    { id:nid(), name:"ไก่ย่างเขาสวนกวาง", price:135, eaters:ids("พูบ","ชาเน่","โบ","ยูกะ","มาร์ค","โอชิ","เจ้าสั่ว") },
-    { id:nid(), name:"ลาบคั่ว", price:80, eaters:ids("มาร์ค","โอชิ","พูบ","กิติภูมิ","เจ้าสั่ว") },
-    { id:nid(), name:"ซอยจุ๊", price:100, eaters:ids("กิติภูมิ","เจ้าสั่ว") },
-    { id:nid(), name:"เนื้อเสือร้องไห้", price:100, eaters:ids("มาร์ค","กิติภูมิ","เจ้าสั่ว") }
+    { id:nid(), name:"ตำไทย", price:50, eaters:ids("ชาเน่","โบ","ยูกะ") },
+    { id:nid(), name:"ตำปูปลาร้า", price:50, eaters:ids("มาร์ค","พูบ","โอชิ","เจ้าสั่ว") },
+    { id:nid(), name:"ตำซั่ว", price:60, eaters:ids("มาร์ค","กิติภูมิ","พูบ") },
+    { id:nid(), name:"ไก่ย่างเขาสวนกวาง", price:180, eaters:ids.apply(null, all) },
+    { id:nid(), name:"คอหมูย่าง", price:120, eaters:ids("มาร์ค","กิติภูมิ","พูบ","โอชิ","เจ้าสั่ว") },
+    { id:nid(), name:"ลาบหมู", price:80, eaters:ids("มาร์ค","กิติภูมิ","พูบ","ชาเน่","โบ","โอชิ","เจ้าสั่ว") },
+    { id:nid(), name:"ต้มแซ่บกระดูกอ่อน", price:120, eaters:ids("กิติภูมิ","ชาเน่","โบ","เจ้าสั่ว") },
+    { id:nid(), name:"ไส้กรอกอีสาน", price:60, eaters:ids("ชาเน่","โบ","ยูกะ") },
+    { id:nid(), name:"ไข่เจียวหมูสับ", price:60, eaters:ids("ยูกะ","ชาเน่") },
+    { id:nid(), name:"ซอยจุ๊", price:150, eaters:ids("กิติภูมิ","เจ้าสั่ว") }
   ];
   state.shared = [
-    { id:nid(), name:"น้ำโค้ก", price:45 },
-    { id:nid(), name:"น้ำเปล่า", price:20 },
-    { id:nid(), name:"ข้าวเหนียว", price:80 }
+    { id:nid(), name:"ข้าวเหนียว 4 กระติ๊บ", price:60 },
+    { id:nid(), name:"น้ำแข็ง", price:20 },
+    { id:nid(), name:"โค้กขวดใหญ่ 2 ขวด", price:70 },
+    { id:nid(), name:"น้ำเปล่าขวดใหญ่ 2 ขวด", price:30 }
   ];
+  state.charges.forEach(function(c){ c.on=false; });   // ร้านอีสานทั่วไปไม่คิดค่าบริการ / VAT
   state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
   ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
   render();

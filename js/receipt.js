@@ -47,17 +47,18 @@ function receiptHTML(r, opts){
   '</div><div class="receipt-edge"></div></div>';
 }
 function demoReceiptHTML(){
-  var rows = [["มาร์ค",106.75],["กิติภูมิ",117.46],["พูบ",73.41],["ชาเน่",37.41],
-              ["โบ",37.41],["ยูกะ",37.41],["โอชิ",73.41],["เจ้าสั่ว",136.74]];
+  // ตรงกับปุ่ม "ใส่ข้อมูลตัวอย่าง" (loadDemo) — แก้ข้อมูลตัวอย่างแล้วต้องแก้ตรงนี้ด้วย
+  var rows = [["มาร์ค",112.93],["กิติภูมิ",205.43],["พูบ",112.93],["ชาเน่",153.09],
+              ["โบ",123.09],["ยูกะ",111.67],["โอชิ",92.93],["เจ้าสั่ว",197.93]];
   var lines = rows.map(function(p){
     return '<div class="r-line"><span class="caret" style="visibility:hidden">&#9654;</span>'+
       '<span class="who">'+p[0]+'</span><span class="val">'+baht(p[1])+'</span></div>';
   }).join("");
   return '<div class="receipt-wrap reveal"><div class="receipt">'+
     '<div class="r-title">ใบสรุปยอด</div>'+
-    '<div class="r-meta">8 คน · 5 เมนู · ร้านอาหารอีสาน</div>'+lines+
-    '<div class="r-sum"><div><span>ค่าอาหาร</span><span>475.00</span></div>'+
-    '<div><span>ค่าส่วนกลาง</span><span>145.00</span></div></div>'+
-    '<div class="r-total"><span>รวมทั้งหมด</span><span>620.00 ฿</span></div>'+
-    barcode(620)+'</div><div class="receipt-edge"></div></div>';
+    '<div class="r-meta">8 คน · 10 เมนู · ร้านส้มตำหน้ามอ</div>'+lines+
+    '<div class="r-sum"><div><span>ค่าอาหาร</span><span>930.00</span></div>'+
+    '<div><span>ค่าส่วนกลาง</span><span>180.00</span></div></div>'+
+    '<div class="r-total"><span>รวมทั้งหมด</span><span>1,110.00 ฿</span></div>'+
+    barcode(1110)+'</div><div class="receipt-edge"></div></div>';
 }
