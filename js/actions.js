@@ -401,15 +401,15 @@ async function loadDemo(){
   // มื้ออีสานร้านหน้ามอ 8 คน — แต่ละคนกินไม่เท่ากันแบบที่เกิดจริง
   var all = ["มาร์ค","พูม","ไอซ์","ชาเน่","โม","ยูกะ","โฟรค์","เจ้าสัว"];
   state.menus = [
-    { id:nid(), name:"ตำไทย", price:50, eaters:ids("ชาเน่","โม","ยูกะ") },
-    { id:nid(), name:"ตำปูปลาร้า", price:50, eaters:ids("มาร์ค","พูม","โฟรค์","เจ้าสัว") },
-    { id:nid(), name:"ตำซั่ว", price:60, eaters:ids("มาร์ค","ไอซ์","พูม") },
+    { id:nid(), name:"ตำไทย", price:50, eaters:ids("ชาเน่","ยูกะ","โฟรค์") },
+    { id:nid(), name:"ตำปูปลาร้า", price:50, eaters:ids("มาร์ค","พูม","เจ้าสัว") },
+    { id:nid(), name:"ตำซั่ว", price:60, eaters:ids("ไอซ์","มาร์ค") },
     { id:nid(), name:"ไก่ย่างเขาสวนกวาง", price:180, eaters:ids.apply(null, all) },
-    { id:nid(), name:"คอหมูย่าง", price:120, eaters:ids("มาร์ค","ไอซ์","พูม","โฟรค์","เจ้าสัว") },
-    { id:nid(), name:"ลาบหมู", price:80, eaters:ids("มาร์ค","ไอซ์","พูม","ชาเน่","โม","โฟรค์","เจ้าสัว") },
-    { id:nid(), name:"ต้มแซ่บกระดูกอ่อน", price:120, eaters:ids("ไอซ์","ชาเน่","โม","เจ้าสัว") },
-    { id:nid(), name:"ไส้กรอกอีสาน", price:60, eaters:ids("ชาเน่","โม","ยูกะ") },
-    { id:nid(), name:"ไข่เจียวหมูสับ", price:60, eaters:ids("ยูกะ","ชาเน่") },
+    { id:nid(), name:"คอหมูย่าง", price:120, eaters:ids("มาร์ค","ไอซ์","เจ้าสัว") },
+    { id:nid(), name:"ลาบหมู", price:80, eaters:ids("มาร์ค","พูม","ไอซ์","โม") },
+    { id:nid(), name:"ต้มแซ่บกระดูกอ่อน", price:120, eaters:ids("ไอซ์","เจ้าสัว","โม") },
+    { id:nid(), name:"ไส้กรอกอีสาน", price:60, eaters:ids("ชาเน่","โม") },
+    { id:nid(), name:"ไข่เจียวหมูสับ", price:60, eaters:ids("ยูกะ") },
     { id:nid(), name:"ซอยจุ๊", price:150, eaters:ids("ไอซ์","เจ้าสัว") }
   ];
   state.shared = [

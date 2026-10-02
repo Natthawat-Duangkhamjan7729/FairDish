@@ -52,7 +52,7 @@ function renderMembers(){
       var eaten = menusOf(p.id).length;
       return '<span class="chip">'+
         '<span class="nm">'+esc(p.name)+'</span>'+
-        (eaten ? '<span class="count" title="อยู่ใน '+eaten+' เมนู">'+eaten+'</span>' : '')+
+        (eaten ? '<span class="count" title="อยู่ใน '+eaten+' เมนู">'+eaten+' เมนู</span>' : '')+
         '<button class="act" data-edit-member="'+p.id+'" aria-label="แก้ชื่อ '+esc(p.name)+'">'+ICON_EDIT+'</button>'+
         '<button class="act del" data-del-member="'+p.id+'" aria-label="ลบ '+esc(p.name)+'">'+ICON_X+'</button>'+
       '</span>';

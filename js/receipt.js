@@ -48,8 +48,8 @@ function receiptHTML(r, opts){
 }
 function demoReceiptHTML(){
   // ตรงกับปุ่ม "ใส่ข้อมูลตัวอย่าง" (loadDemo) — แก้ข้อมูลตัวอย่างแล้วต้องแก้ตรงนี้ด้วย
-  var rows = [["มาร์ค",112.93],["พูม",112.93],["ไอซ์",205.43],["ชาเน่",153.09],
-              ["โม",123.09],["ยูกะ",111.67],["โฟรค์",92.93],["เจ้าสัว",197.93]];
+  var rows = [["มาร์ค",151.67],["พูม",81.66],["ไอซ์",250.00],["ชาเน่",91.67],
+              ["โม",135.00],["ยูกะ",121.67],["โฟรค์",61.66],["เจ้าสัว",216.67]];
   var lines = rows.map(function(p){
     return '<div class="r-line"><span class="caret" style="visibility:hidden">&#9654;</span>'+
       '<span class="who">'+p[0]+'</span><span class="val">'+baht(p[1])+'</span></div>';
