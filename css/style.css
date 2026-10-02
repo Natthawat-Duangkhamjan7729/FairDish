@@ -379,6 +379,7 @@ input[aria-invalid=true]{border-color:var(--danger);background:var(--danger-soft
 .pick button[aria-pressed=true]{background:var(--purple-grad);border-color:transparent;color:#FFF;box-shadow:0 3px 0 #5533C4}
 .pick .all{border-style:dashed}
 .empty{border:1px dashed #E6D9FF;border-radius:var(--r-sm);padding:var(--s5) var(--s4);text-align:center;color:var(--ink-3);font-size:var(--fs-small);background:var(--link-soft)}
+#menuList .empty{margin-bottom:var(--s3)}  /* ไม่ให้กล่อง "ยังไม่มีเมนู" ติดกับปุ่ม + เพิ่มเมนู */
 .app-foot{display:flex;gap:var(--s2);justify-content:center;margin-top:var(--s5);flex-wrap:wrap}
 .app-foot button,.app-foot a{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);padding:var(--s2) var(--s4);min-height:var(--tap);display:inline-flex;align-items:center;border-radius:var(--r-pill)}
 .app-foot button:hover,.app-foot a:hover{color:var(--ink);background:var(--surface)}
