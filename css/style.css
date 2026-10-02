@@ -427,3 +427,7 @@ input[aria-invalid=true]{border-color:var(--danger);background:var(--danger-soft
   .reveal .r-total{animation-delay:.32s}
   @keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 }
+
+/* ---------------- แถบบอกว่าอยู่ในพื้นที่ทดลอง (branch claude/playground เท่านั้น) ---------------- */
+.sandbox-bar{background:var(--secondary);color:var(--secondary-ink);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
+.sandbox-bar a{text-decoration:underline;margin-left:var(--s2)}
