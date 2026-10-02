@@ -7,6 +7,7 @@
 var Store = {
   key: "fairdish:bill:v1",
   menuKey: "fairdish:menu-memory:v1",   // คีย์ใหม่ ไม่ทับข้อมูลบิลที่เคยบันทึกไว้
+  billsKey: "fairdish:bills:v1",        // สมุดบิล (v2.0) — key เดิมยังเก็บบิลที่เปิดอยู่ไว้ให้เวอร์ชันเก่าอ่านได้
   mode: "memory",
   mem: null,
   memStore: {},
@@ -48,6 +49,14 @@ var Store = {
     var text = JSON.stringify(data);
     await this.writeRaw(this.key, text);
     this.mem = JSON.parse(text);
+  },
+  async loadBills(){
+    var raw = await this.readRaw(this.billsKey);
+    var book = raw ? JSON.parse(raw) : null;
+    return book && Array.isArray(book.list) ? book : null;
+  },
+  async saveBills(book){
+    await this.writeRaw(this.billsKey, JSON.stringify(book));
   },
   async loadMenus(){
     var raw = await this.readRaw(this.menuKey);

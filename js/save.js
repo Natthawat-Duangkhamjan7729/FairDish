@@ -20,6 +20,7 @@ function setSave(next){
 async function commit(successMessage, source){
   setSave("saving");
   try {
+    await saveBillBook();
     await Store.save(serialize());
     setSave("saved");
     ui.saveFailedIn = null;

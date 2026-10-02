@@ -80,3 +80,18 @@ test("ไม่มีสมาชิกเลยไม่พัง", () => {
   assert.equal(r.list.length, 0);
   assert.equal(r.n, 0);
 });
+
+test("compute(bill) คำนวณบิลอื่นได้โดยไม่แตะบิลที่เปิดอยู่ (ใช้ในหน้าประวัติ)", () => {
+  const app = loadApp();
+  app.state.members = [{ id: "a", name: "เอ" }];
+  app.state.menus = [{ id: "x", name: "ข้าว", price: 50, eaters: ["a"] }];
+  const old = {
+    members: [{ id: "p", name: "พี" }, { id: "q", name: "คิว" }],
+    menus: [{ id: "y", name: "หมูกระทะ", price: 299, eaters: ["p", "q"] }],
+    shared: [], charges: [{ id: "vat", rate: 7, on: true }]
+  };
+  const r = app.compute(old);
+  assert.equal(r.grand, 319.93);
+  assert.equal(sumRounded(r), 319.93);
+  assert.equal(app.compute().grand, 50);
+});

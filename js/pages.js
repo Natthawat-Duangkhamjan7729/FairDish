@@ -68,14 +68,18 @@ function pageSplit(){
     '<div class="page-head" style="margin-bottom:var(--s5);max-width:none">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);flex-wrap:wrap">'+
         '<h1>หารบิล</h1>'+
-        '<button class="btn-quiet" id="resetBtn" style="font-size:var(--fs-small);min-height:var(--tap);padding:var(--s2) var(--s4)">'+ICON_DEL+' ล้างข้อมูลทั้งหมด</button>'+
+        '<button class="btn-quiet" id="resetBtn" style="font-size:var(--fs-small);min-height:var(--tap);padding:var(--s2) var(--s4)">+ เริ่มบิลใหม่</button>'+
       '</div>'+
-      '<p>ไล่ทีละขั้นจาก 1 ถึง 4 ระบบบันทึกให้อัตโนมัติทุกครั้งที่แก้ข้อมูล</p>'+
-      (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="ยืนยันการล้างข้อมูล">'+
-        '<h3>ล้างข้อมูลทั้งหมดในบิลนี้?</h3>'+
-        '<p>สมาชิก เมนู และรายการส่วนกลางทั้งหมดจะถูกล้างออก</p>'+
+      '<label class="sr-only" for="billName">ชื่อบิล</label>'+
+      '<input type="text" id="billName" class="bill-name" maxlength="40" autocomplete="off" '+
+        'placeholder="ตั้งชื่อบิล เช่น ส้มตำป้าแดง" value="'+esc(currentBill() ? currentBill().name : "")+'">'+
+      '<p>ไล่ทีละขั้นจาก 1 ถึง 4 ระบบบันทึกให้อัตโนมัติ บิลเก่าดูและแก้ได้ใน <a href="#/history">ประวัติ</a></p>'+
+      (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="เริ่มบิลใหม่">'+
+        '<h3>เริ่มบิลใหม่?</h3>'+
+        '<p>บิลนี้ถูกเก็บไว้ในประวัติแล้ว เปิดกลับมาแก้ได้ทุกเมื่อ</p>'+
         '<div class="btn-row"><button class="btn-quiet" id="cancelReset">ยกเลิก</button>'+
-        '<button class="btn-danger" id="confirmReset">ล้างข้อมูล</button></div></div>' : '')+
+        '<button class="btn-quiet" id="confirmResetKeep">ใช้เพื่อนชุดเดิม</button>'+
+        '<button class="btn-sm" id="confirmReset">บิลว่าง</button></div></div>' : '')+
     '</div>'+
 
     '<section class="step-card" aria-labelledby="h-members">'+

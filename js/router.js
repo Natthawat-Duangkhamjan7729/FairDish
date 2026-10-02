@@ -8,6 +8,7 @@ var routes = {
   "/":      { title:"FairDish — จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์", view:pageHome },
   "/split": { title:"หารบิล · FairDish", view:pageSplit },
   "/bill":  { title:"ใบสรุปยอด · FairDish", view:pageBill },
+  "/history": { title:"ประวัติบิล · FairDish", view:pageHistory },
   "/how":   { title:"วิธีใช้ · FairDish", view:pageHow },
   "/about": { title:"เกี่ยวกับ · FairDish", view:pageAbout }
 };

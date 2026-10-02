@@ -426,3 +426,18 @@ input[aria-invalid=true]{border-color:var(--danger);background:var(--danger-soft
   .reveal .r-total{animation-delay:.32s}
   @keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 }
+
+/* ---------------- ประวัติบิล (v2.0) ---------------- */
+.bill-name{width:100%;margin-top:var(--s3);font-family:var(--font-head);font-size:var(--fs-title);font-weight:500}
+.bill-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--s3)}
+.bill-row{display:flex;align-items:stretch;gap:var(--s2);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow)}
+.bill-row.current{border-color:var(--primary-ink)}
+.bill-open{flex:1;min-width:0;display:flex;align-items:center;gap:var(--s3);padding:var(--s4);text-align:left;min-height:var(--tap)}
+.bill-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:var(--s1)}
+.bill-main b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bill-meta{font-size:var(--fs-small);color:var(--ink-2)}
+.bill-tag{display:inline-block;width:max-content;font-size:var(--fs-small);font-weight:600;color:var(--primary-ink);background:var(--primary-soft);border-radius:var(--r-pill);padding:0 var(--s2)}
+.bill-total{font-weight:600;white-space:nowrap}
+.bill-del{display:grid;place-items:center;width:var(--tap);flex:0 0 auto;align-self:center;height:var(--tap);margin-right:var(--s2);border-radius:var(--r-sm);color:var(--ink-3)}
+.bill-del:hover{color:var(--danger)}
+.bill-del svg{width:18px;height:18px}

@@ -65,7 +65,7 @@ document.addEventListener("click", async function(e){
             "[data-edit-menu],[data-dup-menu],[data-del-menu],[data-eat],[data-eat-all],[data-suggest],"+
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
-            "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave";
+            "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#confirmResetKeep,#memberAdd,#retrySave";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
   var v;
@@ -92,18 +92,7 @@ document.addEventListener("click", async function(e){
     document.getElementById("view").innerHTML = pageSplit();
     return render();
   }
-  if (t.id==="confirmReset"){
-    ui.confirmReset = false;
-    state.members=[]; state.menus=[]; state.shared=[];
-    state.charges = state.charges.filter(function(c){ return c.fixed; });
-    state.charges.forEach(function(c){ c.on=false; });
-    state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
-    ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
-    document.getElementById("view").innerHTML = pageSplit();
-    render();
-    await commit("ล้างข้อมูลแล้ว");
-    return render();
-  }
+  if (t.id==="confirmReset" || t.id==="confirmResetKeep") return startNewBill(t.id==="confirmResetKeep");
 
   if (t.id==="menuOpen"){
     state.menuForm={ id:null, name:"", price:"", eaters:[] };

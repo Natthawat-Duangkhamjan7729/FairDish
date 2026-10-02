@@ -4,19 +4,20 @@
 /* =========================================================
    4. การคำนวณ
    ========================================================= */
-function compute(){
-  var n = state.members.length;
+function compute(bill){
+  var b = bill || state;
+  var n = b.members.length;
   var known = {};
-  state.members.forEach(function(p){ known[p.id] = true; });
+  b.members.forEach(function(p){ known[p.id] = true; });
 
-  var cleaned = state.menus.map(function(m){
+  var cleaned = b.menus.map(function(m){
     return { id:m.id, name:m.name, price:m.price, eaters:m.eaters.filter(function(id){ return known[id]; }) };
   });
   var valid = cleaned.filter(function(m){ return m.eaters.length > 0; });
   var orphan = cleaned.length - valid.length;
 
   var per = {};
-  state.members.forEach(function(p){
+  b.members.forEach(function(p){
     per[p.id] = { id:p.id, name:p.name, food:0, items:[], sharedShare:0, charge:0, total:0, rounded:0 };
   });
   valid.forEach(function(m){
@@ -29,11 +30,11 @@ function compute(){
   });
 
   var foodTotal = valid.reduce(function(a,m){ return a+m.price; },0);
-  var sharedTotal = state.shared.reduce(function(a,s){ return a+s.price; },0);
+  var sharedTotal = b.shared.reduce(function(a,s){ return a+s.price; },0);
   var sharedEach = n>0 ? sharedTotal/n : 0;
-  var rate = state.charges.reduce(function(a,c){ return a+(c.on?c.rate:0); },0)/100;
+  var rate = b.charges.reduce(function(a,c){ return a+(c.on?c.rate:0); },0)/100;
 
-  var list = state.members.map(function(p){
+  var list = b.members.map(function(p){
     var row = per[p.id];
     row.sharedShare = sharedEach;
     var base = row.food + sharedEach;
