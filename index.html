@@ -40,6 +40,9 @@
       <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
     </nav>
     <a class="nav-cta" href="#/split" data-link="split">หารบิล</a>
+    <button class="install-btn" id="installBtn" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>
+      <span>ติดตั้ง<span class="install-long">แอป</span></span></button>
   </div>
 </header>
 
@@ -47,7 +50,7 @@
 
 <footer class="foot">
   <div class="wrap foot-in">
-    <span>FairDish v2.2 · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
+    <span>FairDish v2.3 · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
     <nav>
       <a href="#/">หน้าแรก</a>
       <a href="#/how">วิธีใช้</a>
@@ -76,6 +79,9 @@
     <span>อื่น ๆ</span></a>
 </nav>
 
+<!-- v2.3: หน้าต่างวิธีติดตั้งแอป (เนื้อหาสร้างโดย js/install.js) -->
+<dialog class="install-dialog" id="installDialog" aria-labelledby="installTitle"></dialog>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/config.js" defer></script>
@@ -91,6 +97,7 @@
 <script src="js/render.js" defer></script>
 <script src="js/actions.js" defer></script>
 <script src="js/shared-library.js" defer></script>
+<script src="js/install.js" defer></script>
 <script src="js/router.js" defer></script>
 <script src="js/events.js" defer></script>
 <script src="js/main.js" defer></script>

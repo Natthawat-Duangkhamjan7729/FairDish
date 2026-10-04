@@ -92,6 +92,7 @@ async function boot(){
   try { applyTheme(await Store.readRaw(Store.themeKey)); } catch(e){}
   try { state.menuMemory = await Store.loadMenus(); } catch(e){ state.menuMemory = []; }
   try { ui.myGroups = await Store.loadGroups(); } catch(e){ ui.myGroups = []; }
+  updateInstallButton();
   route();
 }
 boot();

@@ -585,6 +585,36 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 72px + env(safe-area-inset-b
   #homeResume{max-width:560px}
 }
 
+/* ---- v2.3: ปุ่มติดตั้งแอป + หน้าต่างวิธีติดตั้ง ---- */
+.install-btn{display:inline-flex;align-items:center;gap:var(--s1);flex:0 0 auto;min-height:var(--tap-sm);padding:0 var(--s3);
+  border-radius:var(--r-pill);border:1.5px solid var(--link-line-soft);background:var(--link-soft);color:var(--link);
+  font-size:var(--fs-small);font-weight:600;white-space:nowrap}
+.install-btn svg{width:18px;height:18px}
+.install-btn:hover{border-color:var(--link)}
+.install-btn[hidden]{display:none}
+.nav-ctx{max-width:32vw}
+@media(max-width:399px){.nav-ctx:not(:empty){display:none}.install-long{display:none}}
+.install-dialog{width:min(480px,calc(100vw - 2 * var(--s4)));max-height:calc(100dvh - 2 * var(--s4));overflow-y:auto;
+  padding:var(--s5) var(--s4);border:1px solid var(--line);border-radius:var(--r-lg);
+  background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.install-dialog::backdrop{background:rgba(23,18,31,.55);backdrop-filter:blur(3px)}
+.install-head{display:flex;align-items:flex-start;gap:var(--s3);margin-bottom:var(--s4)}
+.install-head img{width:48px;height:48px;border-radius:14px;flex:0 0 auto;border:1px solid var(--line)}
+.install-head div{flex:1;min-width:0}
+.install-head h2{font-size:var(--fs-title);font-weight:600}
+.install-head p{font-size:var(--fs-small);color:var(--ink-2);margin-top:var(--s1)}
+.install-head .icon-btn{margin:calc(-1 * var(--s2)) calc(-1 * var(--s2)) 0 0}
+.install-inapp{margin:0 0 var(--s4)}
+.install-tabs{position:static;margin-bottom:var(--s4);box-shadow:none}
+.install-steps{display:grid;gap:var(--s4);padding:0;margin:0;list-style:none}
+.install-steps li{display:flex;gap:var(--s3);align-items:flex-start;line-height:1.6}
+.install-ico{flex:0 0 auto;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.i-inline{width:22px;height:22px}
+.i-app{width:28px;height:28px;border-radius:7px}
+.install-note{margin-top:var(--s4);font-size:var(--fs-small);color:var(--ink-2)}
+.install-now{margin-bottom:var(--s2)}
+.install-or{text-align:center;font-size:var(--fs-small);color:var(--ink-3);margin-bottom:var(--s4)}
+
 /* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)
    =================================================================== */

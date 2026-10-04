@@ -71,6 +71,7 @@ document.addEventListener("click", async function(e){
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],"+
+            "#installBtn,#installClose,#installNow,#installCopyLink,[data-install-tab],"+
             "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -85,6 +86,13 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
   if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
+
+  /* v2.3: ติดตั้งแอป */
+  if (t.id==="installBtn") return openInstall();
+  if (t.id==="installClose") return closeInstall();
+  if (t.id==="installNow") return installNow();
+  if (t.id==="installCopyLink") return copyText(location.href, "คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย");
+  if ((v = t.getAttribute("data-install-tab"))){ Install.tab = v; return renderInstall(); }
 
   /* v2.2: หน้าแรก → สร้างกลุ่ม */
   if (t.getAttribute("data-start-group")){ ui.focusGroupName = true; location.hash = "#/groups"; return; }
@@ -216,4 +224,9 @@ document.addEventListener("click", async function(e){
 /* v2.0: กลับมาที่แท็บ = ดึงบิลกลุ่มล่าสุด เผื่อเพื่อนแก้ไปแล้ว */
 document.addEventListener("visibilitychange", function(){
   if (document.visibilityState === "visible") refreshGroup(false);
+});
+
+/* v2.3: แตะพื้นหลังมืดรอบหน้าต่างติดตั้ง = ปิด */
+document.getElementById("installDialog").addEventListener("click", function(e){
+  if (e.target === this) closeInstall();
 });
