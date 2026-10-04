@@ -17,6 +17,7 @@
 | `config.js` | `SUPABASE_URL`, `SUPABASE_ANON_KEY` (เว้นว่าง = ปิดระบบกลุ่ม) |
 | `store.js` | ชั้นเก็บข้อมูล (localStorage หรือบิลกลุ่มผ่าน `Cloud` เมื่อ `Store.groupId` ถูกตั้ง) |
 | `state.js` | `state`, `ui`, ค่าคงที่, `APP_VERSION` |
+| `qr.js` | `QR.encode()` / `QR.svg()` สร้าง QR code เอง (byte, เวอร์ชัน 1–10, ระดับแก้ผิด H) — ไม่แตะ DOM |
 | `cloud.js` | `Cloud` เรียก RPC ของ Supabase ด้วย `fetch`, รหัส/ลิงก์กลุ่ม, "กลุ่มของฉัน" |
 | `menu-library.js` | คลังเมนูแนะนำ |
 | `shared-library.js` | รายการแนะนำค่าส่วนกลาง (แยกจากคลังเมนู) |

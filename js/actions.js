@@ -586,11 +586,88 @@ async function setMe(memberId){
   render();
 }
 
+/* ---- v2.7: หน้าต่างชวนเพื่อน (QR + ช่องทางแชร์) ---- */
+var ICON_LINE_CHAT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4c-4.97 0-9 3.13-9 7 0 2.4 1.56 4.52 3.94 5.78L6 20l3.74-2.2c.73.13 1.49.2 2.26.2 4.97 0 9-3.13 9-7s-4.03-7-9-7Z"/></svg>';
+var ICON_SAVE_IMG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12l4 4 4-4"/></svg>';
+/** ข้อความชวนที่ส่งเข้าแชตพร้อมลิงก์ */
+function inviteText(){
+  return 'มาช่วยกันกรอกบิล "'+Store.groupName+'" ใน FairDish กัน 🍲\n'+
+    'กดลิงก์แล้วแก้บิลเดียวกันได้เลย ไม่ต้องสมัคร\n'+groupLink(ui.ctx);
+}
+function openShareDialog(){
+  var box = document.getElementById("shareDialog");
+  if (!box || !ui.ctx) return;
+  var link = groupLink(ui.ctx);
+  var q = QR.encode(link);
+  var qr = q
+    ? '<div class="qr-code">'+QR.svg(link, "QR code ลิงก์กลุ่ม "+esc(Store.groupName))+
+        (q.version >= 4 ? '<span class="qr-logo"><img src="img/icon-192.png" alt=""></span>' : '')+'</div>'
+    : '';
+  box.innerHTML =
+    '<div class="install-head"><div><h2 id="shareTitle">ชวนเพื่อนมาหารด้วยกัน</h2>'+
+      '<p>สแกนหรือกดลิงก์ แล้วช่วยกันกรอกบิลนี้ได้เลย ไม่ต้องสมัคร</p></div>'+
+      '<button class="icon-btn" data-share-close="1" aria-label="ปิด">'+ICON_X+'</button></div>'+
+    (qr ? '<div class="qr-card">'+qr+
+      '<b class="qr-name">'+esc(Store.groupName)+'</b>'+
+      '<span class="qr-hint">เปิดกล้องมือถือแล้วสแกนได้เลย</span></div>' : '')+
+    '<div class="share-grid">'+
+      '<a class="share-opt" href="https://line.me/R/share?text='+encodeURIComponent(inviteText())+'" target="_blank" rel="noopener">'+
+        ICON_LINE_CHAT+'<span>ส่งเข้า LINE</span></a>'+
+      (navigator.share ? '<button class="share-opt" id="shareNative">'+ICON_SHARE+'<span>แชร์ทางอื่น</span></button>' : '')+
+      '<button class="share-opt" id="shareCopy">'+ICON_COPY+'<span>คัดลอกลิงก์</span></button>'+
+      (qr ? '<button class="share-opt" id="shareSaveQr">'+ICON_SAVE_IMG+'<span>บันทึกรูป QR</span></button>' : '')+
+    '</div>'+
+    '<p class="share-link" title="'+esc(link)+'">'+esc(link)+'</p>';
+  if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
+}
+function closeShareDialog(){
+  var box = document.getElementById("shareDialog");
+  if (!box) return;
+  if (typeof box.close === "function") box.close(); else box.removeAttribute("open");
+}
+/** QR + โลโก้เป็นรูป PNG (สีจากตัวแปร --qr-ink / --paper) */
+async function qrImageBlob(){
+  var link = groupLink(ui.ctx), q = QR.encode(link);
+  if (!q) throw new Error("link too long");
+  var cs = getComputedStyle(document.documentElement);
+  var ink = cs.getPropertyValue("--qr-ink").trim(), paper = cs.getPropertyValue("--qr-paper").trim();
+  var scale = 16, n = (q.size + 8) * scale;
+  var c = document.createElement("canvas");
+  c.width = n; c.height = n;
+  var ctx = c.getContext("2d");
+  ctx.fillStyle = paper; ctx.fillRect(0, 0, n, n);
+  ctx.fillStyle = ink;
+  for (var y=0;y<q.size;y++) for (var x=0;x<q.size;x++) if (q.dark(x, y)) ctx.fillRect((x+4)*scale, (y+4)*scale, scale, scale);
+  if (q.version >= 4){
+    var logo = await loadImage("img/icon-192.png");
+    var w = Math.round(n * 0.22), o = Math.round((n - w) / 2), pad = Math.round(scale * 0.6);
+    ctx.fillStyle = paper; roundRect(ctx, o - pad, o - pad, w + 2*pad, w + 2*pad, pad*2); ctx.fill();
+    if (logo){ ctx.save(); roundRect(ctx, o, o, w, w, Math.round(w*0.22)); ctx.clip(); ctx.drawImage(logo, o, o, w, w); ctx.restore(); }
+  }
+  return new Promise(function(ok, fail){ c.toBlob(function(b){ b ? ok(b) : fail(new Error("toBlob")); }, "image/png"); });
+}
+async function saveQrImage(){
+  try {
+    var blob = await qrImageBlob();
+    var name = "FairDish-QR-" + Store.groupName.replace(/[\\/:*?"<>|\s]+/g,"-") + ".png";
+    var file = typeof File === "function" ? new File([blob], name, { type:"image/png" }) : null;
+    if (file && navigator.canShare && navigator.canShare({ files:[file] })){
+      try { await navigator.share({ files:[file], text:inviteText() }); } catch(e){ if (e && e.name !== "AbortError") throw e; }
+      return;
+    }
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+    toast("บันทึกรูป QR แล้ว","ok");
+  } catch(err){ toast("บันทึกรูปไม่สำเร็จ ลองคัดลอกลิงก์แทน","error"); }
+}
+
 function shareGroupLink(){
   if (!ui.ctx) return;
   var link = groupLink(ui.ctx);
   if (!navigator.share) return copyText(link, "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
-  navigator.share({ title:Store.groupName+" · FairDish", text:"มาหารบิล "+Store.groupName+" ด้วยกันใน FairDish", url:link })
+  navigator.share({ title:Store.groupName+" · FairDish", text:'มาช่วยกันกรอกบิล "'+Store.groupName+'" ใน FairDish กัน 🍲', url:link })
     .catch(function(){});   // ผู้ใช้กดยกเลิก = ไม่ใช่ข้อผิดพลาด
 }
 

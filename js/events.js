@@ -78,6 +78,7 @@ document.addEventListener("click", async function(e){
             "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
+            "#shareNative,#shareCopy,#shareSaveQr,[data-share-close],"+
             "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -130,7 +131,11 @@ document.addEventListener("click", async function(e){
   if (t.id==="groupCreate") return createGroup();
   if (t.id==="groupJoin") return joinGroup();
   if (t.id==="groupCopy") return copyText(groupLink(ui.ctx), "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
-  if (t.id==="groupShare") return shareGroupLink();
+  if (t.id==="groupShare") return openShareDialog();
+  if (t.id==="shareNative"){ closeShareDialog(); return shareGroupLink(); }
+  if (t.id==="shareCopy") return copyText(inviteText(), "คัดลอกลิงก์พร้อมคำชวนแล้ว วางในแชตได้เลย");
+  if (t.id==="shareSaveQr") return saveQrImage();
+  if (t.getAttribute("data-share-close")) return closeShareDialog();
   if (t.id==="groupRefresh") return refreshGroup(true);
   if (t.id==="groupRetry") return loadContext(ui.ctx);
   if (t.id==="groupLinkInput") return t.select();
@@ -272,4 +277,7 @@ document.getElementById("meDialog").addEventListener("click", function(e){
 document.addEventListener("change", function(e){
   var id = e.target && e.target.getAttribute && e.target.getAttribute("data-payer-amt");
   if (id) setPayerAmount(id, e.target.value);
+});
+document.getElementById("shareDialog").addEventListener("click", function(e){
+  if (e.target === this) closeShareDialog();
 });
