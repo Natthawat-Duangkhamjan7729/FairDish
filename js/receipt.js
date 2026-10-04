@@ -25,7 +25,7 @@ function receiptHTML(r, opts){
       + (opts.interactive ? '</button>' : '</div>');
     if (opts.interactive && opened){
       var d = p.items.map(function(it){
-        return '<div><span class="dname">'+esc(it.name)+' ÷ '+it.split+'</span><span>'+baht(it.amount)+'</span></div>';
+        return '<div><span class="dname">'+(it.meal ? '🍲 '+esc(it.name)+' · ตามที่กิน' : esc(it.name)+' ÷ '+it.split)+'</span><span>'+baht(it.amount)+'</span></div>';
       }).join("");
       if (p.items.length===0) d = '<div><span class="dname">'+kt("noItems")+'</span><span>0.00</span></div>';
       if (r.sharedTotal>0) d += '<div><span class="dname">ค่าส่วนกลาง ÷ '+r.n+'</span><span>'+baht(p.sharedShare)+'</span></div>';
@@ -35,7 +35,7 @@ function receiptHTML(r, opts){
     return html;
   }).join("");
 
-  var sums = '<div><span>ค่าอาหาร</span><span>'+baht(r.foodTotal)+'</span></div>';
+  var sums = '<div><span>'+kt("sumLabel")+'</span><span>'+baht(r.foodTotal)+'</span></div>';
   if (r.sharedTotal>0) sums += '<div><span>ค่าส่วนกลาง</span><span>'+baht(r.sharedTotal)+'</span></div>';
   if (r.chargeTotal>0) sums += '<div><span>ค่าบริการ + ภาษี</span><span>'+baht(r.chargeTotal)+'</span></div>';
 

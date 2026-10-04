@@ -723,6 +723,90 @@ async function fillHomeResume(){
   (ui.myGroups.length > 3 ? '<a class="add-slot" href="#/groups">ดูกลุ่มทั้งหมด ('+ui.myGroups.length+')</a>' : '');
 }
 
+/* ---- v3.1: มื้ออาหารข้างในทริป ----
+   ตอนแก้มื้อ เราสลับ state.menus/shared/charges เป็นของมื้อนั้นชั่วคราว (ui.tripStash เก็บของทริปไว้)
+   ตัวแก้เมนู/ส่วนกลาง/VAT เดิมจึงใช้ได้ทั้งหมด — serialize() ประกอบกลับเป็นทริปให้ตอนบันทึก */
+function currentMeal(){
+  var t = ui.tripStash;
+  if (!t) return null;
+  for (var i=0;i<t.menus.length;i++) if (t.menus[i].id === t.mealId) return t.menus[i];
+  return null;
+}
+function mealTotalOf(m){
+  var md = mealOf(m);
+  return computeBill({ members:state.members, menus:md.menus, shared:md.shared, charges:md.charges, kind:"meal" });
+}
+function enterMeal(id){
+  if (ui.tripStash) exitMeal();
+  var item = state.menus.filter(function(m){ return m.id === id && m.type === "meal"; })[0];
+  if (!item) return;
+  var md = mealOf(item);
+  ui.tripStash = { mealId:id, menus:state.menus, shared:state.shared, charges:state.charges, payers:state.payers };
+  state.kind = "meal";
+  state.menus = md.menus; state.shared = md.shared; state.charges = md.charges.length ? md.charges : defaultCharges();
+  state.payers = [];
+  state.menuForm = null; state.sharedForm = null; state.chargeForm = null; closeSuggestions();
+  ui.step = "menus";
+  document.getElementById("view").innerHTML = pageSplit();
+  render();
+  window.scrollTo(0, 0);
+}
+/** เก็บมื้อที่แก้อยู่กลับเข้าทริป (ไม่บันทึกเอง — ทุกการแก้ในมื้อ commit ไปแล้ว) */
+function exitMeal(){
+  var t = ui.tripStash;
+  if (!t) return;
+  var item = currentMeal();
+  if (item) item.meal = { menus:state.menus, shared:state.shared, charges:state.charges };
+  state.menus = t.menus; state.shared = t.shared; state.charges = t.charges; state.payers = t.payers;
+  state.kind = "trip";
+  ui.tripStash = null;
+  state.menuForm = null; state.sharedForm = null; state.chargeForm = null; closeSuggestions();
+  ui.step = "menus";
+}
+function backToTrip(){
+  exitMeal();
+  document.getElementById("view").innerHTML = pageSplit();
+  render();
+  window.scrollTo(0, 0);
+}
+async function addMeal(){
+  var n = state.menus.filter(function(m){ return m.type === "meal"; }).length + 1;
+  var payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
+  var item = { id:nid(), type:"meal", name:"มื้อที่ "+n, price:0, eaters:[],
+               meal:{ menus:[], shared:[], charges:defaultCharges() } };
+  if (payer) item.payer = payer;
+  state.menus.push(item);
+  await commit(null, "menu");
+  enterMeal(item.id);
+  var name = document.getElementById("mealName");
+  if (name){ name.focus(); name.select(); }
+}
+async function renameMeal(value){
+  var item = currentMeal();
+  var name = String(value || "").trim().replace(/\s+/g," ").slice(0, MAX_MENU_NAME);
+  if (!item || !name || name === item.name) return renderMealHead();
+  item.name = name;
+  renderMealHead();
+  await commit("เปลี่ยนชื่อมื้อเป็น "+name+" แล้ว");
+}
+async function setMealPayer(id){
+  var item = currentMeal();
+  if (!item || !nameOf(id)) return;
+  item.payer = id;
+  ui.lastPayer = id;
+  renderMealHead();
+  await commit();
+}
+async function deleteMeal(){
+  var item = currentMeal();
+  if (!item) return;
+  var id = item.id;
+  exitMeal();
+  document.getElementById("view").innerHTML = pageSplit();
+  render();
+  await removeMenu(id);                 // มีปุ่มเลิกทำเหมือนลบรายการปกติ
+}
+
 /* ---- v3.0: ประเภทบิล ---- */
 function billIsEmpty(){ return !state.menus.length && !state.shared.length; }
 /** สลับประเภทบิลที่เปิดอยู่ — ทำได้เมื่อยังไม่มีรายการ (กันข้อมูลค่าส่วนกลาง/VAT ค้างแบบมองไม่เห็น) */

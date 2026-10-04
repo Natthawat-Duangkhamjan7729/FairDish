@@ -23,7 +23,7 @@
 | `shared-library.js` | รายการแนะนำค่าส่วนกลาง (แยกจากคลังเมนู) |
 | `utils.js` | `baht`, `esc`, ไอคอน |
 | `save.js` | `commit()` บันทึกข้อมูล |
-| `calc.js` | `compute()` คำนวณเงิน, `settle()` ใครโอนให้ใคร (คิดเป็นสตางค์) — **ห้ามแตะ DOM** |
+| `calc.js` | `compute()` / `computeBill(bill)` คำนวณเงิน (ทริปเรียกซ้ำกับมื้อข้างใน), `settle()` / `settleBill()` ใครโอนให้ใคร — **ห้ามแตะ DOM** |
 | `receipt.js`, `pages.js`, `render.js` | สร้าง HTML ของแต่ละหน้า |
 | `actions.js` | การกระทำของผู้ใช้ |
 | `share-image.js` | วาดใบเสร็จเป็นรูป PNG ด้วย canvas (`receiptImageBlob()`, `shareReceiptImage()`) สีอ่านจากตัวแปร CSS ของ `.receipt-wrap` |
@@ -45,7 +45,10 @@
 - แถวรายการและชิปชื่อไม่ใส่ไอคอนแก้/ลบ — แตะแถว/ชื่อเพื่อเปิดโหมดแก้ ปุ่มลบและปุ่มอื่นอยู่ในนั้น
 - บิลมีประเภท `state.kind` = `"meal"` | `"trip"` — คำที่ต่างตามประเภทใช้ `kt("key")` / `ktOf(kind, key)` จาก `KIND_TEXT` ใน `state.js`
   ทริประบุคนจ่ายในแต่ละรายการ (`menus[i].payer`) และใช้ `settleBill()` ใน `calc.js` (เลือกวิธีตามประเภทให้เอง) อย่าเรียก `settle()` ตรง ๆ
-- หน้าหารบิลแบ่งเป็นแท็บ (`steps()` ใน `pages.js`, `ui.step` — ทริปไม่มีแท็บส่วนกลาง) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
+- มื้ออาหารในทริป = รายการ `{ type:"meal", name, payer, meal:{ menus, shared, charges } }`
+  ตอนแก้มื้อ `enterMeal()` สลับ `state.menus/shared/charges` เป็นของมื้อชั่วคราว (`ui.tripStash` เก็บของทริป) และ `serialize()` ประกอบกลับเป็นทริป
+  `route()` / `applyBill()` ออกจากมื้อให้เอง — โค้ดที่วนรายการทริปต้องข้ามหรือจัดการ `type === "meal"` (ไม่มี `eaters`/`price` จริง)
+- หน้าหารบิลแบ่งเป็นแท็บ (`steps()` ใน `pages.js`, `ui.step` — ทริปไม่มีแท็บส่วนกลาง, ในมื้อของทริปไม่มีแท็บคน) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
   ฟังก์ชัน `render*()` จึงหา element ได้เสมอ
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย
 

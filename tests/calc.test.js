@@ -202,3 +202,56 @@ test("มื้ออาหาร: settleBill ใช้คนจ่ายระ�
   const s = app.settleBill(app.compute());
   assert.deepEqual(transfersText(s), ["บี>เอ:50"]);
 });
+
+/* ---- v3.1: มื้ออาหารข้างในทริป ---- */
+function tripWithMeal({ members, items, meal, mealPayer, vat }){
+  const app = loadApp();
+  app.state.kind = "trip";
+  app.state.members = members.map((name, i) => ({ id: "m" + i, name }));
+  const charges = app.defaultCharges();
+  if (vat) charges[1].on = true;
+  app.state.menus = items.map(([name, price, eaters, payer], i) =>
+    ({ id: "t" + i, name, price, eaters: eaters.map(n => "m" + n), payer: payer == null ? undefined : "m" + payer }));
+  if (meal) app.state.menus.push({ id: "meal1", type: "meal", name: "มื้อเย็น", eaters: [], price: 0,
+    payer: mealPayer == null ? undefined : "m" + mealPayer,
+    meal: { menus: meal.map(([name, price, eaters], i) => ({ id: "f" + i, name, price, eaters: eaters.map(n => "m" + n) })), shared: [], charges } });
+  const r = app.compute();
+  return { app, r, s: app.settleBill(r) };
+}
+
+test("ทริป + มื้ออาหาร: ยอดรายคน = ส่วนที่หารเท่า + ส่วนที่กินจริง", () => {
+  // ที่พัก 900 (3 คน, เอจ่าย) + มื้อเย็น: ส้มตำ 90 (เอ+บี), ไก่ 120 (ซีคนเดียว) บีจ่ายมื้อนี้
+  const { r, s } = tripWithMeal({ members: ["เอ", "บี", "ซี"],
+    items: [["ที่พัก", 900, [0, 1, 2], 0]], meal: [["ส้มตำ", 90, [0, 1]], ["ไก่", 120, [2]]], mealPayer: 1 });
+  assert.deepEqual({ ...byName(r) }, { "เอ": 345, "บี": 345, "ซี": 420 });
+  assert.equal(r.grand, 1110);
+  assert.equal(sumRounded(r), r.grand);
+  assert.equal(s.ok, true);
+  assert.deepEqual({ ...s.paid }, { m0: 900, m1: 210 });
+  assertBalanced(r, s);
+});
+
+test("ทริป + มื้ออาหาร: VAT ของมื้อคิดเฉพาะในมื้อนั้น และเศษลงตัวทั้งทริป", () => {
+  const { r, s } = tripWithMeal({ members: ["1", "2", "3"],
+    items: [["น้ำมัน", 100, [0, 1, 2], 2]], meal: [["ก", 99.99, [0, 1, 2]], ["ข", 13.5, [0]]], mealPayer: 0, vat: true });
+  assert.equal(r.rate, 0);                                   // ระดับทริปไม่มี VAT
+  assert.equal(r.grand, Math.round((100 + (99.99 + 13.5) * 1.07) * 100) / 100);
+  assert.equal(sumRounded(r), r.grand);
+  assert.equal(s.ok, true);
+  assertBalanced(r, s);
+});
+
+test("ทริป + มื้ออาหาร: มื้อที่ยังไม่ระบุคนจ่ายถูกแจ้ง แต่มื้อว่างไม่ถูกนับ", () => {
+  const a = tripWithMeal({ members: ["เอ", "บี"], items: [["ที่พัก", 100, [0, 1], 0]], meal: [["ข้าว", 50, [0, 1]]] });
+  assert.equal(a.s.reason, "unpaid");
+  assert.equal(a.s.count, 1);
+  const b = tripWithMeal({ members: ["เอ", "บี"], items: [["ที่พัก", 100, [0, 1], 0]], meal: [] });
+  assert.equal(b.s.ok, true);
+  assert.equal(b.r.grand, 100);
+});
+
+test("ทริป + มื้ออาหาร: เมนูในมื้อที่ไม่มีคนกินนับเป็น orphan", () => {
+  const { r } = tripWithMeal({ members: ["เอ"], items: [], meal: [["ข้าว", 40, [0]], ["ไม่มีใครกิน", 500, []]], mealPayer: 0 });
+  assert.equal(r.grand, 40);
+  assert.equal(r.orphan, 1);
+});

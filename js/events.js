@@ -26,6 +26,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
   if (e.target.id === "groupName"){ e.preventDefault(); createGroup(); }
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
+  if (e.target.id === "mealName"){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
 });
 document.addEventListener("input", function(e){
@@ -76,6 +77,7 @@ document.addEventListener("click", async function(e){
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],[data-kind],[data-start-kind],[data-group-kind],[data-pay],"+
+            "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "#shareNative,#shareCopy,#shareSaveQr,[data-share-close],"+
@@ -112,6 +114,13 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-me-pick"))) return chooseMe(v);
   if (t.getAttribute("data-me-close")) return closeMeDialog();
   if (t.getAttribute("data-me-add")) return addMyselfFromDialog();
+
+  /* v3.1: มื้ออาหารในทริป */
+  if ((v = t.getAttribute("data-open-meal"))) return enterMeal(v);
+  if (t.getAttribute("data-add-meal")) return addMeal();
+  if (t.getAttribute("data-back-trip")) return backToTrip();
+  if ((v = t.getAttribute("data-meal-pay"))) return setMealPayer(v);
+  if (t.getAttribute("data-del-meal")) return deleteMeal();
 
   /* v3.0: ประเภทบิล + คนจ่ายของรายการทริป */
   if ((v = t.getAttribute("data-kind"))) return setKind(v);
@@ -290,6 +299,7 @@ document.getElementById("meDialog").addEventListener("click", function(e){
 document.addEventListener("change", function(e){
   var id = e.target && e.target.getAttribute && e.target.getAttribute("data-payer-amt");
   if (id) setPayerAmount(id, e.target.value);
+  if (e.target && e.target.id === "mealName") renameMeal(e.target.value);
 });
 document.getElementById("shareDialog").addEventListener("click", function(e){
   if (e.target === this) closeShareDialog();

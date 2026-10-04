@@ -66,7 +66,7 @@ function refreshView(){
 async function refreshGroup(manual){
   var id = ui.ctx;
   if (!id || ui.loading || ui.groupError || ui.syncing || ui.save==="saving") return;
-  var busy = state.menuForm || state.sharedForm || state.chargeForm || ui.editingMember ||
+  var busy = ui.tripStash || state.menuForm || state.sharedForm || state.chargeForm || ui.editingMember ||
              ui.savingMember || ui.savingMenu || ui.confirmMember || ui.confirmReset;
   if (!manual && busy) return;   // กำลังกรอกอะไรอยู่ อย่าวาดทับ
   ui.syncing = true;

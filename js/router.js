@@ -45,6 +45,7 @@ function currentGroupId(){
   return g ? g.id : null;
 }
 function route(){
+  if (ui.tripStash) exitMeal();          // v3.1: เปลี่ยนหน้า = ออกจากมื้อกลับไปที่ทริป (ข้อมูล commit ไปแล้ว)
   var path = currentPath();
   var groupId = currentGroupId();
   var r = routes[path];

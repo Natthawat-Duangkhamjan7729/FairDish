@@ -89,6 +89,7 @@ function pageHome(){
 
 /** แท็บของหน้าหารบิล — ทริปไม่มีแท็บส่วนกลาง (ไม่มีค่าบริการ/VAT และ "หารทุกคน" คือเลือกทุกคนอยู่แล้ว) */
 function steps(){
+  if (ui.tripStash) return [ { id:"menus", label:"เมนู" }, { id:"shared", label:"ส่วนกลาง" } ];   // v3.1: แก้มื้อในทริป
   var list = [ { id:"members", label:"คน" }, { id:"menus", label:kt("items") } ];
   if (state.kind !== "trip") list.push({ id:"shared", label:"ส่วนกลาง" });
   return list;
@@ -110,16 +111,18 @@ function stepPanel(id, body){
 function pageSplit(){
   if (ui.ctx && ui.groupError) return pageGroupError();
   var inGroup = !!ui.ctx;
-  if (!steps().some(function(st){ return st.id === ui.step; })) ui.step = "members";
+  if (!steps().some(function(st){ return st.id === ui.step; })) ui.step = steps()[0].id;
+  var inMeal = !!ui.tripStash;
   return '<div class="page page-app"><div class="wrap split-layout">'+
     '<div class="split-main">'+
+      (inMeal ? '<button class="crumb back-trip" data-back-trip="1">← กลับไปที่ทริป</button>' : '')+
       '<div class="split-head">'+
-        '<h1>'+(inGroup ? "หารบิลกลุ่ม" : "หารบิล")+'</h1>'+
+        '<h1>'+(inMeal ? "🍲 มื้ออาหารในทริป" : (inGroup ? "หารบิลกลุ่ม" : "หารบิล"))+'</h1>'+
         '<p>'+(inGroup ? "ทุกคนที่มีลิงก์กลุ่มแก้บิลนี้ได้ ระบบบันทึกขึ้นกลุ่มให้อัตโนมัติ"
                        : "ไล่ทีละแท็บ ระบบบันทึกในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล")+'</p>'+
-        '<div id="kindSlot"></div>'+
+        (inMeal ? '' : '<div id="kindSlot"></div>')+
       '</div>'+
-      '<div id="groupBar"></div>'+
+      (inMeal ? '<div id="mealHead"></div>' : '<div id="groupBar"></div>')+
       '<div class="step-tabs" role="tablist" aria-label="ขั้นตอนการหารบิล">'+steps().map(stepTab).join("")+'</div>'+
 
       stepPanel("members",
@@ -155,11 +158,13 @@ function pageSplit(){
           '<input type="text" id="resetConfirmName" autocomplete="off" placeholder="'+esc(Store.groupName)+'">' : '')+
         '<div class="btn-row"><button class="btn-quiet" id="cancelReset">ยกเลิก</button>'+
         '<button class="btn-danger" id="confirmReset"'+(inGroup ? ' disabled' : '')+'>'+ICON_DEL+' ล้างข้อมูล</button></div></div>' : '')+
+      (inMeal ? '<div class="app-foot"><button data-back-trip="1">← กลับไปที่ทริป</button>'+
+          '<button class="danger-link" data-del-meal="1">'+ICON_DEL+' ลบมื้อนี้</button></div>' :
       '<div class="app-foot">'+
         (!inGroup && Cloud.ready() ? '<a href="#/groups">👥 ชวนเพื่อนมาแก้บิลนี้ด้วยกัน</a>' : '')+
         (inGroup ? '' : '<button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button>')+
         '<button id="resetBtn">'+ICON_DEL+' ล้างข้อมูลทั้งหมด</button>'+
-      '</div>'+
+      '</div>')+
     '</div>'+
 
     '<aside class="split-side" aria-labelledby="h-summary">'+
@@ -191,7 +196,7 @@ function pageBill(){
       '<a class="crumb" href="'+splitHref()+'">← กลับไปแก้บิล</a>'+
       '<div class="page-head finish-head">'+(ui.ctx && Store.groupName ? '<p class="eyebrow">กลุ่ม '+esc(Store.groupName)+'</p>' : '')+
       '<h1>'+kt("done")+' <span class="finish-pop" aria-hidden="true">🎉</span></h1>'+
-      '<p>ยอดครบทุกคนแล้ว ส่งให้เพื่อนได้เลย กดชื่อใครก็เห็นว่ายอดมาจากเมนูไหน</p></div>';
+      '<p>ยอดครบทุกคนแล้ว ส่งให้เพื่อนได้เลย กดชื่อใครก็เห็นว่ายอดมาจาก'+kt("fromWhat")+'</p></div>';
   }
   var mine = myShare();
   return head + '<div class="app-col">'+

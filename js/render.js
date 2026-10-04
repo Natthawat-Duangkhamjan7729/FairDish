@@ -5,7 +5,7 @@
    7. แสดงผลหน้าแอป
    ========================================================= */
 function render(){
-  renderKindSlot(); renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
+  renderKindSlot(); renderMealHead(); renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
   renderStepTabs(); renderTotalBar();
 }
 
@@ -14,6 +14,28 @@ function renderKindSlot(){
   var box = document.getElementById("kindSlot");
   if (!box) return;
   box.innerHTML = ui.loading ? "" : kindSwitch("data-kind", state.kind);
+}
+
+/* ---- v3.1: หัวของมื้ออาหารในทริป (ชื่อมื้อ, ใครจ่าย, ยอดมื้อ) ---- */
+function renderMealHead(){
+  var box = document.getElementById("mealHead");
+  if (!box) return;
+  var item = currentMeal();
+  if (!item || ui.loading){ box.innerHTML = ""; return; }
+  var typing = document.activeElement && document.activeElement.id === "mealName";
+  if (typing) return;                                   // อย่าวาดทับตอนกำลังพิมพ์ชื่อ
+  var r = compute();
+  box.innerHTML = '<section class="step-card meal-head" aria-label="ข้อมูลมื้อนี้">'+
+    '<label class="label" for="mealName">ชื่อมื้อ</label>'+
+    '<input type="text" id="mealName" value="'+esc(item.name)+'" maxlength="'+MAX_MENU_NAME+'" autocomplete="off" placeholder="เช่น มื้อเย็น ร้านส้มตำ">'+
+    '<div class="label" style="margin-top:var(--s4)">ใครจ่ายมื้อนี้</div>'+
+    '<div class="pick payer-pick" role="radiogroup" aria-label="ใครจ่ายมื้อนี้">'+state.members.map(function(p){
+      var on = item.payer === p.id;
+      return '<button role="radio" data-meal-pay="'+p.id+'" aria-pressed="'+on+'" aria-checked="'+on+'">'+esc(p.name)+'</button>';
+    }).join("")+'</div>'+
+    (nameOf(item.payer) ? '' : '<p class="field-msg error">เลือกว่าใครจ่ายมื้อนี้ จะได้รวมในการโอนของทริป</p>')+
+    '<p class="meal-total">ยอดมื้อนี้ <b>'+baht(r.grand)+' ฿</b> <span>หารตามที่แต่ละคนกินจริง</span></p>'+
+  '</section>';
 }
 
 /* ---- v2.1: แท็บขั้นตอน + แถบยอดรวมล่างจอ ---- */
@@ -184,6 +206,18 @@ function renderMembers(){
   extra.innerHTML = html;
 }
 
+/** v3.1: แถวมื้ออาหารในรายการทริป — แตะเพื่อเข้าไปแก้เมนูข้างใน */
+function mealRow(m){
+  var sub = mealTotalOf(m), n = mealOf(m).menus.length;
+  var unpaid = sub.grand > 0 && !nameOf(m.payer);
+  var who = (unpaid ? '<span class="unpaid">ยังไม่เลือกคนจ่าย</span>' : (nameOf(m.payer) ? '<b class="payer-tag">'+esc(nameOf(m.payer))+' จ่าย</b>' : ''))+
+    (unpaid || nameOf(m.payer) ? ' · ' : '')+(n ? n+' เมนู' : 'ยังไม่มีเมนู');
+  return '<div class="row-item meal-row'+(unpaid ? ' warn' : '')+'">'+
+    '<button class="row-tap" data-open-meal="'+m.id+'" aria-label="เปิดมื้อ '+esc(m.name)+'">'+
+      '<span class="body"><span class="name">🍲 '+esc(m.name)+'</span><span class="sub">'+who+'</span></span>'+
+      '<span class="amt">'+baht(sub.grand)+'<small>ตามที่กิน ›</small></span>'+
+    '</button></div>';
+}
 /** v2.6: ชื่อคนกินแบบสั้น ไม่ให้แถวยาวหลายบรรทัด — "ทุกคน" / "มาร์ค · พูม · ไอซ์" / "มาร์ค · พูม +3" */
 function eatersLabel(ids){
   if (ids.length === state.members.length && ids.length > 1) return "ทุกคน ("+ids.length+")";
@@ -203,13 +237,14 @@ function renderMenus(){
     return;
   }
 
-  var total = state.menus.reduce(function(a,m){ return a+m.price; },0);
+  var total = state.kind === "trip" ? compute().grand : state.menus.reduce(function(a,m){ return a+m.price; },0);
   if (meta) meta.textContent = state.menus.length ? "รวม "+baht(total)+" ฿" : "";
 
   if (state.menus.length===0 && !state.menuForm){
     list.innerHTML = '<p class="empty">'+kt("empty")+'</p>';
   } else {
     list.innerHTML = state.menus.map(function(m){
+      if (m.type === "meal") return mealRow(m);
       var known = m.eaters.filter(function(id){ return !!nameOf(id); });
       var who = known.length ? eatersLabel(known) : "ยังไม่ได้เลือกคนมีส่วน — ยังไม่ถูกนำไปคำนวณ";
       var trip = state.kind === "trip";
@@ -229,7 +264,10 @@ function renderMenus(){
   var notice = (ui.save === "error" && ui.saveFailedIn === "menu") ? saveErrorNotice() : "";
 
   if (!state.menuForm){
-    slot.innerHTML = '<button class="add-slot" id="menuOpen">'+kt("add")+'</button>'+notice;
+    slot.innerHTML = (state.kind === "trip"
+      ? '<div class="add-row"><button class="add-slot" id="menuOpen">'+kt("addShort")+'</button>'+
+        '<button class="add-slot" data-add-meal="1">+ มื้ออาหาร 🍲</button></div>'
+      : '<button class="add-slot" id="menuOpen">'+kt("add")+'</button>')+notice;
     return;
   }
 

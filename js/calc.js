@@ -4,21 +4,45 @@
 /* =========================================================
    4. การคำนวณ
    ========================================================= */
-function compute(){
-  var n = state.members.length;
-  var known = {};
-  state.members.forEach(function(p){ known[p.id] = true; });
+function compute(){ return computeBill(state); }
 
-  var cleaned = state.menus.map(function(m){
+/** v3.1: คำนวณบิลใดก็ได้ { members, menus, shared, charges, kind } — ทริปเรียกซ้ำกับมื้ออาหารข้างใน (menus[i].type === "meal") */
+function mealOf(m){
+  var meal = m.meal || {};
+  return { menus:meal.menus || [], shared:meal.shared || [], charges:meal.charges || [] };
+}
+function computeBill(b){
+  var n = b.members.length;
+  var known = {};
+  b.members.forEach(function(p){ known[p.id] = true; });
+
+  var per = {};
+  b.members.forEach(function(p){
+    per[p.id] = { id:p.id, name:p.name, food:0, items:[], sharedShare:0, charge:0, total:0, rounded:0 };
+  });
+
+  // มื้ออาหารในทริป: คิดแยกด้วยวิธีของมื้ออาหาร แล้วบวกยอดรายคน (ปัดเป็นสตางค์แล้ว) เข้ายอดของทริป
+  var mealTotal = 0, mealOrphan = 0;
+  b.menus.forEach(function(m){
+    if (m.type !== "meal") return;
+    var md = mealOf(m);
+    var sub = computeBill({ members:b.members, menus:md.menus, shared:md.shared, charges:md.charges, kind:"meal" });
+    mealOrphan += sub.orphan;
+    if (!(sub.grand > 0)) return;
+    mealTotal += sub.grand;
+    sub.list.forEach(function(p){
+      if (!per[p.id] || !p.rounded) return;
+      per[p.id].food += p.rounded;
+      per[p.id].items.push({ name:m.name, amount:p.rounded, split:null, meal:true });
+    });
+  });
+
+  var cleaned = b.menus.filter(function(m){ return m.type !== "meal"; }).map(function(m){
     return { id:m.id, name:m.name, price:m.price, eaters:m.eaters.filter(function(id){ return known[id]; }) };
   });
   var valid = cleaned.filter(function(m){ return m.eaters.length > 0; });
-  var orphan = cleaned.length - valid.length;
+  var orphan = cleaned.length - valid.length + mealOrphan;
 
-  var per = {};
-  state.members.forEach(function(p){
-    per[p.id] = { id:p.id, name:p.name, food:0, items:[], sharedShare:0, charge:0, total:0, rounded:0 };
-  });
   valid.forEach(function(m){
     var each = m.price / m.eaters.length;
     m.eaters.forEach(function(pid){
@@ -28,13 +52,13 @@ function compute(){
     });
   });
 
-  var foodTotal = valid.reduce(function(a,m){ return a+m.price; },0);
-  var sharedTotal = state.shared.reduce(function(a,s){ return a+s.price; },0);
+  var foodTotal = valid.reduce(function(a,m){ return a+m.price; },0) + mealTotal;
+  var sharedTotal = b.shared.reduce(function(a,s){ return a+s.price; },0);
   var sharedEach = n>0 ? sharedTotal/n : 0;
   // v3.0: ทริปไม่มีค่าบริการ/VAT แม้ข้อมูลเดิมจะเปิดไว้
-  var rate = state.kind === "trip" ? 0 : state.charges.reduce(function(a,c){ return a+(c.on?c.rate:0); },0)/100;
+  var rate = b.kind === "trip" ? 0 : b.charges.reduce(function(a,c){ return a+(c.on?c.rate:0); },0)/100;
 
-  var list = state.members.map(function(p){
+  var list = b.members.map(function(p){
     var row = per[p.id];
     row.sharedShare = sharedEach;
     var base = row.food + sharedEach;
@@ -119,6 +143,14 @@ function itemPayers(){
   state.members.forEach(function(p){ known[p.id] = true; });
   var paid = {}, missing = 0;
   state.menus.forEach(function(m){
+    if (m.type === "meal"){
+      var md = mealOf(m);
+      var cents = Math.round(computeBill({ members:state.members, menus:md.menus, shared:md.shared, charges:md.charges, kind:"meal" }).grand * 100);
+      if (!cents) return;                                   // มื้อว่าง ไม่ต้องมีคนจ่าย
+      if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + cents;
+      else missing++;
+      return;
+    }
     if (!m.eaters.some(function(id){ return known[id]; })) return;
     if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + Math.round(m.price * 100);
     else missing++;

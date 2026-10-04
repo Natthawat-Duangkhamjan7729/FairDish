@@ -745,6 +745,17 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 64px + env(safe-area-inset-b
 .paid-chip{font-size:var(--fs-small);color:var(--ink-2);padding:var(--s1) var(--s3);border-radius:var(--r-pill);background:var(--surface);border:1px solid var(--line)}
 .paid-chip b{font-family:var(--font-num);color:var(--ink)}
 
+/* ---- v3.1: มื้ออาหารในทริป ---- */
+.add-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.meal-row .name{color:var(--ink)}
+.back-trip{margin-bottom:var(--s1)}
+.meal-head{margin-top:0}
+.meal-head .label{display:block;font-size:var(--fs-small);color:var(--ink-2);font-weight:600;margin-bottom:var(--s2)}
+.meal-total{margin-top:var(--s4);padding-top:var(--s3);border-top:1px dashed var(--line-2);font-size:var(--fs-small);color:var(--ink-2);display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--s2)}
+.meal-total b{font-family:var(--font-num);font-size:var(--fs-title);color:var(--ink)}
+.danger-link{color:var(--danger) !important}
+.danger-link svg{width:16px;height:16px;margin-right:var(--s1)}
+
 /* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)
    =================================================================== */
