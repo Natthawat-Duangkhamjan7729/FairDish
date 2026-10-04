@@ -800,24 +800,6 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .kind-text span{font-size:var(--fs-small);color:var(--ink-2)}
 
 
-/* v4.1: QR พร้อมเพย์ */
-:root{--pp-soft:#E6F4FF;--pp-ink:#0B4F8A}
-.tf-qr{display:grid;place-items:center;width:var(--tap);height:var(--tap);flex:0 0 auto;border-radius:12px;color:var(--link);background:var(--link-soft);border:1px solid var(--link-line-soft)}
-.tf-qr svg{width:20px;height:20px}
-.tf-row{padding-right:6px}
-.pp-sheet{text-align:center}
-.pp-badge{display:table;margin:0 auto;background:var(--pp-soft);color:var(--pp-ink);border-radius:var(--r-pill);padding:2px 14px;font-size:13px;font-weight:700}
-.pp-line{margin-top:10px;font-size:15px;font-weight:600}
-.pp-amt{font-family:var(--font-num);font-size:34px;font-weight:600;line-height:1.3;font-variant-numeric:tabular-nums}
-.pp-qr{max-width:260px;margin:var(--s3) auto 0;padding:var(--s3)}
-.pp-who{margin-top:10px;font-size:13px;color:var(--ink-2)}
-.pp-who .link-btn{min-height:32px;font-size:13px;color:var(--link)}
-.pp-hint{margin-top:2px;font-size:13px;color:var(--ink-2)}
-.pp-form{text-align:left;margin-top:var(--s4)}
-.pp-form .label{font-size:var(--fs-small);font-weight:600;color:var(--ink-2)}
-.pp-sheet .form-actions{margin-top:var(--s4)}
-
-
 /* v4.1: หน้าชวนเพื่อนเข้ากลุ่ม (#/g/<id>/share) */
 .share-intro{margin:var(--s2) var(--s1) var(--s4);color:var(--ink-2);font-size:15px}
 .share-card{display:flex;align-items:center;gap:var(--s4);padding:18px var(--s4);background:var(--card);border-radius:var(--r-md);box-shadow:var(--shadow)}
@@ -940,7 +922,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
     --glow-1:rgba(255,109,122,.14); --glow-2:rgba(61,191,146,.10); --glow-3:rgba(240,163,60,.08);
     --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
     --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
-    --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6); --pp-soft:#10304D; --pp-ink:#9CCBF5;
+    --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
@@ -959,7 +941,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   --glow-1:rgba(255,109,122,.14); --glow-2:rgba(61,191,146,.10); --glow-3:rgba(240,163,60,.08);
   --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
   --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
-  --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6); --pp-soft:#10304D; --pp-ink:#9CCBF5;
+  --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
 }
 :root[data-theme="light"]{color-scheme:light}
 

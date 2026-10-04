@@ -803,68 +803,6 @@ async function togglePaid(key){
   await commit();
 }
 
-/* ---- v4.1: QR พร้อมเพย์พร้อมยอดของแต่ละการโอน (เบอร์พร้อมเพย์เก็บที่ members[i].pp) ---- */
-function transferByKey(key){
-  var s = settleBill(compute());
-  if (!s.ok) return null;
-  return s.transfers.filter(function(t){ return transferKey(t) === key; })[0] || null;
-}
-function memberById(id){ return state.members.filter(function(p){ return p.id === id; })[0] || null; }
-function openPromptPay(key, editing){
-  var t = transferByKey(key);
-  if (!t) return closeGlobalSheet();
-  var to = memberById(t.to);
-  var pp = to && cleanPromptPay(to.pp);
-  var done = !!state.paid[key];
-  var body;
-  if (pp && !editing){
-    var payload = promptPayPayload(pp, t.amount), q = QR.encode(payload);
-    body = '<div class="qr-card pp-qr"><div class="qr-code">'+QR.svg(payload, L("QR พร้อมเพย์ {name} {amt} บาท", { name:esc(t.toName), amt:baht(t.amount) }))+
-        (q && q.version >= 4 ? '<span class="qr-logo"><img src="img/icon-192.png" alt=""></span>' : '')+'</div></div>'+
-      '<p class="pp-who">'+L("พร้อมเพย์ของ {name}", { name:esc(t.toName) })+' · <span class="mono">'+esc(maskPromptPay(pp))+'</span> '+
-        '<button class="link-btn" type="button" data-pp-edit="'+esc(key)+'">'+L("เปลี่ยน")+'</button></p>'+
-      '<p class="pp-hint">'+L("สแกนด้วยแอปธนาคาร ยอดใส่ไว้ให้แล้ว")+'</p>';
-  } else {
-    body = '<div class="form-box pp-form">'+
-      '<label class="label" for="ppInput">'+L("เบอร์พร้อมเพย์ของ {name}", { name:esc(t.toName) })+'</label>'+
-      '<input type="text" id="ppInput" inputmode="numeric" autocomplete="off" maxlength="20" value="'+esc(pp || "")+'" placeholder="'+L("เบอร์มือถือ หรือเลขบัตรประชาชน 13 หลัก")+'" aria-describedby="ppMsg">'+
-      '<p class="field-msg muted" id="ppMsg">'+(ui.ctx ? L("บันทึกไว้ในบิลกลุ่มนี้ ทุกคนที่มีลิงก์กลุ่มเห็นเบอร์นี้") : L("บันทึกไว้ในบิลนี้ในเครื่องของคุณ"))+'</p>'+
-      '<button class="btn-sm btn-block" type="button" id="ppSave" data-pp-key="'+esc(key)+'">'+L("สร้าง QR")+'</button>'+
-    '</div>';
-  }
-  ui.sheet = "pp";
-  renderGlobalSheet(
-    '<div class="pp-sheet"><span class="pp-badge" id="ppTitle">'+L("QR พร้อมเพย์")+'</span>'+
-    '<p class="pp-line">'+L("{from} โอนให้ {to}", { from:esc(t.fromName), to:esc(t.toName) })+'</p>'+
-    '<div class="pp-amt">'+baht(t.amount)+' ฿</div>'+body+
-    '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ปิด")+'</button>'+
-      '<button class="btn-sm" type="button" data-pp-paid="'+esc(key)+'">'+(done ? L("ยังไม่ได้โอน") : L("โอนแล้ว"))+'</button></div></div>', "ppTitle");
-  var sheet = document.querySelector("#globalSheet .sheet");
-  if (sheet && pp && !editing) fitQr(sheet, QR.encode(promptPayPayload(pp, t.amount)));
-  var input = document.getElementById("ppInput");
-  if (input) input.focus();
-}
-async function savePromptPay(key){
-  var t = transferByKey(key), input = document.getElementById("ppInput");
-  if (!t || !input) return;
-  var pp = cleanPromptPay(input.value);
-  if (!pp){
-    var msg = document.getElementById("ppMsg");
-    if (msg){ msg.className = "field-msg error"; msg.textContent = L("ใส่เบอร์มือถือ 10 หลัก หรือเลขบัตรประชาชน 13 หลัก"); }
-    input.setAttribute("aria-invalid","true");
-    return input.focus();
-  }
-  var to = memberById(t.to);
-  if (!to) return;
-  to.pp = pp;
-  openPromptPay(key);
-  await commit();
-}
-async function paidFromSheet(key){
-  closeGlobalSheet();
-  await togglePaid(key);
-}
-
 /* ---- v3.2: ชวนเพื่อนเข้ากลุ่มจากบิลส่วนตัว = ย้ายบิลนี้ขึ้นกลุ่ม ---- */
 async function inviteFromBill(){
   if (ui.ctx || !Cloud.ready() || ui.creatingGroup) return;

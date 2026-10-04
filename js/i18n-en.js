@@ -285,7 +285,7 @@ EN = {
   "น้ำแข็ง":"Ice cubes", "โค้กขวดใหญ่ 2 ขวด":"Coke, 2 large bottles", "น้ำเปล่าขวดใหญ่ 2 ขวด":"Water, 2 large bottles",
   "ร้านส้มตำหน้ามอ":"Som tam by campus",
 
-  /* ---- v4.1: หน้าตาแอปใหม่ ประวัติ ติ๊กโอน QR พร้อมเพย์ ชวนเพื่อน ---- */
+  /* ---- v4.1–4.2: หน้าตาแอปใหม่ ประวัติ ติ๊กโอน ชวนเพื่อน ---- */
   "มีชื่อ {name} ในโต๊ะแล้ว ลองเติมนามสกุลหรือชื่อเล่นให้ต่างกัน":"{name} is already at the table. Add a surname or nickname to tell them apart.",
   "คืนเมนู {name} กลับมาแล้ว":"Restored {name}",
   "{label} {n} จาก {total} รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง":"{label}: {n} of {total} — keep typing to narrow down",
@@ -308,19 +308,8 @@ EN = {
   "เลือกครั้งเดียวตอนเริ่ม":"Pick once when you start",
   "เช่น ร้านส้มตำหน้ามอ":"e.g. Som tam by campus",
   "เปลี่ยนชื่อบิลเป็น {name} แล้ว":"Renamed the bill to {name}",
-  "QR พร้อมเพย์ {name} {amt} บาท":"PromptPay QR for {name}, {amt} THB",
-  "พร้อมเพย์ของ {name}":"{name}'s PromptPay",
-  "เปลี่ยน":"Change",
-  "สแกนด้วยแอปธนาคาร ยอดใส่ไว้ให้แล้ว":"Scan with any banking app — the amount is filled in",
-  "เบอร์พร้อมเพย์ของ {name}":"{name}'s PromptPay number",
-  "เบอร์มือถือ หรือเลขบัตรประชาชน 13 หลัก":"Mobile number or 13-digit ID",
-  "บันทึกไว้ในบิลกลุ่มนี้ ทุกคนที่มีลิงก์กลุ่มเห็นเบอร์นี้":"Saved in this group bill. Anyone with the group link can see it.",
-  "บันทึกไว้ในบิลนี้ในเครื่องของคุณ":"Saved in this bill on your device",
-  "สร้าง QR":"Make QR",
-  "QR พร้อมเพย์":"PromptPay QR",
   "{from} โอนให้ {to}":"{from} pays {to}",
   "ยังไม่ได้โอน":"Not paid yet",
-  "ใส่เบอร์มือถือ 10 หลัก หรือเลขบัตรประชาชน 13 หลัก":"Enter a 10-digit mobile number or a 13-digit ID",
   "กำลังสร้างกลุ่ม":"Creating group",
   "ชวนเพื่อนเข้ากลุ่ม":"Invite friends to the group",
   "ค่าที่พัก 2 คืน":"Hotel, 2 nights",
@@ -384,8 +373,6 @@ EN = {
   "เลือกว่าใครจ่ายให้ร้าน แล้วรู้เลยว่าใครต้องโอนให้ใคร ติ๊กเมื่อโอนแล้ว ไม่มีใครต้องตามทวง":"Pick who paid the restaurant and see who pays whom. Tick each payment when it's done — no chasing.",
   "ไม่หาย ระบบบันทึกบิลไว้ในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล เริ่มบิลใหม่แล้วบิลเดิมก็ยังอยู่ในหน้าประวัติ":"No. Every change is saved on your device automatically, and when you start a new bill the old one stays in History.",
   "แก้อะไรก็บันทึกทันที เริ่มบิลใหม่แล้วบิลเดิมเก็บไว้ในหน้าประวัติ เปิดกลับมาทำต่อได้":"Every change is saved right away. Starting a new bill keeps the old one in History, ready to reopen.",
-  "เพื่อนยืนยันเมนูเองได้ + QR พร้อมเพย์":"Friends confirm their own dishes + PromptPay QR",
-  "ส่งลิงก์ให้เพื่อนเลือกชื่อแล้วติ๊กเมนูที่กิน และสแกน QR พร้อมเพย์ที่มียอดใส่ไว้ให้แล้ว":"Send a link so friends pick their name and tick what they ate, then scan a PromptPay QR with the amount filled in.",
   "ยังไม่มีบัญชีผู้ใช้":"No user accounts yet",
   "บิลส่วนตัวอยู่ในเครื่องที่ใช้เท่านั้น ถ้าอยากเปิดหลายเครื่องให้ย้ายบิลขึ้นกลุ่ม":"Personal bills stay on the device you used. To open a bill on several devices, move it to a group.",
   "หาร 4 คน · คนละ 20.00 บาท":"Split 4 ways · 20.00 THB each",
@@ -403,7 +390,6 @@ EN = {
   "ใครจ่ายไปแล้ว":"Who has paid",
   "{name} จ่ายไป {amt}":"{name} paid {amt}",
   "{from} โอนให้ {to} แล้ว":"{from} has paid {to}",
-  "QR พร้อมเพย์ {from} โอนให้ {to}":"PromptPay QR: {from} pays {to}",
   "แตะช่องหน้าชื่อเมื่อโอนแล้ว ไม่มีใครต้องตามทวง":"Tick the box once paid — no one has to chase",
   "คุณคือ":"You are",
   "เลือกว่าคุณคือใคร ›":"Pick who you are ›",
@@ -432,5 +418,9 @@ EN = {
   "เพิ่ม {name} อีกจานแล้ว":"Added another {name}",
   "ทำซ้ำ {name} แล้ว":"Duplicated {name}",
   "ส่งลิงก์ให้เพื่อนกดยืนยันเมนูเอง":"Send a link so friends confirm their own dishes",
-  "บิลกลุ่ม":"Group"
+  "บิลกลุ่ม":"Group",
+  "เพื่อนยืนยันเมนูเองได้":"Friends confirm their own dishes",
+  "ส่งลิงก์ให้เพื่อนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตให้ทันที":"Send a link so friends pick their name and tick what they ate; everyone's total updates instantly.",
+  "ไม่เก็บเบอร์โทรหรือเลขบัตรประชาชน":"No phone or ID numbers collected",
+  "FairDish เก็บแค่ชื่อเล่นและรายการในบิล ไม่ขอข้อมูลที่ใช้ระบุตัวตน":"FairDish only keeps nicknames and bill items. It never asks for identifying details."
 };

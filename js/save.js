@@ -25,7 +25,9 @@ function mealWithScope(m){
 function normalizeBill(saved){
   saved = saved || {};
   var b = {};
-  b.members = Array.isArray(saved.members) ? saved.members : [];
+  // v4.2: เก็บแค่ id กับชื่อ — ข้อมูลอื่นของคน (เช่นเบอร์พร้อมเพย์ pp จาก v4.1) ถูกทิ้ง บันทึกครั้งถัดไปจึงไม่มีอีก
+  b.members = (Array.isArray(saved.members) ? saved.members : []).filter(function(p){ return p && p.id; })
+    .map(function(p){ return { id:String(p.id), name:String(p.name || "") }; });
   b.menus = (Array.isArray(saved.menus) ? saved.menus : []).map(function(m){
     var item = { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
     if (m.payer) item.payer = String(m.payer);

@@ -64,3 +64,11 @@ test("applyBill: ตั้งตัวนับ id ต่อจากของ�
   assert.equal(app.state.menus[0].price, 80);
   assert.equal(app.nid(), "i10");
 });
+
+test("v4.2: ไม่เก็บข้อมูลอื่นของคน — เบอร์พร้อมเพย์ (pp) ที่บันทึกไว้จาก v4.1 ถูกทิ้ง", () => {
+  const app = loadApp();
+  app.applyBill({ members: [{ id: "i1", name: "เอ", pp: "0812345678" }, { id: "i2", name: "บี", pp: "1234567890123", extra: 1 }] });
+  assert.deepEqual(plain(app.state.members), [{ id: "i1", name: "เอ" }, { id: "i2", name: "บี" }]);
+  assert.equal(JSON.stringify(app.serialize()).includes("0812345678"), false);
+  assert.equal(JSON.stringify(app.serialize()).includes("1234567890123"), false);
+});

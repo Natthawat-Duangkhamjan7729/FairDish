@@ -134,9 +134,7 @@ function transfersBlock(s, interactive, headId, paid){
         : '<span class="tf-tick" aria-hidden="true">'+box+'</span>')+
       '<span class="tf-who"><span class="tf-names"><b>'+esc(t.fromName)+'</b> <span class="tf-arrow" aria-label="'+L("โอนให้")+'">→</span> <b>'+esc(t.toName)+'</b></span>'+
         '<span class="tf-status">'+(done ? L("โอนแล้ว") : L("ยังไม่ได้โอน"))+'</span></span>'+
-      '<span class="tf-amt">'+baht(t.amount)+'</span>'+
-      (interactive ? '<button class="tf-qr" type="button" data-pp="'+esc(k)+'" aria-haspopup="dialog" aria-label="'+L("QR พร้อมเพย์ {from} โอนให้ {to}", { from:esc(t.fromName), to:esc(t.toName) })+'">'+ICON_QR+'</button>' : '')+
-      '</div>';
+      '<span class="tf-amt">'+baht(t.amount)+'</span></div>';
   }).join("");
   return '<div class="tf-head"><h3 class="settle-head" id="'+headId+'">'+L("ใครโอนให้ใคร")+'</h3>'+
       (s.transfers.length ? '<span class="tf-count">'+L("โอนแล้ว {done}/{total}", { done:prog.done, total:prog.total })+'</span>' : '')+'</div>'+
