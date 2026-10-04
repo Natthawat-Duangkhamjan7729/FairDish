@@ -1,4 +1,4 @@
-/* FairDish — หน้าเว็บแต่ละหน้า */
+/* FairDish — หน้าเว็บแต่ละหน้า (หน้าแรก/ประวัติ/ยืนยันเมนู อยู่ใน screens.js) */
 "use strict";
 
 /* =========================================================
@@ -6,96 +6,17 @@
    ========================================================= */
 function item(k,h,p){ return '<li><span class="k">'+k+'</span><div><h3>'+h+'</h3><p>'+p+'</p></div></li>'; }
 
-/* ---- v2.2: ปุ่มเริ่มใหญ่บนหน้าแรก ---- */
-var ICON_START_BILL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg>';
 var ICON_START_GROUP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.4.2 4 1.9 4.5 4.6"/></svg>';
-function startCard(tag, attrs, kind, icon, title, sub){
-  return '<'+tag+' class="start-card '+kind+'" '+attrs+'>'+
-    '<span class="start-icon">'+icon+'</span>'+
-    '<span class="start-text"><b>'+title+'</b><span>'+sub+'</span></span>'+
-    '<span class="start-go" aria-hidden="true">›</span></'+tag+'>';
-}
-function homeStart(){
-  return '<section class="home-start" aria-labelledby="h-start"><div class="wrap">'+
-    '<h1 id="h-start">วันนี้หารอะไรดี?</h1>'+
-    '<div class="start-grid">'+
-      // v3.0: เลือกประเภทตั้งแต่ปุ่มแรก
-      startCard("button", 'type="button" data-start-kind="meal"', "coral", '<span class="start-emoji" aria-hidden="true">🍲</span>', ktOf("meal","start"), ktOf("meal","startSub"))+
-      startCard("button", 'type="button" data-start-kind="trip"', "mint", '<span class="start-emoji" aria-hidden="true">✈️</span>', ktOf("trip","start"), ktOf("trip","startSub"))+
-      (Cloud.ready()
-        ? startCard("button", 'type="button" data-start-group="1"', "purple", ICON_START_GROUP, "สร้างกลุ่มก่อน", "ส่งลิงก์ให้เพื่อนช่วยกันกรอก ใช้ได้ทั้งมื้ออาหารและทริป")
-        : '')+
-    '</div>'+
-    '<div id="homeResume"></div>'+
-  '</div></section>';
-}
-
-function pageHome(){
-  return homeStart()+
-  '<section class="hero"><div class="wrap hero-grid">'+
-    '<div>'+
-      '<p class="eyebrow">หารบิลให้สนุกขึ้นอีกนิด</p>'+
-      '<h2 class="hero-title">จ่ายตามที่กินจริง<br>จบทุกมื้ออย่างแฟร์</h2>'+
-      '<p class="lede">FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปออกมาเป็นบิลรายคนที่ส่งเข้ากลุ่มได้ทันที จบปัญหาคนกินน้อยต้องจ่ายเท่าคนกินเยอะ</p>'+
-      '<p class="note"><span class="spark">&#9829; มื้อสนุก ไม่ต้องเกี่ยงยอด</span></p>'+
-      '<div class="hero-steps"><span><b>1</b>เพิ่มเพื่อน</span><span><b>2</b>ใส่เมนู</span><span><b>3</b>ดูยอด</span></div>'+
-      '<div class="btn-row"><a class="btn btn-main" href="#/split">เริ่มหารบิล &#8595;</a>'+
-      '<a class="btn btn-line" href="#/how">ดูวิธีใช้</a></div>'+
-      '<p class="note" style="margin-top:var(--s4)">ไม่ต้องสมัครสมาชิก · เปิดใช้ได้ทันทีบนมือถือ · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ</p>'+
-    '</div><div class="hero-art">'+
-      '<span class="blob purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v6a3 3 0 0 0 6 0V3M10 12v9M17 3v18M17 3c-2 1-3 4-3 7h3"/></svg></span>'+
-      '<span class="blob coral" aria-hidden="true">&#247;</span>'+
-      '<span class="blob mint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>'+
-      demoReceiptHTML()+'</div>'+
-  '</div></section>'+
-
-  '<section><div class="wrap">'+
-    '<div class="sec-head"><h2>บิลใบเดียวกัน สองวิธีคิด</h2>'+
-    '<p>มื้ออีสานร้านหน้ามอ: 8 คน 10 เมนู รวมข้าวเหนียวกับน้ำ 1,110 บาท</p></div>'+
-    '<div class="compare">'+
-      '<div class="cmp bad"><h3>หารเท่ากันทั้งโต๊ะ</h3><div class="tag">1,110 ÷ 8 = ทุกคนจ่ายเท่ากัน</div>'+
-        '<ul><li><span>โฟรค์ — กิน 2 เมนู</span><span>138.75</span></li>'+
-        '<li><span>ยูกะ — ไม่กินเผ็ด 3 เมนู</span><span>138.75</span></li>'+
-        '<li><span>ไอซ์ — กิน 6 เมนู มีซอยจุ๊</span><span>138.75</span></li></ul>'+
-        '<p class="foot">โฟรค์จ่ายเกินไป 77.09 บาท ส่วนไอซ์จ่ายขาดไป 111.25 บาท ทั้งที่ไม่มีใครตั้งใจเอาเปรียบกัน</p></div>'+
-      '<div class="cmp good"><h3>หารด้วย FairDish</h3><div class="tag">คิดจากเมนูที่แต่ละคนกินจริง</div>'+
-        '<ul><li><span>โฟรค์ — กิน 2 เมนู</span><span>61.66</span></li>'+
-        '<li><span>ยูกะ — ไม่กินเผ็ด 3 เมนู</span><span>121.67</span></li>'+
-        '<li><span>ไอซ์ — กิน 6 เมนู มีซอยจุ๊</span><span>250.00</span></li></ul>'+
-        '<p class="foot">ยอดรายคนรวมกันได้ 1,110.00 บาทพอดี ไม่มีเศษสตางค์หาย และทุกคนกดดูได้ว่ายอดของตัวเองมาจากเมนูไหน</p></div>'+
-    '</div>'+
-  '</div></section>'+
-
-  '<section><div class="wrap">'+
-    '<div class="sec-head"><h2>สิ่งที่ FairDish ทำให้</h2><p>ไล่ทีละแท็บ คน · เมนู · ส่วนกลาง แล้วได้บิลเลย</p></div>'+
-    '<ul class="bill-list">'+
-      item("01","เพิ่มคนในโต๊ะ","ใส่ชื่อสมาชิกที่ร่วมมื้อนี้ แก้ชื่อหรือลบออกได้ตลอด พร้อมเลิกทำถ้าลบผิดคน")+
-      item("02","ใส่เมนูและราคา","พิมพ์ไม่กี่ตัวอักษรก็มีเมนูแนะนำกว่า 1,000 รายการขึ้นมาให้เลือก และเมนูที่คุณสั่งเองระบบจำไว้ให้พร้อมราคาครั้งก่อน")+
-      item("03","เลือกคนที่กินแต่ละเมนู","แตะชื่อคนที่กินจานนั้น ระบบหารเฉพาะคนที่แตะไว้ ไม่ใช่ทั้งโต๊ะ")+
-      item("04","บวกค่าส่วนกลางอัตโนมัติ","ค่าบริการ 10% VAT 7% หรือกำหนดเปอร์เซ็นต์เอง ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน")+
-      item("05","สรุปยอดเป็นบิลรายคน","แตะชื่อใครก็เห็นทันทีว่ายอดนั้นมาจากเมนูไหนบ้าง กี่บาท หารกี่คน")+
-      item("06","คัดลอกส่งเข้ากลุ่ม","กดปุ่มเดียวได้ข้อความสรุปพร้อมวางในแชทกลุ่ม ไม่ต้องพิมพ์ตามทีละคน")+
-      item("07","ตรวจสอบและแก้ไขได้ตลอด","แก้เมนู ราคา หรือคนกินได้ทุกเมื่อ บิลคำนวณใหม่ให้ทันทีโดยไม่ต้องเริ่มใหม่")+
-    '</ul>'+
-  '</div></section>'+
-
-  '<section><div class="wrap"><div class="cta-box">'+
-    '<h2>มื้อหน้าไม่ต้องกดเครื่องคิดเลขแล้ว</h2>'+
-    '<p>เปิด FairDish ตอนบิลมาถึงโต๊ะ ใส่ชื่อกับเมนู แล้วส่งยอดเข้ากลุ่มก่อนจะลุกจากร้าน</p>'+
-    '<div class="btn-row"><a class="btn btn-main" href="#/split">เริ่มหารบิล</a>'+
-    '<a class="btn btn-line" href="#/about">ที่มาของโปรเจกต์</a></div>'+
-  '</div></div></section>';
-}
 
 /** แท็บของหน้าหารบิล — ทริปไม่มีแท็บส่วนกลาง (ไม่มีค่าบริการ/VAT และ "หารทุกคน" คือเลือกทุกคนอยู่แล้ว) */
 function steps(){
-  if (ui.tripStash) return [ { id:"menus", label:"เมนู" }, { id:"shared", label:"ส่วนกลาง" } ];   // v3.1: แก้มื้อในทริป
-  var list = [ { id:"members", label:"คน" }, { id:"menus", label:kt("items") } ];
-  if (state.kind !== "trip") list.push({ id:"shared", label:"ส่วนกลาง" });
+  if (ui.tripStash) return [ { id:"menus", label:L("เมนู") }, { id:"shared", label:L("ส่วนกลาง") } ];   // v3.1: แก้มื้อในทริป
+  var list = [ { id:"members", label:L("คน") }, { id:"menus", label:kt("items") } ];
+  if (state.kind !== "trip") list.push({ id:"shared", label:L("ส่วนกลาง") });
   return list;
 }
 function kindSwitch(attr, current){
-  return '<div class="kind-switch" role="group" aria-label="ประเภทบิล">'+["meal","trip"].map(function(k){
+  return '<div class="kind-switch" role="group" aria-label="'+L("ประเภทบิล")+'">'+["meal","trip"].map(function(k){
     return '<button type="button" '+attr+'="'+k+'" aria-pressed="'+(current===k)+'">'+ktOf(k,"icon")+' '+ktOf(k,"name")+'</button>';
   }).join("")+'</div>';
 }
@@ -115,24 +36,25 @@ function pageSplit(){
   var inMeal = !!ui.tripStash;
   return '<div class="page page-app"><div class="wrap split-layout">'+
     '<div class="split-main">'+
-      (inMeal ? '<button class="crumb back-trip" data-back-trip="1">← กลับไปที่ทริป</button>' : '')+
+      (inMeal ? '<button class="crumb back-trip" data-back-trip="1">← '+L("กลับไปที่ทริป")+'</button>' : '')+
       '<div class="split-head">'+
-        '<h1>'+(inMeal ? "🍲 มื้ออาหารในทริป" : (inGroup ? "หารบิลกลุ่ม" : "หารบิล"))+'</h1>'+
-        '<p>'+(inGroup ? "ทุกคนที่มีลิงก์กลุ่มแก้บิลนี้ได้ ระบบบันทึกขึ้นกลุ่มให้อัตโนมัติ"
-                       : "ไล่ทีละแท็บ ระบบบันทึกในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล")+'</p>'+
+        '<h1>'+(inMeal ? "🍲 "+L("มื้ออาหารในทริป") : (inGroup ? L("หารบิลกลุ่ม") : L("หารบิล")))+'</h1>'+
+        '<p>'+(inGroup ? L("ทุกคนที่มีลิงก์กลุ่มแก้บิลนี้ได้ ระบบบันทึกขึ้นกลุ่มให้อัตโนมัติ")
+                       : L("ไล่ทีละแท็บ ระบบบันทึกในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล"))+'</p>'+
+        (inMeal || inGroup ? '' : '<div id="titleSlot"></div>')+
         (inMeal ? '' : '<div id="kindSlot"></div>')+
       '</div>'+
       (inMeal ? '<div id="mealHead"></div>' : '<div id="groupBar"></div>')+
-      '<div class="step-tabs" role="tablist" aria-label="ขั้นตอนการหารบิล">'+steps().map(stepTab).join("")+'</div>'+
+      '<div class="step-tabs" role="tablist" aria-label="'+L("ขั้นตอนการหารบิล")+'">'+steps().map(stepTab).join("")+'</div>'+
 
       stepPanel("members",
         '<div class="step-head"><h2 id="h-members">'+kt("people")+'</h2></div>'+
         '<div class="field-row">'+
           '<div>'+
-            '<label class="sr-only" for="memberInput">ชื่อคนในบิลนี้</label>'+
-            '<input type="text" id="memberInput" placeholder="พิมพ์ชื่อ เช่น มาร์ค" autocomplete="off" maxlength="'+MAX_NAME+'" aria-describedby="memberMsg">'+
+            '<label class="sr-only" for="memberInput">'+L("ชื่อคนในบิลนี้")+'</label>'+
+            '<input type="text" id="memberInput" placeholder="'+L("พิมพ์ชื่อ เช่น มาร์ค")+'" autocomplete="off" maxlength="'+MAX_NAME+'" aria-describedby="memberMsg">'+
           '</div>'+
-          '<button class="btn-sm" id="memberAdd">เพิ่ม</button>'+
+          '<button class="btn-sm" id="memberAdd">'+L("เพิ่ม")+'</button>'+
         '</div>'+
         '<p class="field-msg muted" id="memberMsg" aria-live="polite"></p>'+
         '<div id="memberList"></div>'+
@@ -145,31 +67,31 @@ function pageSplit(){
         '<div id="menuList"></div><div id="menuFormSlot"></div>')+
 
       (state.kind === "trip" ? '' : stepPanel("shared",
-        '<div class="step-head"><h2>ค่าส่วนกลาง</h2></div>'+
-        '<p class="hint">คิดเป็น % จากยอดของแต่ละคน</p>'+
+        '<div class="step-head"><h2>'+L("ค่าส่วนกลาง")+'</h2></div>'+
+        '<p class="hint">'+L("คิดเป็น % จากยอดของแต่ละคน")+'</p>'+
         '<div class="pick" id="chargeList"></div><div id="chargeFormSlot"></div>'+
-        '<p class="sub-head">หารเท่ากันทุกคน</p>'+
+        '<p class="sub-head">'+L("หารเท่ากันทุกคน")+'</p>'+
         '<div id="sharedList"></div><div id="sharedFormSlot"></div>'))+
 
-      (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="ยืนยันการล้างข้อมูล">'+
-        '<h3>ล้างข้อมูลทั้งหมดในบิลนี้?</h3>'+
-        '<p>รายชื่อและรายการทั้งหมดจะถูกล้างออก'+(inGroup ? " <b>ทุกคนในกลุ่มจะเห็นบิลว่างด้วย</b>" : "")+'</p>'+
-        (inGroup ? '<label class="confirm-type" for="resetConfirmName">พิมพ์ชื่อกลุ่ม <b>'+esc(Store.groupName)+'</b> เพื่อยืนยัน</label>'+
+      (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="'+L("ยืนยันการล้างข้อมูล")+'">'+
+        '<h3>'+L("ล้างข้อมูลทั้งหมดในบิลนี้?")+'</h3>'+
+        '<p>'+L("รายชื่อและรายการทั้งหมดจะถูกล้างออก")+(inGroup ? " <b>"+L("ทุกคนในกลุ่มจะเห็นบิลว่างด้วย")+"</b>" : "")+'</p>'+
+        (inGroup ? '<label class="confirm-type" for="resetConfirmName">'+L("พิมพ์ชื่อกลุ่ม {name} เพื่อยืนยัน", { name:'<b>'+esc(Store.groupName)+'</b>' })+'</label>'+
           '<input type="text" id="resetConfirmName" autocomplete="off" placeholder="'+esc(Store.groupName)+'">' : '')+
-        '<div class="btn-row"><button class="btn-quiet" id="cancelReset">ยกเลิก</button>'+
-        '<button class="btn-danger" id="confirmReset"'+(inGroup ? ' disabled' : '')+'>'+ICON_DEL+' ล้างข้อมูล</button></div></div>' : '')+
-      (inMeal ? '<div class="app-foot"><button data-back-trip="1">← กลับไปที่ทริป</button>'+
-          '<button class="danger-link" data-del-meal="1">'+ICON_DEL+' ลบมื้อนี้</button></div>' :
+        '<div class="btn-row"><button class="btn-quiet" id="cancelReset">'+L("ยกเลิก")+'</button>'+
+        '<button class="btn-danger" id="confirmReset"'+(inGroup ? ' disabled' : '')+'>'+ICON_DEL+' '+L("ล้างข้อมูล")+'</button></div></div>' : '')+
+      (inMeal ? '<div class="app-foot"><button data-back-trip="1">← '+L("กลับไปที่ทริป")+'</button>'+
+          '<button class="danger-link" data-del-meal="1">'+ICON_DEL+' '+L("ลบมื้อนี้")+'</button></div>' :
       '<div class="app-foot">'+
-        (!inGroup && Cloud.ready() ? '<a href="#/groups">👥 ชวนเพื่อนมาแก้บิลนี้ด้วยกัน</a>' : '')+
-        (inGroup ? '' : '<button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button>')+
-        '<button id="resetBtn">'+ICON_DEL+' ล้างข้อมูลทั้งหมด</button>'+
+        (!inGroup && Cloud.ready() ? '<a href="#/groups">👥 '+L("ชวนเพื่อนมาแก้บิลนี้ด้วยกัน")+'</a>' : '')+
+        (inGroup ? '' : '<button id="demoBtn">'+L("ใส่ข้อมูลตัวอย่าง")+'</button>')+
+        '<button id="resetBtn">'+ICON_DEL+' '+L("ล้างข้อมูลทั้งหมด")+'</button>'+
       '</div>')+
     '</div>'+
 
     '<aside class="split-side" aria-labelledby="h-summary">'+
       '<section class="step-card">'+
-        '<div class="step-head"><h2 id="h-summary">สรุปยอด</h2><span class="aside" id="summaryAside"></span></div>'+
+        '<div class="step-head"><h2 id="h-summary">'+L("สรุปยอด")+'</h2><span class="aside" id="summaryAside"></span></div>'+
         '<div id="summary" aria-live="polite"></div>'+
       '</section>'+
     '</aside>'+
@@ -177,56 +99,64 @@ function pageSplit(){
   '<div class="total-bar" id="totalBar" hidden></div>';
 }
 
+/** ชื่อบิลที่เปิดอยู่: กลุ่มใช้ชื่อกลุ่ม บิลส่วนตัวใช้ชื่อที่ตั้งเอง หรือชื่อตั้งต้นตามวันที่ */
+function currentBillName(){
+  if (ui.ctx) return Store.groupName;
+  return state.title || billTitle(serialize());
+}
+
 function pageBill(){
   if (ui.ctx && ui.groupError) return pageGroupError();
+  var eyebrow = ui.loading ? '' : '<p class="eyebrow">'+(ui.ctx ? L("บิลกลุ่ม")+' · ' : '')+kt("icon")+' '+esc(currentBillName())+'</p>';
   var head = '<div class="page"><div class="wrap">'+
-    '<a class="crumb" href="'+splitHref()+'">← กลับไปแก้บิล</a>'+
-    '<div class="page-head">'+(ui.ctx && Store.groupName ? '<p class="eyebrow">กลุ่ม '+esc(Store.groupName)+'</p>' : '')+'<h1>ใบสรุปยอด</h1>'+
-    '<p>ยอดที่แต่ละคนต้องจ่าย พร้อมที่มาของทุกบาท กางให้ทั้งโต๊ะดูหรือคัดลอกส่งเข้ากลุ่มได้เลย</p></div>';
-  if (ui.loading) return head + '<div class="empty" style="max-width:540px">กำลังโหลดข้อมูลบิล…</div></div></div>';
+    '<a class="crumb" href="'+splitHref()+'">← '+L("กลับไปแก้บิล")+'</a>'+
+    '<div class="page-head">'+eyebrow+'<h1>'+L("ใบสรุปยอด")+'</h1>'+
+    '<p>'+L("ยอดที่แต่ละคนต้องจ่าย พร้อมที่มาของทุกบาท กางให้ทั้งโต๊ะดูหรือคัดลอกส่งเข้ากลุ่มได้เลย")+'</p></div>';
+  if (ui.loading) return head + '<div class="empty" style="max-width:540px">'+L("กำลังโหลดข้อมูลบิล…")+'</div></div></div>';
   if (!hasData()){
-    return head + '<div class="empty" style="max-width:540px">ยังไม่มีข้อมูลบิล เริ่มจากใส่ชื่อคนกินและเมนูในหน้าหารบิลก่อน<br><br>'+
-      '<a class="btn btn-main" href="'+splitHref()+'">ไปหน้าหารบิล</a></div></div></div>';
+    return head + '<div class="empty" style="max-width:540px">'+L("ยังไม่มีข้อมูลบิล เริ่มจากใส่ชื่อคนกินและเมนูในหน้าหารบิลก่อน")+'<br><br>'+
+      '<a class="btn btn-main" href="'+splitHref()+'">'+L("ไปหน้าหารบิล")+'</a></div></div></div>';
   }
   var r = compute();
   var done = r.orphan === 0;
   if (done){
     // v2.4: ตอนจบที่น่าจำ (peak-end) — บิลครบแล้ว ฉลองเล็ก ๆ แล้วพาไปแชร์ต่อ
     head = '<div class="page"><div class="wrap">'+
-      '<a class="crumb" href="'+splitHref()+'">← กลับไปแก้บิล</a>'+
-      '<div class="page-head finish-head">'+(ui.ctx && Store.groupName ? '<p class="eyebrow">กลุ่ม '+esc(Store.groupName)+'</p>' : '')+
+      '<a class="crumb" href="'+splitHref()+'">← '+L("กลับไปแก้บิล")+'</a>'+
+      '<div class="page-head finish-head">'+eyebrow+
       '<h1>'+kt("done")+' <span class="finish-pop" aria-hidden="true">🎉</span></h1>'+
-      '<p>ยอดครบทุกคนแล้ว ส่งให้เพื่อนได้เลย กดชื่อใครก็เห็นว่ายอดมาจาก'+kt("fromWhat")+'</p></div>';
+      '<p>'+L("ยอดครบทุกคนแล้ว ส่งให้เพื่อนได้เลย กดชื่อใครก็เห็นว่ายอดมาจาก{what}", { what:kt("fromWhat") })+'</p></div>';
   }
   var mine = myShare();
   return head + '<div class="app-col">'+
-      (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' '+kt("orphan")+' จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
-      (mine ? '<div class="my-total my-total-bill"><span class="my-label">ยอดของคุณ ('+esc(nameOf(mine.id))+')'+
+      (r.orphan>0 ? '<div class="notice warn"><p>'+L("มี {n} {what} จึงยังไม่ถูกรวมในบิลนี้", { n:r.orphan, what:kt("orphan") })+'</p></div>' : '')+
+      (mine ? '<div class="my-total my-total-bill"><span class="my-label">'+L("ยอดของคุณ ({name})", { name:esc(nameOf(mine.id)) })+
         (myTransferText() ? '<span class="my-sub">'+esc(myTransferText())+'</span>' : '')+'</span>'+
-        '<span class="my-amt">'+baht(mine.rounded)+' <small>บาท</small></span></div>' : '')+
+        '<span class="my-amt">'+baht(mine.rounded)+' <small>'+L("บาท")+'</small></span></div>' : '')+
       receiptHTML(r,{ interactive:true, reveal:done && !ui.noReveal })+
       '<div class="finish-actions">'+
-        '<button class="btn-sm btn-block" id="shareImgBtn">'+ICON_SHARE+' แชร์รูปใบเสร็จ</button>'+
-        '<button class="btn-quiet btn-block" id="copyBtn">'+ICON_COPY+' คัดลอกเป็นข้อความ</button>'+
+        '<button class="btn-sm btn-block" id="shareImgBtn">'+ICON_SHARE+' '+L("แชร์รูปใบเสร็จ")+'</button>'+
+        '<button class="btn-quiet btn-block" id="copyBtn">'+ICON_COPY+' '+L("คัดลอกเป็นข้อความ")+'</button>'+
       '</div>'+
+      confirmSection(r)+
       payerSection(r)+
       (done ? installNudgeHTML() : '')+
-      '<div class="app-foot"><a href="'+splitHref()+'">แก้ไขรายการ</a></div>'+
+      '<div class="app-foot"><a href="'+splitHref()+'">'+L("แก้ไขรายการ")+'</a></div>'+
     '</div></div></div>';
 }
 
 function pageGroupError(){
   var msg = ({
-    notfound:["ไม่พบกลุ่มนี้","ลิงก์อาจพิมพ์ผิดหรือคัดลอกมาไม่ครบ ลองขอลิงก์จากเพื่อนอีกครั้ง"],
-    disabled:["ระบบกลุ่มยังไม่เปิดใช้","เว็บนี้ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์สำหรับกลุ่ม ยังหารบิลในเครื่องตัวเองได้ตามปกติ"],
-    load:["โหลดกลุ่มไม่สำเร็จ","ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"]
-  })[ui.groupError] || ["โหลดกลุ่มไม่สำเร็จ",""];
+    notfound:[L("ไม่พบกลุ่มนี้"),L("ลิงก์อาจพิมพ์ผิดหรือคัดลอกมาไม่ครบ ลองขอลิงก์จากเพื่อนอีกครั้ง")],
+    disabled:[L("ระบบกลุ่มยังไม่เปิดใช้"),L("เว็บนี้ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์สำหรับกลุ่ม ยังหารบิลในเครื่องตัวเองได้ตามปกติ")],
+    load:[L("โหลดกลุ่มไม่สำเร็จ"),L("ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง")]
+  })[ui.groupError] || [L("โหลดกลุ่มไม่สำเร็จ"),""];
   return '<div class="page"><div class="wrap app-col">'+
     '<div class="page-head"><h1>'+msg[0]+'</h1><p>'+msg[1]+'</p></div>'+
     '<div class="btn-row">'+
-      (ui.groupError==="load" ? '<button class="btn-sm" id="groupRetry">ลองอีกครั้ง</button>' : '')+
-      '<a class="btn-quiet" href="#/groups">ไปหน้ากลุ่ม</a>'+
-      '<a class="btn-quiet" href="#/split">หารบิลในเครื่อง</a>'+
+      (ui.groupError==="load" ? '<button class="btn-sm" id="groupRetry">'+L("ลองอีกครั้ง")+'</button>' : '')+
+      '<a class="btn-quiet" href="#/groups">'+L("ไปหน้ากลุ่ม")+'</a>'+
+      '<a class="btn-quiet" href="#/split">'+L("หารบิลในเครื่อง")+'</a>'+
     '</div></div></div>';
 }
 
@@ -234,47 +164,47 @@ function pageGroups(){
   var on = Cloud.ready();
   var list = ui.myGroups.length
     ? ui.myGroups.map(function(g){
-        var when = g.at ? new Date(g.at).toLocaleDateString("th-TH",{ day:"numeric", month:"short" }) : "";
+        var when = g.at ? shortDate(g.at) : "";
         return '<div class="row-item">'+
           '<a class="row-tap" href="#/g/'+esc(g.id)+'"><span class="body">'+
             '<span class="name">'+ktOf(g.kind,"icon")+' '+esc(g.name)+'</span>'+
-            '<span class="sub">'+(when ? "เปิดล่าสุด "+when : "")+'</span></span></a>'+
-          '<span class="acts"><button class="icon-btn" data-forget-group="'+esc(g.id)+'" aria-label="เอา '+esc(g.name)+' ออกจากรายการ">'+ICON_X+'</button></span>'+
+            '<span class="sub">'+(when ? L("เปิดล่าสุด {when}", { when:when }) : "")+'</span></span></a>'+
+          '<span class="acts"><button class="icon-btn" data-forget-group="'+esc(g.id)+'" aria-label="'+L("เอา {name} ออกจากรายการ", { name:esc(g.name) })+'">'+ICON_X+'</button></span>'+
         '</div>';
       }).join("")
-    : '<p class="empty">ยังไม่มีกลุ่ม — สร้างกลุ่มใหม่ หรือกดลิงก์ที่เพื่อนส่งมา</p>';
+    : '<p class="empty">'+L("ยังไม่มีกลุ่ม — สร้างกลุ่มใหม่ หรือกดลิงก์ที่เพื่อนส่งมา")+'</p>';
 
   var create = !on
-    ? '<div class="notice warn"><p>ระบบกลุ่มยังไม่เปิดใช้ในเว็บนี้ (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์) ยังหารบิลในเครื่องได้ตามปกติ</p></div>'
+    ? '<div class="notice warn"><p>'+L("ระบบกลุ่มยังไม่เปิดใช้ในเว็บนี้ (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์) ยังหารบิลในเครื่องได้ตามปกติ")+'</p></div>'
     : '<section class="step-card" aria-labelledby="h-new-group">'+
-        '<div class="step-head"><h2 id="h-new-group">สร้างกลุ่มใหม่</h2></div>'+
+        '<div class="step-head"><h2 id="h-new-group">'+L("สร้างกลุ่มใหม่")+'</h2></div>'+
         kindSwitch("data-group-kind", ui.newGroupKind)+
         '<div class="field-row">'+
-          '<div><label class="sr-only" for="groupName">ชื่อกลุ่ม</label>'+
-          '<input type="text" id="groupName" value="'+esc(defaultGroupName(null, ui.newGroupKind))+'" placeholder="ชื่อกลุ่ม เช่น ส้มตำหน้ามอ" autocomplete="off" maxlength="'+MAX_GROUP_NAME+'" aria-describedby="groupMsg"></div>'+
-          '<button class="btn-sm" id="groupCreate">สร้างกลุ่ม</button>'+
+          '<div><label class="sr-only" for="groupName">'+L("ชื่อกลุ่ม")+'</label>'+
+          '<input type="text" id="groupName" value="'+esc(defaultGroupName(null, ui.newGroupKind))+'" placeholder="'+L("ชื่อกลุ่ม เช่น ส้มตำหน้ามอ")+'" autocomplete="off" maxlength="'+MAX_GROUP_NAME+'" aria-describedby="groupMsg"></div>'+
+          '<button class="btn-sm" id="groupCreate">'+L("สร้างกลุ่ม")+'</button>'+
         '</div>'+
         '<div id="groupFromSlot"></div>'+
-        '<p class="field-msg muted" id="groupMsg" aria-live="polite">ตั้งชื่อให้แล้ว กดสร้างได้เลย · ส่งลิงก์เฉพาะคนในโต๊ะ</p>'+
+        '<p class="field-msg muted" id="groupMsg" aria-live="polite">'+L("ตั้งชื่อให้แล้ว กดสร้างได้เลย · ส่งลิงก์เฉพาะคนในโต๊ะ")+'</p>'+
         // v2.6: ส่วนใหญ่กดลิงก์จากแชตอยู่แล้ว ช่องวางลิงก์จึงพับไว้
-        '<details class="join-fold"><summary>มีลิงก์จากเพื่อน? วางตรงนี้</summary>'+
+        '<details class="join-fold"><summary>'+L("มีลิงก์จากเพื่อน? วางตรงนี้")+'</summary>'+
           '<div class="field-row">'+
-            '<div><label class="sr-only" for="groupJoinInput">ลิงก์หรือรหัสกลุ่ม</label>'+
-            '<input type="text" id="groupJoinInput" placeholder="วางลิงก์หรือรหัสกลุ่ม" autocomplete="off" aria-describedby="groupJoinMsg"></div>'+
-            '<button class="btn-quiet" id="groupJoin">เข้ากลุ่ม</button>'+
+            '<div><label class="sr-only" for="groupJoinInput">'+L("ลิงก์หรือรหัสกลุ่ม")+'</label>'+
+            '<input type="text" id="groupJoinInput" placeholder="'+L("วางลิงก์หรือรหัสกลุ่ม")+'" autocomplete="off" aria-describedby="groupJoinMsg"></div>'+
+            '<button class="btn-quiet" id="groupJoin">'+L("เข้ากลุ่ม")+'</button>'+
           '</div>'+
           '<p class="field-msg muted" id="groupJoinMsg" aria-live="polite"></p>'+
         '</details>'+
       '</section>';
   var mine = '<section class="step-card" aria-labelledby="h-my-groups">'+
-      '<div class="step-head"><h2 id="h-my-groups">กลุ่มของฉัน</h2></div>'+
+      '<div class="step-head"><h2 id="h-my-groups">'+L("กลุ่มของฉัน")+'</h2></div>'+
       list+
-      '<a class="add-slot" href="#/split" style="margin-top:var(--s3)">เปิดบิลส่วนตัว (ไม่แชร์)</a>'+
+      '<a class="add-slot" href="#/split" style="margin-top:var(--s3)">'+L("เปิดบิลส่วนตัว (ไม่แชร์)")+'</a>'+
     '</section>';
 
   return '<div class="page"><div class="wrap app-col">'+
-    '<div class="page-head" style="max-width:none"><h1>กลุ่ม</h1>'+
-      '<p>ส่งลิงก์กลุ่มเข้าแชต เพื่อนกดแล้วแก้บิลเดียวกันได้ ไม่ต้องสมัคร</p></div>'+
+    '<div class="page-head" style="max-width:none"><h1>'+L("กลุ่ม")+'</h1>'+
+      '<p>'+L("ส่งลิงก์กลุ่มเข้าแชต เพื่อนกดแล้วแก้บิลเดียวกันได้ ไม่ต้องสมัคร")+'</p></div>'+
     (ui.myGroups.length ? mine + create : create + mine)+
   '</div></div>';
 }
@@ -286,17 +216,27 @@ function pageMore(){
       '<span class="name">'+name+'</span><span class="sub">'+sub+'</span></span><span aria-hidden="true">›</span></a></div>';
   }
   return '<div class="page"><div class="wrap app-col">'+
-    '<div class="page-head" style="max-width:none"><h1>อื่น ๆ</h1></div>'+
+    '<div class="page-head" style="max-width:none"><h1>'+L("อื่น ๆ")+'</h1></div>'+
+    '<section class="step-card" aria-labelledby="h-lang">'+
+      '<div class="step-head"><h2 id="h-lang">'+L("ภาษา")+'</h2></div>'+
+      '<div class="pick" role="group" aria-labelledby="h-lang">'+
+        '<button data-lang="th" aria-pressed="'+(LANG==="th")+'" lang="th">ไทย</button>'+
+        '<button data-lang="en" aria-pressed="'+(LANG==="en")+'" lang="en">English</button>'+
+      '</div>'+
+    '</section>'+
     '<section class="step-card" aria-labelledby="h-theme">'+
-      '<div class="step-head"><h2 id="h-theme">ธีม</h2></div>'+
+      '<div class="step-head"><h2 id="h-theme">'+L("ธีม")+'</h2></div>'+
       '<div class="pick" role="group" aria-labelledby="h-theme">'+THEMES.map(function(t){
-        return '<button data-theme-pick="'+t.id+'" aria-pressed="'+(ui.theme===t.id)+'">'+t.label+'</button>';
+        return '<button data-theme-pick="'+t.id+'" aria-pressed="'+(ui.theme===t.id)+'">'+L(t.label)+'</button>';
       }).join("")+'</div>'+
     '</section>'+
     '<section class="step-card" aria-labelledby="h-pages">'+
-      '<div class="step-head"><h2 id="h-pages">เกี่ยวกับ FairDish</h2></div>'+
-      link("#/how","วิธีใช้","ทีละขั้น + คำถามที่ถูกถามบ่อย")+
-      link("#/about","เกี่ยวกับ","ทีมผู้จัดทำและขอบเขตของเวอร์ชันนี้")+
+      '<div class="step-head"><h2 id="h-pages">'+L("เกี่ยวกับ FairDish")+'</h2></div>'+
+      link("#/history",L("ประวัติบิล"),L("บิลที่เก็บไว้ในเครื่องนี้ และกลุ่มที่คุณเคยเปิด"))+
+      link("#/how",L("วิธีใช้"),L("ทีละขั้น + คำถามที่ถูกถามบ่อย"))+
+      link("#/about",L("เกี่ยวกับ"),L("ทีมผู้จัดทำและขอบเขตของเวอร์ชันนี้"))+
+      '<div class="row-item"><button class="row-tap" data-ob-show="1"><span class="body">'+
+        '<span class="name">'+L("ดูหน้าแนะนำอีกครั้ง")+'</span><span class="sub">'+L("3 หน้าสั้น ๆ ว่า FairDish ทำอะไรได้")+'</span></span><span aria-hidden="true">›</span></button></div>'+
     '</section>'+
     '<p class="hint" style="text-align:center">FairDish v'+APP_VERSION+'</p>'+
   '</div></div>';
@@ -304,52 +244,83 @@ function pageMore(){
 
 function pageHow(){
   return '<div class="page"><div class="wrap">'+
-    '<div class="page-head"><h1>วิธีใช้ 4 ขั้น</h1>'+
-    '<p>ออกแบบให้ทำเสร็จภายในเวลาที่พนักงานเดินไปเก็บเงินอีกโต๊ะ</p></div>'+
+    '<div class="page-head"><h1>'+L("วิธีใช้ 4 ขั้น")+'</h1>'+
+    '<p>'+L("ออกแบบให้ทำเสร็จภายในเวลาที่พนักงานเดินไปเก็บเงินอีกโต๊ะ")+'</p></div>'+
     '<div class="steps">'+
-      '<div class="stp"><b>1</b><h3>ใครกินบ้าง</h3><p>พิมพ์ชื่อทุกคนที่ร่วมโต๊ะ กดเพิ่มทีละคน ชื่อเล่นสั้น ๆ อ่านง่ายที่สุดตอนดูบิล</p></div>'+
-      '<div class="stp"><b>2</b><h3>รายการอาหาร</h3><p>ใส่ชื่อเมนูกับราคาต่อจาน แล้วแตะเลือกคนที่กินจานนั้น ถ้าทั้งโต๊ะกินกดปุ่มทุกคนได้เลย</p></div>'+
-      '<div class="stp"><b>3</b><h3>ค่าส่วนกลาง</h3><p>เปิดค่าบริการหรือ VAT ตามที่ร้านคิด ส่วนน้ำเปล่า น้ำแข็ง ข้าวเหนียว ใส่เป็นรายการหารเท่ากัน</p></div>'+
-      '<div class="stp"><b>4</b><h3>สรุปยอด</h3><p>บิลขึ้นเองทันที แตะชื่อใครก็ดูที่มาของยอดได้ แล้วกดคัดลอกส่งเข้ากลุ่ม</p></div>'+
+      '<div class="stp"><b>1</b><h3>'+L("ใครกินบ้าง")+'</h3><p>'+L("พิมพ์ชื่อทุกคนที่ร่วมโต๊ะ กดเพิ่มทีละคน ชื่อเล่นสั้น ๆ อ่านง่ายที่สุดตอนดูบิล")+'</p></div>'+
+      '<div class="stp"><b>2</b><h3>'+L("รายการอาหาร")+'</h3><p>'+L("ใส่ชื่อเมนูกับราคาต่อจาน แล้วแตะเลือกคนที่กินจานนั้น ถ้าทั้งโต๊ะกินกดปุ่มทุกคนได้เลย")+'</p></div>'+
+      '<div class="stp"><b>3</b><h3>'+L("ค่าส่วนกลาง")+'</h3><p>'+L("เปิดค่าบริการหรือ VAT ตามที่ร้านคิด ส่วนน้ำเปล่า น้ำแข็ง ข้าวเหนียว ใส่เป็นรายการหารเท่ากัน")+'</p></div>'+
+      '<div class="stp"><b>4</b><h3>'+L("สรุปยอด")+'</h3><p>'+L("บิลขึ้นเองทันที แตะชื่อใครก็ดูที่มาของยอดได้ แล้วกดคัดลอกส่งเข้ากลุ่ม")+'</p></div>'+
     '</div>'+
-    '<section><div class="sec-head"><h2>สามคำถามที่ถูกถามบ่อย</h2></div>'+
-      '<div class="split2">'+
-        '<div class="panel"><h3>เศษสตางค์หายไปไหน</h3><p>ไม่หาย FairDish กระจายเศษสตางค์ให้ยอดรายคนรวมกันเท่ากับยอดบิลเป๊ะเสมอ ไม่ต้องมีใครควักเพิ่มทีหลัง</p></div>'+
-        '<div class="panel"><h3>ค่าบริการคิดยังไง</h3><p>คิดเป็นเปอร์เซ็นต์จากยอดของแต่ละคนหลังรวมส่วนแบ่งค่าส่วนกลางแล้ว เหมือนที่ร้านคิดจากยอดบิลรวม</p></div>'+
-        '<div class="panel"><h3>ปิดหน้าเว็บแล้วข้อมูลหายไหม</h3><p>ไม่หาย ระบบบันทึกบิลไว้ในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล เปิดกลับมาก็ทำต่อได้จากจุดเดิม</p></div>'+
+
+    // v4.0: ย้ายมาจากหน้าแรกเดิม — หน้าแรกกลายเป็น "บิลของฉัน" แบบแอป
+    '<section><div class="sec-head"><h2>'+L("บิลใบเดียวกัน สองวิธีคิด")+'</h2>'+
+      '<p>'+L("มื้ออีสานร้านหน้ามอ: 8 คน 10 เมนู รวมข้าวเหนียวกับน้ำ 1,110 บาท")+'</p></div>'+
+      '<div class="compare">'+
+        '<div class="cmp bad"><h3>'+L("หารเท่ากันทั้งโต๊ะ")+'</h3><div class="tag">'+L("1,110 ÷ 8 = ทุกคนจ่ายเท่ากัน")+'</div>'+
+          '<ul><li><span>'+L("โฟรค์ — กิน 2 เมนู")+'</span><span>138.75</span></li>'+
+          '<li><span>'+L("ยูกะ — ไม่กินเผ็ด 3 เมนู")+'</span><span>138.75</span></li>'+
+          '<li><span>'+L("ไอซ์ — กิน 6 เมนู มีซอยจุ๊")+'</span><span>138.75</span></li></ul>'+
+          '<p class="foot">'+L("โฟรค์จ่ายเกินไป 77.09 บาท ส่วนไอซ์จ่ายขาดไป 111.25 บาท ทั้งที่ไม่มีใครตั้งใจเอาเปรียบกัน")+'</p></div>'+
+        '<div class="cmp good"><h3>'+L("หารด้วย FairDish")+'</h3><div class="tag">'+L("คิดจากเมนูที่แต่ละคนกินจริง")+'</div>'+
+          '<ul><li><span>'+L("โฟรค์ — กิน 2 เมนู")+'</span><span>61.66</span></li>'+
+          '<li><span>'+L("ยูกะ — ไม่กินเผ็ด 3 เมนู")+'</span><span>121.67</span></li>'+
+          '<li><span>'+L("ไอซ์ — กิน 6 เมนู มีซอยจุ๊")+'</span><span>250.00</span></li></ul>'+
+          '<p class="foot">'+L("ยอดรายคนรวมกันได้ 1,110.00 บาทพอดี ไม่มีเศษสตางค์หาย และทุกคนกดดูได้ว่ายอดของตัวเองมาจากเมนูไหน")+'</p></div>'+
       '</div>'+
     '</section>'+
-    '<section><div class="cta-box"><h2>พร้อมลองแล้ว</h2>'+
-      '<p>มีข้อมูลตัวอย่างให้กดใส่ในหน้าหารบิล ลองดูผลก่อนใช้จริงได้</p>'+
-      '<div class="btn-row"><a class="btn btn-main" href="#/split">เริ่มหารบิล</a></div></div></section>'+
+
+    '<section><div class="sec-head"><h2>'+L("สิ่งที่ FairDish ทำให้")+'</h2><p>'+L("ไล่ทีละแท็บ คน · เมนู · ส่วนกลาง แล้วได้บิลเลย")+'</p></div>'+
+      '<ul class="bill-list">'+
+        item("01",L("เพิ่มคนในโต๊ะ"),L("ใส่ชื่อสมาชิกที่ร่วมมื้อนี้ แก้ชื่อหรือลบออกได้ตลอด พร้อมเลิกทำถ้าลบผิดคน"))+
+        item("02",L("ใส่เมนูและราคา"),L("พิมพ์ไม่กี่ตัวอักษรก็มีเมนูแนะนำกว่า 1,000 รายการขึ้นมาให้เลือก และเมนูที่คุณสั่งเองระบบจำไว้ให้พร้อมราคาครั้งก่อน"))+
+        item("03",L("เลือกคนที่กินแต่ละเมนู"),L("แตะชื่อคนที่กินจานนั้น ระบบหารเฉพาะคนที่แตะไว้ ไม่ใช่ทั้งโต๊ะ"))+
+        item("04",L("บวกค่าส่วนกลางอัตโนมัติ"),L("ค่าบริการ 10% VAT 7% หรือกำหนดเปอร์เซ็นต์เอง ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน"))+
+        item("05",L("สรุปยอดเป็นบิลรายคน"),L("แตะชื่อใครก็เห็นทันทีว่ายอดนั้นมาจากเมนูไหนบ้าง กี่บาท หารกี่คน"))+
+        item("06",L("ให้เพื่อนยืนยันเมนูเอง"),L("ส่งลิงก์กลุ่ม เพื่อนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน เห็นว่าใครยืนยันแล้วบ้าง"))+
+        item("07",L("เก็บประวัติบิล"),L("เริ่มบิลใหม่เมื่อไหร่ บิลเก่าถูกเก็บไว้ในประวัติ เปิดกลับมาดูหรือทำต่อได้"))+
+      '</ul>'+
+    '</section>'+
+
+    '<section><div class="sec-head"><h2>'+L("สามคำถามที่ถูกถามบ่อย")+'</h2></div>'+
+      '<div class="split2">'+
+        '<div class="panel"><h3>'+L("เศษสตางค์หายไปไหน")+'</h3><p>'+L("ไม่หาย FairDish กระจายเศษสตางค์ให้ยอดรายคนรวมกันเท่ากับยอดบิลเป๊ะเสมอ ไม่ต้องมีใครควักเพิ่มทีหลัง")+'</p></div>'+
+        '<div class="panel"><h3>'+L("ค่าบริการคิดยังไง")+'</h3><p>'+L("คิดเป็นเปอร์เซ็นต์จากยอดของแต่ละคนหลังรวมส่วนแบ่งค่าส่วนกลางแล้ว เหมือนที่ร้านคิดจากยอดบิลรวม")+'</p></div>'+
+        '<div class="panel"><h3>'+L("ปิดหน้าเว็บแล้วข้อมูลหายไหม")+'</h3><p>'+L("ไม่หาย ระบบบันทึกบิลไว้ในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล เปิดกลับมาก็ทำต่อได้จากจุดเดิม")+'</p></div>'+
+      '</div>'+
+    '</section>'+
+    '<section><div class="cta-box"><h2>'+L("พร้อมลองแล้ว")+'</h2>'+
+      '<p>'+L("มีข้อมูลตัวอย่างให้กดใส่ในหน้าหารบิล ลองดูผลก่อนใช้จริงได้")+'</p>'+
+      '<div class="btn-row"><a class="btn btn-main" href="#/split">'+L("เริ่มหารบิล")+'</a></div></div></section>'+
   '</div></div>';
 }
 
 function pageAbout(){
   return '<div class="page"><div class="wrap">'+
-    '<div class="page-head"><h1>เกี่ยวกับ FairDish</h1>'+
-    '<p>โปรเจกต์ที่เริ่มจากคำถามง่าย ๆ ว่าทำไมคนสั่งน้ำเปล่าแก้วเดียวต้องจ่ายเท่าคนสั่งสเต๊ก</p></div>'+
+    '<div class="page-head"><h1>'+L("เกี่ยวกับ FairDish")+'</h1>'+
+    '<p>'+L("โปรเจกต์ที่เริ่มจากคำถามง่าย ๆ ว่าทำไมคนสั่งน้ำเปล่าแก้วเดียวต้องจ่ายเท่าคนสั่งสเต๊ก")+'</p></div>'+
     '<div class="split2">'+
-      '<div class="panel"><h3>ปัญหาที่ต้องการแก้</h3>'+
-        '<p>การกินข้าวเป็นกลุ่มมักจบด้วยการหารเท่ากันทั้งโต๊ะ เพราะเร็วและไม่ต้องคิดมาก แต่คนที่กินน้อยหรือไม่ได้กินบางเมนูก็ต้องจ่ายมากกว่าที่ควร ความรู้สึกไม่เป็นธรรมสะสมจนกลายเป็นความขัดแย้งในกลุ่ม และการคิดเองก็ผิดพลาดง่ายเมื่อมีค่าบริการกับ VAT เข้ามา</p></div>'+
-      '<div class="panel"><h3>ผู้ใช้ที่เราออกแบบให้</h3><dl class="dl">'+
-          '<div><dt>ตัวแทนผู้ใช้</dt><dd>นายสมภูมิ อายุ 22 ปี นักศึกษา</dd></div>'+
-          '<div><dt>สถานการณ์</dt><dd>กินข้าวกับเพื่อนเป็นกลุ่ม แต่ละคนสั่งไม่เท่ากัน</dd></div>'+
-          '<div><dt>สิ่งที่ต้องการ</dt><dd>หารค่าอาหารให้ลงตัวโดยไม่ต้องเถียงกัน</dd></div>'+
-          '<div><dt>สิ่งที่คาดหวัง</dt><dd>คำนวณถูกต้อง ครบถ้วน และอธิบายที่มาของยอดได้</dd></div>'+
+      '<div class="panel"><h3>'+L("ปัญหาที่ต้องการแก้")+'</h3>'+
+        '<p>'+L("การกินข้าวเป็นกลุ่มมักจบด้วยการหารเท่ากันทั้งโต๊ะ เพราะเร็วและไม่ต้องคิดมาก แต่คนที่กินน้อยหรือไม่ได้กินบางเมนูก็ต้องจ่ายมากกว่าที่ควร ความรู้สึกไม่เป็นธรรมสะสมจนกลายเป็นความขัดแย้งในกลุ่ม และการคิดเองก็ผิดพลาดง่ายเมื่อมีค่าบริการกับ VAT เข้ามา")+'</p></div>'+
+      '<div class="panel"><h3>'+L("ผู้ใช้ที่เราออกแบบให้")+'</h3><dl class="dl">'+
+          '<div><dt>'+L("ตัวแทนผู้ใช้")+'</dt><dd>'+L("นายสมภูมิ อายุ 22 ปี นักศึกษา")+'</dd></div>'+
+          '<div><dt>'+L("สถานการณ์")+'</dt><dd>'+L("กินข้าวกับเพื่อนเป็นกลุ่ม แต่ละคนสั่งไม่เท่ากัน")+'</dd></div>'+
+          '<div><dt>'+L("สิ่งที่ต้องการ")+'</dt><dd>'+L("หารค่าอาหารให้ลงตัวโดยไม่ต้องเถียงกัน")+'</dd></div>'+
+          '<div><dt>'+L("สิ่งที่คาดหวัง")+'</dt><dd>'+L("คำนวณถูกต้อง ครบถ้วน และอธิบายที่มาของยอดได้")+'</dd></div>'+
       '</dl></div>'+
     '</div>'+
-    '<section><div class="sec-head"><h2>ขอบเขตของเวอร์ชันนี้</h2>'+
-      '<p>FairDish มีผู้ใช้ประเภทเดียว ทุกคนที่เปิดแอปทำสิ่งเดียวกันได้ทั้งหมด จึงไม่มีระบบสมาชิกหรือสิทธิ์แอดมินให้ต้องจำรหัสผ่าน</p></div>'+
+    '<section><div class="sec-head"><h2>'+L("ขอบเขตของเวอร์ชันนี้")+'</h2>'+
+      '<p>'+L("FairDish มีผู้ใช้ประเภทเดียว ทุกคนที่เปิดแอปทำสิ่งเดียวกันได้ทั้งหมด จึงไม่มีระบบสมาชิกหรือสิทธิ์แอดมินให้ต้องจำรหัสผ่าน")+'</p></div>'+
       '<ul class="bill-list">'+
-        item("✓","ใช้ได้ทันทีโดยไม่ต้องล็อกอิน","เปิดแล้วใช้เลย ไม่เก็บข้อมูลส่วนตัว ไม่ต้องรอโหลดบัญชี")+
-        item("✓","บันทึกบิลไว้ในเครื่องให้อัตโนมัติ","แก้อะไรก็บันทึกทันที ปิดแล้วเปิดใหม่ยังทำต่อได้จากบิลเดิม")+
-        item("—","ยังไม่มีประวัติบิลย้อนหลัง","เก็บได้ครั้งละหนึ่งบิล เป็นสิ่งที่จะต่อยอดในเวอร์ชันถัดไป พร้อมการแชร์ลิงก์ให้เพื่อนกดยืนยันเมนูของตัวเอง")+
+        item("✓",L("ใช้ได้ทันทีโดยไม่ต้องล็อกอิน"),L("เปิดแล้วใช้เลย ไม่เก็บข้อมูลส่วนตัว ไม่ต้องรอโหลดบัญชี"))+
+        item("✓",L("บันทึกบิลไว้ในเครื่องให้อัตโนมัติ"),L("แก้อะไรก็บันทึกทันที ปิดแล้วเปิดใหม่ยังทำต่อได้จากบิลเดิม"))+
+        item("✓",L("ประวัติบิลย้อนหลัง"),L("เริ่มบิลใหม่แล้วบิลเก่าถูกเก็บไว้ในเครื่องนี้ เปิดดูหรือทำต่อได้"))+
+        item("✓",L("เพื่อนยืนยันเมนูของตัวเอง"),L("ในกลุ่ม เพื่อนเลือกชื่อแล้วติ๊กเมนูที่กินเอง ทุกคนเห็นว่าใครยืนยันแล้ว"))+
       '</ul>'+
     '</section>'+
-    '<section><div class="cta-box"><h2>ลองใช้ดูก่อนตัดสิน</h2>'+
-      '<p>กดใส่ข้อมูลตัวอย่างในหน้าหารบิล แล้วดูว่าบิลรายคนออกมาหน้าตาเป็นยังไง</p>'+
-      '<div class="btn-row"><a class="btn btn-main" href="#/split">เริ่มหารบิล</a>'+
-      '<a class="btn btn-line" href="#/how">อ่านวิธีใช้</a></div></div></section>'+
+    '<section><div class="cta-box"><h2>'+L("ลองใช้ดูก่อนตัดสิน")+'</h2>'+
+      '<p>'+L("กดใส่ข้อมูลตัวอย่างในหน้าหารบิล แล้วดูว่าบิลรายคนออกมาหน้าตาเป็นยังไง")+'</p>'+
+      '<div class="btn-row"><a class="btn btn-main" href="#/split">'+L("เริ่มหารบิล")+'</a>'+
+      '<a class="btn btn-line" href="#/how">'+L("อ่านวิธีใช้")+'</a></div></div></section>'+
   '</div></div>';
 }

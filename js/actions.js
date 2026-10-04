@@ -26,12 +26,12 @@ function hideToast(){
 }
 
 function validateName(name, ignoreId){
-  if (!name) return "ยังไม่ได้พิมพ์ชื่อ";
-  if (name.length > MAX_NAME) return "ชื่อยาวเกิน "+MAX_NAME+" ตัวอักษร";
+  if (!name) return L("ยังไม่ได้พิมพ์ชื่อ");
+  if (name.length > MAX_NAME) return L("ชื่อยาวเกิน {n} ตัวอักษร", { n:MAX_NAME });
   var dup = state.members.some(function(p){
     return p.id !== ignoreId && p.name.toLowerCase() === name.toLowerCase();
   });
-  if (dup) return "มีชื่อ " + name + " ในโต๊ะแล้ว ลองเติมนามสกุลหรือชื่อเล่นให้ต่างกัน";
+  if (dup) return L("มีชื่อ {name} อยู่แล้ว ลองเติมนามสกุลหรือชื่อเล่นให้ต่างกัน", { name:name });
   return "";
 }
 
@@ -51,7 +51,7 @@ async function addMember(){
   renderMembers();
 
   state.members.push({ id:nid(), name:name });
-  var ok = await commit("เพิ่ม "+name+" แล้ว");
+  var ok = await commit(L("เพิ่ม {name} แล้ว", { name:name }));
 
   ui.savingMember = false;
   if (ok) input.value = "";
@@ -79,7 +79,7 @@ async function saveEdit(id){
   ui.editingMember = null;
   ui.editError = "";
   render();
-  await commit("เปลี่ยนชื่อเป็น "+name+" แล้ว");
+  await commit(L("เปลี่ยนชื่อเป็น {name} แล้ว", { name:name }));
   render();
 }
 
@@ -108,7 +108,7 @@ async function removeMember(id){
 
   clearTimeout(ui.undoTimer);
   ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
-  toast("ลบ "+member.name+" แล้ว","ok",{ label:"เลิกทำ", action:undoRemove });
+  toast(L("ลบ {name} แล้ว", { name:member.name }),"ok",{ label:L("เลิกทำ"), action:undoRemove });
 }
 async function undoRemove(){
   if (!ui.undo) return;
@@ -119,7 +119,7 @@ async function undoRemove(){
   if (u.kind === "menu"){
     state.menus.splice(Math.min(u.index, state.menus.length), 0, u.menu);
     render();
-    await commit("คืนเมนู "+u.menu.name+" กลับมาแล้ว","menu");
+    await commit(L("คืน {name} กลับมาแล้ว", { name:u.menu.name }),"menu");
     return render();
   }
 
@@ -128,7 +128,7 @@ async function undoRemove(){
     if (u.menuIds.indexOf(m.id) >= 0 && m.eaters.indexOf(u.member.id) < 0) m.eaters.push(u.member.id);
   });
   render();
-  await commit("คืนชื่อ "+u.member.name+" กลับมาแล้ว","member");
+  await commit(L("คืนชื่อ {name} กลับมาแล้ว", { name:u.member.name }),"member");
   render();
 }
 
@@ -199,15 +199,15 @@ function renderSuggestions(){
   }
   var head = String(query||"").trim()
     ? (found.total > items.length
-        ? kt("suggest")+" "+items.length+" จาก "+found.total+" รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง"
-        : kt("suggest")+" "+items.length+" รายการ")
+        ? kt("suggest")+" "+L("{n} จาก {total} รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง", { n:items.length, total:found.total })
+        : kt("suggest")+" "+L("{n} รายการ", { n:items.length }))
     : kt("suggestOften");
   box.innerHTML = '<div class="suggest" id="mSuggestList" role="listbox" aria-label="'+kt("suggest")+'">'+
     '<div class="s-head">'+head+'</div>'+
     items.map(function(it,i){
       return '<button type="button" role="option" id="mSuggest'+i+'" data-suggest="'+i+'" aria-selected="'+(i===ui.suggest.active)+'">'+
         '<span class="s-name">'+highlight(it.name, query)+'</span>'+
-        (it.remembered ? '<span class="s-tag">เคยสั่ง</span>' : '')+
+        (it.remembered ? '<span class="s-tag">'+L("เคยสั่ง")+'</span>' : '')+
         (it.price!=null ? '<span class="s-price">'+baht(it.price)+'</span>' : '')+
       '</button>';
     }).join("")+
@@ -290,8 +290,8 @@ function syncMenuForm(){
 function menuPreviewText(f){
   if (!f || !f.eaters.length) return "";
   var price = parseFloat(String(f.price));
-  if (isNaN(price) || price < 0) return "หาร "+f.eaters.length+" คน · ใส่ราคาแล้วจะคิดให้ทันที";
-  return "หาร "+f.eaters.length+" คน · คนละ "+baht(price/f.eaters.length)+" บาท";
+  if (isNaN(price) || price < 0) return L("หาร {n} คน · ใส่ราคาแล้วจะคิดให้ทันที", { n:f.eaters.length });
+  return L("หาร {n} คน · คนละ {each} บาท", { n:f.eaters.length, each:baht(price/f.eaters.length) });
 }
 function updateMenuPreview(){
   var el = document.getElementById("mPreview");
@@ -303,18 +303,18 @@ function validateMenuForm(f){
   var errs = { name:"", price:"", eaters:"", payer:"" };
   var name = String(f.name||"").trim();
   if (!name) errs.name = kt("noName");
-  else if (name.length > MAX_MENU_NAME) errs.name = "ชื่อเมนูยาวเกิน "+MAX_MENU_NAME+" ตัวอักษร";
+  else if (name.length > MAX_MENU_NAME) errs.name = L("ชื่อยาวเกิน {n} ตัวอักษร", { n:MAX_MENU_NAME });
 
   var raw = String(f.price===undefined?"":f.price).trim();
   var price = parseFloat(raw);
-  if (raw === "") errs.price = "ยังไม่ได้ใส่ราคา";
-  else if (isNaN(price)) errs.price = "ราคาต้องเป็นตัวเลข เช่น 60 หรือ 60.50";
-  else if (price < 0) errs.price = "ราคาต้องไม่ติดลบ";
-  else if (price > MAX_PRICE) errs.price = "ราคาสูงเกินจริง ลองตรวจจำนวนศูนย์อีกครั้ง";
+  if (raw === "") errs.price = L("ยังไม่ได้ใส่ราคา");
+  else if (isNaN(price)) errs.price = L("ราคาต้องเป็นตัวเลข เช่น 60 หรือ 60.50");
+  else if (price < 0) errs.price = L("ราคาต้องไม่ติดลบ");
+  else if (price > MAX_PRICE) errs.price = L("ราคาสูงเกินจริง ลองตรวจจำนวนศูนย์อีกครั้ง");
 
-  if (state.members.length === 0) errs.eaters = "ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในแท็บ \"คน\" ก่อน";
+  if (state.members.length === 0) errs.eaters = L("ยังไม่มีใครในบิลนี้ กลับไปเพิ่มชื่อในแท็บ \"คน\" ก่อน");
   else if (f.eaters.length === 0) errs.eaters = kt("noEater");
-  if (state.kind === "trip" && state.members.length && !nameOf(f.payer)) errs.payer = "เลือกว่าใครจ่ายรายการนี้";
+  if (state.kind === "trip" && state.members.length && !nameOf(f.payer)) errs.payer = L("เลือกว่าใครจ่ายรายการนี้");
   return errs;
 }
 async function saveMenuForm(){
@@ -347,7 +347,7 @@ async function saveMenuForm(){
   ui.menuErr = {};
 
   closeSuggestions();
-  await commit(editing ? "บันทึก "+name+" แล้ว" : "เพิ่ม "+name+" "+baht(price)+" บาท แล้ว", "menu");
+  await commit(editing ? L("บันทึก {name} แล้ว", { name:name }) : L("เพิ่ม {name} {amt} บาท แล้ว", { name:name, amt:baht(price) }), "menu");
   await rememberMenu(name, price);
   ui.savingMenu = false;
   render();
@@ -361,7 +361,7 @@ async function duplicateMenu(id){
   if (src.payer) copy.payer = src.payer;
   state.menus.splice(index+1, 0, copy);
   render();
-  await commit((state.kind === "trip" ? "ทำซ้ำ " : "เพิ่ม ")+src.name+(state.kind === "trip" ? " แล้ว" : " อีกจานแล้ว"),"menu");
+  await commit(state.kind === "trip" ? L("ทำซ้ำ {name} แล้ว", { name:src.name }) : L("เพิ่ม {name} อีกจานแล้ว", { name:src.name }),"menu");
   render();
 }
 async function removeMenu(id){
@@ -378,29 +378,33 @@ async function removeMenu(id){
   if (!ok){ ui.undo = null; return; }   // บันทึกไม่ได้/ชนกับเพื่อน อย่าให้ toast เลิกทำทับข้อความแจ้งปัญหา
   clearTimeout(ui.undoTimer);
   ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
-  toast("ลบ "+menu.name+" แล้ว","ok",{ label:"เลิกทำ", action:undoRemove });
+  toast(L("ลบ {name} แล้ว", { name:menu.name }),"ok",{ label:L("เลิกทำ"), action:undoRemove });
 }
 
-/** ข้อความสรุปที่ส่งเข้าแชต — v2.4: เปิดด้วยคำขอบคุณให้อ่านเป็นเรื่องของเพื่อน ไม่ใช่ใบแจ้งหนี้ */
+/** ข้อความสรุปที่ส่งเข้าแชต — v2.4: เปิดด้วยคำขอบคุณให้อ่านเป็นเรื่องของเพื่อน ไม่ใช่ใบแจ้งหนี้
+ *  v4.0: ใช้ได้กับบิลใดก็ได้ (ประวัติบิลส่ง s = null เพราะไม่มีข้อมูลคนจ่ายของบิลที่เปิดอยู่) */
+function summaryLines(r, title, kind, s, link){
+  var lines = [];
+  lines.push(ktOf(kind,"icon")+" "+title);
+  lines.push(ktOf(kind,"thanks"));
+  lines.push(L("ยอดของแต่ละคนตามนี้เลย 👇"));
+  lines.push("");
+  r.list.forEach(function(p){ lines.push("• "+p.name+"  "+L("{amt} บาท", { amt:baht(p.rounded) })); });
+  lines.push("");
+  lines.push(L("รวมทั้งหมด {amt} บาท", { amt:baht(r.grand) }));
+  if (s && s.ok && s.transfers.length){
+    lines.push("");
+    lines.push(L("โอนเงินตามนี้นะ 🙏"));
+    s.transfers.forEach(function(t){ lines.push("• "+t.fromName+" → "+t.toName+"  "+L("{amt} บาท", { amt:baht(t.amount) })); });
+  }
+  if (link) lines.push(L("กดดูได้ว่ายอดมาจาก{what}: {link}", { what:ktOf(kind,"fromWhat"), link:link }));
+  lines.push(kind === "trip" ? L("— หารตามที่ใช้จริงด้วย FairDish") : L("— หารตามที่กินจริงด้วย FairDish"));
+  return lines;
+}
 function summaryText(){
   var r = compute();
-  var lines = [];
-  lines.push(kt("icon")+" "+(ui.ctx && Store.groupName ? Store.groupName : kt("head")));
-  lines.push(kt("thanks"));
-  lines.push("ยอดของแต่ละคนตามนี้เลย 👇");
-  lines.push("");
-  r.list.forEach(function(p){ lines.push("• "+p.name+"  "+baht(p.rounded)+" บาท"); });
-  lines.push("");
-  lines.push("รวมทั้งหมด "+baht(r.grand)+" บาท");
-  var s = settleBill(r);
-  if (s.ok && s.transfers.length){
-    lines.push("");
-    lines.push("โอนเงินตามนี้นะ 🙏");
-    s.transfers.forEach(function(t){ lines.push("• "+t.fromName+" → "+t.toName+"  "+baht(t.amount)+" บาท"); });
-  }
-  if (ui.ctx) lines.push("กดดูได้ว่ายอดมาจาก"+(state.kind === "trip" ? "รายการไหน: " : "เมนูไหน: ")+groupLink(ui.ctx)+"/bill");
-  lines.push(state.kind === "trip" ? "— หารตามที่ใช้จริงด้วย FairDish" : "— หารตามที่กินจริงด้วย FairDish");
-  return lines.join("\n");
+  return summaryLines(r, ui.ctx && Store.groupName ? Store.groupName : currentBillName(), state.kind, settleBill(r),
+    ui.ctx ? groupLink(ui.ctx)+"/bill" : null).join("\n");
 }
 function copyText(text, okMessage){
   function fallback(){
@@ -408,14 +412,14 @@ function copyText(text, okMessage){
     ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
     document.body.appendChild(ta); ta.select();
     try { document.execCommand("copy"); toast(okMessage,"ok"); }
-    catch(e){ toast("คัดลอกไม่สำเร็จ ลองเลือกข้อความแล้วคัดลอกเอง","error"); }
+    catch(e){ toast(L("คัดลอกไม่สำเร็จ ลองเลือกข้อความแล้วคัดลอกเอง"),"error"); }
     document.body.removeChild(ta);
   }
   if (navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(function(){ toast(okMessage,"ok"); }, fallback);
   } else fallback();
 }
-function copySummary(){ copyText(summaryText(), "คัดลอกสรุปยอดแล้ว"); }
+function copySummary(){ copyText(summaryText(), L("คัดลอกสรุปยอดแล้ว")); }
 
 /* ---- v2.5: ใครจ่ายให้ร้าน → ใครโอนให้ใคร ---- */
 /** วาดหน้าใบสรุปใหม่โดยไม่เล่นแอนิเมชันซ้ำและไม่เลื่อนจอ */
@@ -440,7 +444,7 @@ async function togglePayer(id){
 async function setPayerAmount(id, raw){
   var text = String(raw || "").trim();
   var n = parseFloat(text);
-  if (text !== "" && (isNaN(n) || n < 0 || n > MAX_PRICE * 10)){ toast("ใส่ยอดเป็นตัวเลข เช่น 500 หรือ 500.50","error"); return rerenderBill(); }
+  if (text !== "" && (isNaN(n) || n < 0 || n > MAX_PRICE * 10)){ toast(L("ใส่ยอดเป็นตัวเลข เช่น 500 หรือ 500.50"),"error"); return rerenderBill(); }
   state.payers.forEach(function(p){ if (p.id === id) p.amount = text === "" ? null : Math.round(n * 100) / 100; });
   rerenderBill();
   await commit();
@@ -454,9 +458,9 @@ function myTransferText(){
   if (!s.ok) return "";
   var out = s.transfers.filter(function(t){ return t.from === me; });
   var inn = s.transfers.filter(function(t){ return t.to === me; });
-  if (out.length) return out.map(function(t){ return "โอนให้ "+t.toName+" "+baht(t.amount); }).join(" · ");
-  if (inn.length) return "รอรับคืน "+baht(inn.reduce(function(a,t){ return a+t.amount; },0))+" บาท";
-  return "ไม่ต้องโอนให้ใคร";
+  if (out.length) return out.map(function(t){ return L("โอนให้ {name} {amt}", { name:t.toName, amt:baht(t.amount) }); }).join(" · ");
+  if (inn.length) return L("รอรับคืน {amt} บาท", { amt:baht(inn.reduce(function(a,t){ return a+t.amount; },0)) });
+  return L("ไม่ต้องโอนให้ใคร");
 }
 
 /* ---- v2.4: ล้างข้อมูลแบบปลอดภัย ---- */
@@ -468,7 +472,7 @@ function resetNameMatches(){
 async function undoReset(before){
   applyBill(before);
   render();
-  await commit("คืนข้อมูลกลับมาแล้ว");
+  await commit(L("คืนข้อมูลกลับมาแล้ว"));
   render();
 }
 
@@ -487,7 +491,7 @@ async function checkLocalBill(){
   var slot = document.getElementById("groupFromSlot");
   if (!slot || !saved || !saved.members || !saved.members.length) return;
   slot.innerHTML = '<label class="check"><input type="checkbox" id="groupFromLocal" checked> '+
-    'ใช้บิลที่ทำค้างไว้ในเครื่อง ('+saved.members.length+' คน) เป็นบิลเริ่มต้นของกลุ่ม</label>';
+    L("ใช้บิลที่ทำค้างไว้ในเครื่อง ({n} คน) เป็นบิลเริ่มต้นของกลุ่ม", { n:saved.members.length })+'</label>';
 }
 
 async function createGroup(){
@@ -495,30 +499,37 @@ async function createGroup(){
   var btn = document.getElementById("groupCreate");
   if (!input || ui.creatingGroup) return;
   var name = input.value.trim().replace(/\s+/g," ");
-  if (!name){ setFieldMsg("groupMsg","ตั้งชื่อกลุ่มก่อน เช่น ส้มตำหน้ามอ",true); return input.focus(); }
-  if (name.length > MAX_GROUP_NAME){ setFieldMsg("groupMsg","ชื่อกลุ่มยาวเกิน "+MAX_GROUP_NAME+" ตัวอักษร",true); return input.focus(); }
+  if (!name){ setFieldMsg("groupMsg",L("ตั้งชื่อกลุ่มก่อน เช่น ส้มตำหน้ามอ"),true); return input.focus(); }
+  if (name.length > MAX_GROUP_NAME){ setFieldMsg("groupMsg",L("ชื่อยาวเกิน {n} ตัวอักษร", { n:MAX_GROUP_NAME }),true); return input.focus(); }
 
   var data = { members:[], menus:[], shared:[], charges:defaultCharges(), kind:ui.newGroupKind };
   var from = document.getElementById("groupFromLocal");
+  var moved = false;
   if (from && from.checked){
+    moved = true;
     try { var raw = await Store.readRaw(Store.key); if (raw) data = JSON.parse(raw); } catch(e){}
     // บิลในเครื่องยังไม่มีรายการ = ใช้ประเภทที่เลือกในฟอร์ม, มีรายการแล้ว = ใช้ประเภทของบิลนั้น
     if (!((data.menus || []).length || (data.shared || []).length)) data.kind = ui.newGroupKind;
     else data.kind = data.kind === "trip" ? "trip" : "meal";
   }
   ui.creatingGroup = true;
-  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>กำลังสร้าง'; }
+  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>'+L("กำลังสร้าง"); }
   try {
     var g = await Cloud.create(name, data);
     await rememberGroup(g.id, g.name, data.kind);
+    // v4.0: บิลในเครื่องย้ายเข้ากลุ่มแล้ว ล้างบิลส่วนตัวไม่ให้ขึ้นซ้ำบนหน้าแรก/ประวัติ
+    if (moved){
+      try { await Store.writeRaw(Store.key, JSON.stringify({ members:[], menus:[], shared:[], charges:defaultCharges(), payers:[], kind:data.kind })); } catch(e){}
+      if (ui.ctx === null) ui.ctx = undefined;          // กลับมาบิลส่วนตัวเมื่อไหร่ให้โหลดใหม่
+    }
     location.hash = "#/g/" + g.id;
-    toast("สร้างกลุ่มแล้ว คัดลอกลิงก์ส่งให้เพื่อนได้เลย","ok");
+    toast(L("สร้างกลุ่มแล้ว คัดลอกลิงก์ส่งให้เพื่อนได้เลย"),"ok");
   } catch(err){
-    setFieldMsg("groupMsg","สร้างกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง",true);
+    setFieldMsg("groupMsg",L("สร้างกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"),true);
   } finally {
     ui.creatingGroup = false;
     var again = document.getElementById("groupCreate");
-    if (again){ again.disabled = false; again.textContent = "สร้างกลุ่ม"; }
+    if (again){ again.disabled = false; again.textContent = L("สร้างกลุ่ม"); }
   }
 }
 
@@ -527,7 +538,7 @@ function joinGroup(){
   if (!input) return;
   var id = groupIdFromInput(input.value);
   if (!id){
-    setFieldMsg("groupJoinMsg","ไม่ใช่ลิงก์กลุ่มของ FairDish ลองคัดลอกลิงก์จากเพื่อนมาใหม่ทั้งหมด",true);
+    setFieldMsg("groupJoinMsg",L("ไม่ใช่ลิงก์กลุ่มของ FairDish ลองคัดลอกลิงก์จากเพื่อนมาใหม่ทั้งหมด"),true);
     return input.focus();
   }
   location.hash = "#/g/" + id;
@@ -540,7 +551,7 @@ async function forgetGroup(id){
   await saveMyGroups();
   document.getElementById("view").innerHTML = pageGroups();
   checkLocalBill();
-  toast("เอา "+g.name+" ออกจากรายการแล้ว (กลุ่มยังอยู่ เปิดจากลิงก์ได้)","ok");
+  toast(L("เอา {name} ออกจากรายการแล้ว (กลุ่มยังอยู่ เปิดจากลิงก์ได้)", { name:g.name }),"ok");
 }
 
 /* ---- v2.4: ถาม "คุณคือใคร" ครั้งแรกที่เปิดกลุ่ม ---- */
@@ -556,15 +567,15 @@ function openMeDialog(){
   var box = document.getElementById("meDialog");
   if (!box || !ui.ctx) return;
   box.innerHTML =
-    '<div class="install-head"><div><h2 id="meTitle">คุณคือใครในโต๊ะนี้?</h2>'+
-      '<p>เลือกชื่อตัวเอง แล้วยอดที่คุณต้องจ่ายจะแสดงตัวใหญ่ให้เห็นทันที (จำไว้ในเครื่องนี้)</p></div>'+
-      '<button class="icon-btn" data-me-close="1" aria-label="ปิด">'+ICON_X+'</button></div>'+
+    '<div class="install-head"><div><h2 id="meTitle">'+L("คุณคือใครในบิลนี้?")+'</h2>'+
+      '<p>'+L("เลือกชื่อตัวเอง แล้วยอดที่คุณต้องจ่ายจะแสดงตัวใหญ่ให้เห็นทันที (จำไว้ในเครื่องนี้)")+'</p></div>'+
+      '<button class="icon-btn" data-me-close="1" aria-label="'+L("ปิด")+'">'+ICON_X+'</button></div>'+
     '<div class="pick me-pick">'+state.members.map(function(p){
       return '<button data-me-pick="'+p.id+'">'+esc(p.name)+'</button>';
     }).join("")+'</div>'+
     '<div class="me-other">'+
-      '<button class="btn-quiet" data-me-add="1">ยังไม่มีชื่อฉัน — เพิ่มชื่อตัวเอง</button>'+
-      '<button class="me-skip" data-me-close="1">ข้ามไปก่อน</button>'+
+      '<button class="btn-quiet" data-me-add="1">'+L("ยังไม่มีชื่อฉัน — เพิ่มชื่อตัวเอง")+'</button>'+
+      '<button class="me-skip" data-me-close="1">'+L("ข้ามไปก่อน")+'</button>'+
     '</div>';
   if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
 }
@@ -580,7 +591,7 @@ async function chooseMe(memberId){
   g.me = memberId;
   await saveMyGroups();
   render();
-  toast("สวัสดี "+nameOf(memberId)+" 👋 ยอดของคุณอยู่ด้านบนแล้ว","ok");
+  toast(L("สวัสดี {name} 👋 ยอดของคุณอยู่ด้านบนแล้ว", { name:nameOf(memberId) }),"ok");
 }
 function addMyselfFromDialog(){
   closeMeDialog();
@@ -608,8 +619,8 @@ async function setMe(memberId){
 var ICON_SAVE_IMG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12l4 4 4-4"/></svg>';
 /** ข้อความชวนที่ส่งเข้าแชตพร้อมลิงก์ */
 function inviteText(){
-  return 'มาช่วยกันกรอกบิล "'+Store.groupName+'" ใน FairDish กัน 🍲\n'+
-    'กดลิงก์แล้วแก้บิลเดียวกันได้เลย ไม่ต้องสมัคร\n'+groupLink(ui.ctx);
+  return L("มาช่วยกันกรอกบิล \"{name}\" ใน FairDish กัน 🍲", { name:Store.groupName })+"\n"+
+    L("กดลิงก์แล้วแก้บิลเดียวกันได้เลย ไม่ต้องสมัคร")+"\n"+groupLink(ui.ctx);
 }
 function openShareDialog(){
   var box = document.getElementById("shareDialog");
@@ -617,20 +628,21 @@ function openShareDialog(){
   var link = groupLink(ui.ctx);
   var q = QR.encode(link);
   var qr = q
-    ? '<div class="qr-code">'+QR.svg(link, "QR code ลิงก์กลุ่ม "+esc(Store.groupName))+
+    ? '<div class="qr-code">'+QR.svg(link, L("QR code ลิงก์กลุ่ม {name}", { name:esc(Store.groupName) }))+
         (q.version >= 4 ? '<span class="qr-logo"><img src="img/icon-192.png" alt=""></span>' : '')+'</div>'
     : '';
   box.innerHTML =
-    '<div class="install-head"><div><h2 id="shareTitle" tabindex="-1" autofocus>ชวนเพื่อนมาหารด้วยกัน</h2>'+
-      '<p>สแกนหรือกดลิงก์ แล้วช่วยกันกรอกบิลนี้ได้เลย ไม่ต้องสมัคร</p></div>'+
-      '<button class="icon-btn" data-share-close="1" aria-label="ปิด">'+ICON_X+'</button></div>'+
+    '<div class="install-head"><div><h2 id="shareTitle" tabindex="-1" autofocus>'+L("ชวนเพื่อนมาหารด้วยกัน")+'</h2>'+
+      '<p>'+L("สแกนหรือกดลิงก์ แล้วช่วยกันกรอกบิลนี้ได้เลย ไม่ต้องสมัคร")+'</p></div>'+
+      '<button class="icon-btn" data-share-close="1" aria-label="'+L("ปิด")+'">'+ICON_X+'</button></div>'+
     (qr ? '<div class="qr-card">'+qr+
       '<b class="qr-name">'+esc(Store.groupName)+'</b>'+
-      '<span class="qr-hint">เปิดกล้องมือถือแล้วสแกนได้เลย</span></div>' : '')+
+      '<span class="qr-hint">'+L("เปิดกล้องมือถือแล้วสแกนได้เลย")+'</span></div>' : '')+
     '<div class="share-grid">'+
-      (navigator.share ? '<button class="share-opt" id="shareNative">'+ICON_SHARE+'<span>แชร์ทางอื่น</span></button>' : '')+
-      '<button class="share-opt" id="shareCopy">'+ICON_COPY+'<span>คัดลอกลิงก์</span></button>'+
-      (qr ? '<button class="share-opt" id="shareSaveQr">'+ICON_SAVE_IMG+'<span>บันทึกรูป QR</span></button>' : '')+
+      (navigator.share ? '<button class="share-opt" id="shareNative">'+ICON_SHARE+'<span>'+L("แชร์ทางอื่น")+'</span></button>' : '')+
+      '<button class="share-opt" id="shareCopy">'+ICON_COPY+'<span>'+L("คัดลอกลิงก์")+'</span></button>'+
+      (qr ? '<button class="share-opt" id="shareSaveQr">'+ICON_SAVE_IMG+'<span>'+L("บันทึกรูป QR")+'</span></button>' : '')+
+      '<button class="share-opt" id="shareConfirm">'+ICON_CHECK+'<span>'+L("ลิงก์ให้เพื่อนยืนยันเมนู")+'</span></button>'+
     '</div>'+
     '<p class="share-link" title="'+esc(link)+'">'+esc(link)+'</p>';
   if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
@@ -687,40 +699,16 @@ async function saveQrImage(){
     a.href = URL.createObjectURL(blob); a.download = name;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
-    toast("บันทึกรูป QR แล้ว","ok");
-  } catch(err){ toast("บันทึกรูปไม่สำเร็จ ลองคัดลอกลิงก์แทน","error"); }
+    toast(L("บันทึกรูป QR แล้ว"),"ok");
+  } catch(err){ toast(L("บันทึกรูปไม่สำเร็จ ลองคัดลอกลิงก์แทน"),"error"); }
 }
 
 function shareGroupLink(){
   if (!ui.ctx) return;
   var link = groupLink(ui.ctx);
-  if (!navigator.share) return copyText(link, "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
-  navigator.share({ title:Store.groupName+" · FairDish", text:'มาช่วยกันกรอกบิล "'+Store.groupName+'" ใน FairDish กัน 🍲', url:link })
+  if (!navigator.share) return copyText(link, L("คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย"));
+  navigator.share({ title:Store.groupName+" · FairDish", text:L("มาช่วยกันกรอกบิล \"{name}\" ใน FairDish กัน 🍲", { name:Store.groupName }), url:link })
     .catch(function(){});   // ผู้ใช้กดยกเลิก = ไม่ใช่ข้อผิดพลาด
-}
-
-/* ---- v2.2: หน้าแรก "ทำต่อ" ---- */
-async function fillHomeResume(){
-  var saved = null;
-  try { var raw = await Store.readRaw(Store.key); saved = raw ? JSON.parse(raw) : null; } catch(e){}
-  var box = document.getElementById("homeResume");
-  if (!box) return;
-  var rows = [];
-  if (saved && saved.members && saved.members.length){
-    var nMenus = (saved.menus || []).length;
-    var sk = saved.kind === "trip" ? "trip" : "meal";
-    rows.push(['#/split', ktOf(sk,"icon")+' บิลส่วนตัว', saved.members.length+' คน · '+nMenus+' '+ktOf(sk,"items")+' · ในเครื่องนี้']);
-  }
-  ui.myGroups.slice(0,3).forEach(function(g){
-    var when = g.at ? new Date(g.at).toLocaleDateString("th-TH",{ day:"numeric", month:"short" }) : "";
-    rows.push(['#/g/'+esc(g.id), ktOf(g.kind,"icon")+' '+esc(g.name), 'กลุ่ม'+(when ? ' · เปิดล่าสุด '+when : '')]);
-  });
-  if (!rows.length){ box.innerHTML = ""; return; }
-  box.innerHTML = '<h2 class="resume-head">ทำต่อ</h2>'+rows.map(function(r){
-    return '<div class="row-item"><a class="row-tap" href="'+r[0]+'"><span class="body">'+
-      '<span class="name">'+r[1]+'</span><span class="sub">'+r[2]+'</span></span><span aria-hidden="true">›</span></a></div>';
-  }).join("")+
-  (ui.myGroups.length > 3 ? '<a class="add-slot" href="#/groups">ดูกลุ่มทั้งหมด ('+ui.myGroups.length+')</a>' : '');
 }
 
 /* ---- v3.1: มื้ออาหารข้างในทริป ----
@@ -772,7 +760,7 @@ function backToTrip(){
 async function addMeal(){
   var n = state.menus.filter(function(m){ return m.type === "meal"; }).length + 1;
   var payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
-  var item = { id:nid(), type:"meal", name:"มื้อที่ "+n, price:0, eaters:[],
+  var item = { id:nid(), type:"meal", name:L("มื้อที่ {n}", { n:n }), price:0, eaters:[],
                meal:{ menus:[], shared:[], charges:defaultCharges() } };
   if (payer) item.payer = payer;
   state.menus.push(item);
@@ -787,7 +775,7 @@ async function renameMeal(value){
   if (!item || !name || name === item.name) return renderMealHead();
   item.name = name;
   renderMealHead();
-  await commit("เปลี่ยนชื่อมื้อเป็น "+name+" แล้ว");
+  await commit(L("เปลี่ยนชื่อมื้อเป็น {name} แล้ว", { name:name }));
 }
 async function setMealPayer(id){
   var item = currentMeal();
@@ -814,7 +802,7 @@ async function setKind(kind){
   if (kind !== "meal" && kind !== "trip") return;
   if (kind === state.kind) return;
   if (!billIsEmpty()){
-    toast("มีรายการอยู่แล้ว ล้างข้อมูลก่อนถึงจะเปลี่ยนเป็น"+ktOf(kind,"name")+"ได้","error");
+    toast(L("มีรายการอยู่แล้ว ล้างข้อมูลก่อนถึงจะเปลี่ยนเป็น{kind}ได้", { kind:ktOf(kind,"name") }),"error");
     return renderKindSlot();
   }
   state.kind = kind;
@@ -822,13 +810,17 @@ async function setKind(kind){
   state.menuForm = null;
   document.getElementById("view").innerHTML = pageSplit();
   render();
-  await commit("เปลี่ยนเป็น"+kt("name")+"แล้ว");
+  await commit(L("เปลี่ยนเป็น{kind}แล้ว", { kind:kt("name") }));
   updateChrome();
 }
-/** หน้าแรก: เริ่มหารค่าอาหาร/ค่าทริป บนบิลส่วนตัว */
-function startKind(kind){
+/** หน้าแรก: เริ่มบิลใหม่ (มื้ออาหาร/ทริป) — v4.0: บิลส่วนตัวที่ค้างอยู่ถูกเก็บเข้าประวัติก่อน ไม่ต้องล้างเอง */
+async function startKind(kind){
+  var archived = await archiveLocalBill();
+  if (archived) toast(L("เก็บบิลเดิมไว้ในประวัติแล้ว เริ่มบิลใหม่ได้เลย"),"ok");
   ui.pendingKind = kind;
-  if (location.hash === "#/split" && ui.ctx === null && !ui.loading) return applyPendingKind();
+  ui.homeNew = false;
+  ui.step = "members";
+  if (currentPath() === "/split" && ui.ctx === null && !ui.loading) return applyPendingKind();
   location.hash = "#/split";
 }
 function applyPendingKind(){
@@ -837,7 +829,7 @@ function applyPendingKind(){
   ui.pendingKind = null;
   if (kind === state.kind) return;
   if (billIsEmpty()) return setKind(kind);
-  toast("บิลส่วนตัวมี"+kt("name")+"ค้างอยู่ ล้างข้อมูลก่อนถึงจะเริ่ม"+ktOf(kind,"name")+"ใหม่ได้","error");
+  toast(L("บิลส่วนตัวมี{kind}ค้างอยู่ ล้างข้อมูลก่อนถึงจะเริ่ม{other}ใหม่ได้", { kind:kt("name"), other:ktOf(kind,"name") }),"error");
 }
 /** ฟอร์มสร้างกลุ่ม: เปลี่ยนประเภท และเปลี่ยนชื่อตั้งต้นตาม ถ้ายังไม่ได้แก้ชื่อเอง */
 function setNewGroupKind(kind){
@@ -863,42 +855,58 @@ async function setTheme(theme){
   if (currentPath()==="/more") document.getElementById("view").innerHTML = pageMore();
 }
 
+/* ---- v4.0: ภาษา ---- */
+function applyLang(lang){
+  LANG = lang === "en" ? "en" : "th";
+  applyStaticText();
+}
+async function setLang(lang){
+  applyLang(lang);
+  try { await Store.writeRaw(LANG_KEY, LANG); } catch(e){}
+  if (document.getElementById("onboard")){ document.getElementById("onboard").innerHTML = onboardHTML(); return; }
+  var y = window.scrollY;
+  route();                              // วาดหน้าปัจจุบันใหม่ทั้งหน้าด้วยภาษาใหม่
+  window.scrollTo(0, y);
+}
+
 async function loadDemo(){
   state.members=[]; state.menus=[]; state.shared=[];
   ["มาร์ค","พูม","ไอซ์","ชาเน่","โม","ยูกะ","โฟรค์","เจ้าสัว"].forEach(function(n){
-    state.members.push({ id:nid(), name:n });
+    state.members.push({ id:nid(), name:L(n) });
   });
   function ids(){
     return Array.prototype.slice.call(arguments).map(function(n){
-      var f = state.members.filter(function(m){ return m.name===n; })[0];
+      var f = state.members.filter(function(m){ return m.name===L(n); })[0];
       return f ? f.id : null;
     }).filter(Boolean);
   }
   // มื้ออีสานร้านหน้ามอ 8 คน — แต่ละคนกินไม่เท่ากันแบบที่เกิดจริง
   var all = ["มาร์ค","พูม","ไอซ์","ชาเน่","โม","ยูกะ","โฟรค์","เจ้าสัว"];
   state.menus = [
-    { id:nid(), name:"ตำไทย", price:50, eaters:ids("ชาเน่","ยูกะ","โฟรค์") },
-    { id:nid(), name:"ตำปูปลาร้า", price:50, eaters:ids("มาร์ค","พูม","เจ้าสัว") },
-    { id:nid(), name:"ตำซั่ว", price:60, eaters:ids("ไอซ์","มาร์ค") },
-    { id:nid(), name:"ไก่ย่างเขาสวนกวาง", price:180, eaters:ids.apply(null, all) },
-    { id:nid(), name:"คอหมูย่าง", price:120, eaters:ids("มาร์ค","ไอซ์","เจ้าสัว") },
-    { id:nid(), name:"ลาบหมู", price:80, eaters:ids("มาร์ค","พูม","ไอซ์","โม") },
-    { id:nid(), name:"ต้มแซ่บกระดูกอ่อน", price:120, eaters:ids("ไอซ์","เจ้าสัว","โม") },
-    { id:nid(), name:"ไส้กรอกอีสาน", price:60, eaters:ids("ชาเน่","โม") },
-    { id:nid(), name:"ไข่เจียวหมูสับ", price:60, eaters:ids("ยูกะ") },
-    { id:nid(), name:"ซอยจุ๊", price:150, eaters:ids("ไอซ์","เจ้าสัว") }
+    { id:nid(), name:L("ตำไทย"), price:50, eaters:ids("ชาเน่","ยูกะ","โฟรค์") },
+    { id:nid(), name:L("ตำปูปลาร้า"), price:50, eaters:ids("มาร์ค","พูม","เจ้าสัว") },
+    { id:nid(), name:L("ตำซั่ว"), price:60, eaters:ids("ไอซ์","มาร์ค") },
+    { id:nid(), name:L("ไก่ย่างเขาสวนกวาง"), price:180, eaters:ids.apply(null, all) },
+    { id:nid(), name:L("คอหมูย่าง"), price:120, eaters:ids("มาร์ค","ไอซ์","เจ้าสัว") },
+    { id:nid(), name:L("ลาบหมู"), price:80, eaters:ids("มาร์ค","พูม","ไอซ์","โม") },
+    { id:nid(), name:L("ต้มแซ่บกระดูกอ่อน"), price:120, eaters:ids("ไอซ์","เจ้าสัว","โม") },
+    { id:nid(), name:L("ไส้กรอกอีสาน"), price:60, eaters:ids("ชาเน่","โม") },
+    { id:nid(), name:L("ไข่เจียวหมูสับ"), price:60, eaters:ids("ยูกะ") },
+    { id:nid(), name:L("ซอยจุ๊"), price:150, eaters:ids("ไอซ์","เจ้าสัว") }
   ];
   state.shared = [
-    { id:nid(), name:"ข้าวเหนียว 4 กระติ๊บ", price:60 },
-    { id:nid(), name:"น้ำแข็ง", price:20 },
-    { id:nid(), name:"โค้กขวดใหญ่ 2 ขวด", price:70 },
-    { id:nid(), name:"น้ำเปล่าขวดใหญ่ 2 ขวด", price:30 }
+    { id:nid(), name:L("ข้าวเหนียว 4 กระติ๊บ"), price:60 },
+    { id:nid(), name:L("น้ำแข็ง"), price:20 },
+    { id:nid(), name:L("โค้กขวดใหญ่ 2 ขวด"), price:70 },
+    { id:nid(), name:L("น้ำเปล่าขวดใหญ่ 2 ขวด"), price:30 }
   ];
   state.charges.forEach(function(c){ c.on=false; });   // ร้านอีสานทั่วไปไม่คิดค่าบริการ / VAT
   state.payers = [];
+  state.confirms = {};
+  if (!ui.ctx) state.title = L("ร้านส้มตำหน้ามอ");
   state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
   ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
   render();
-  await commit("ใส่ข้อมูลตัวอย่างแล้ว");
+  await commit(L("ใส่ข้อมูลตัวอย่างแล้ว"));
   render();
 }

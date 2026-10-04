@@ -12,67 +12,66 @@ function barcode(seed){
   }
   return '<div class="barcode" aria-hidden="true">'+bars+'</div>';
 }
+/** opts: interactive (แตะชื่อดูที่มา), reveal (แอนิเมชัน), open/toggleAttr (v4.0: ใบเสร็จของประวัติใช้ชุดของตัวเอง),
+ *  kind (ประเภทบิล ถ้าไม่ใช่บิลที่เปิดอยู่), me (id ของ "ฉัน" — null = ไม่ไฮไลต์) */
 function receiptHTML(r, opts){
   opts = opts || {};
-  var me = myMemberId();
+  var me = opts.me !== undefined ? opts.me : myMemberId();
+  var open = opts.open || state.open;
+  var attr = opts.toggleAttr || "data-toggle";
+  var kind = opts.kind || state.kind;
   var lines = r.list.map(function(p){
-    var opened = !!state.open[p.id];
+    var opened = !!open[p.id];
     var cls = "r-line" + (p.id===me ? " me" : "");
     var html = (opts.interactive
-      ? '<button class="'+cls+'" data-toggle="'+p.id+'" aria-expanded="'+opened+'"><span class="caret">&#9654;</span>'
+      ? '<button class="'+cls+'" '+attr+'="'+p.id+'" aria-expanded="'+opened+'"><span class="caret">&#9654;</span>'
       : '<div class="'+cls+'"><span class="caret" style="visibility:hidden">&#9654;</span>')
-      + '<span class="who">'+esc(p.name)+(p.id===me ? ' <span class="me-tag">ฉัน</span>' : '')+'</span><span class="val">'+baht(p.rounded)+'</span>'
+      + '<span class="who">'+esc(p.name)+(p.id===me ? ' <span class="me-tag">'+L("ฉัน")+'</span>' : '')+'</span><span class="val">'+baht(p.rounded)+'</span>'
       + (opts.interactive ? '</button>' : '</div>');
     if (opts.interactive && opened){
       var d = p.items.map(function(it){
-        return '<div><span class="dname">'+(it.meal ? '🍲 '+esc(it.name)+' · ตามที่กิน' : esc(it.name)+' ÷ '+it.split)+'</span><span>'+baht(it.amount)+'</span></div>';
+        return '<div><span class="dname">'+(it.meal ? '🍲 '+esc(it.name)+' · '+L("ตามที่กิน") : esc(it.name)+' ÷ '+it.split)+'</span><span>'+baht(it.amount)+'</span></div>';
       }).join("");
-      if (p.items.length===0) d = '<div><span class="dname">'+kt("noItems")+'</span><span>0.00</span></div>';
-      if (r.sharedTotal>0) d += '<div><span class="dname">ค่าส่วนกลาง ÷ '+r.n+'</span><span>'+baht(p.sharedShare)+'</span></div>';
-      if (r.rate>0) d += '<div><span class="dname">ค่าบริการ + ภาษี '+(r.rate*100).toFixed(0)+'%</span><span>'+baht(p.charge)+'</span></div>';
+      if (p.items.length===0) d = '<div><span class="dname">'+ktOf(kind,"noItems")+'</span><span>0.00</span></div>';
+      if (r.sharedTotal>0) d += '<div><span class="dname">'+L("ค่าส่วนกลาง")+' ÷ '+r.n+'</span><span>'+baht(p.sharedShare)+'</span></div>';
+      if (r.rate>0) d += '<div><span class="dname">'+L("ค่าบริการ + ภาษี")+' '+(r.rate*100).toFixed(0)+'%</span><span>'+baht(p.charge)+'</span></div>';
       html += '<div class="r-detail">'+d+'</div>';
     }
     return html;
   }).join("");
 
-  var sums = '<div><span>'+kt("sumLabel")+'</span><span>'+baht(r.foodTotal)+'</span></div>';
-  if (r.sharedTotal>0) sums += '<div><span>ค่าส่วนกลาง</span><span>'+baht(r.sharedTotal)+'</span></div>';
-  if (r.chargeTotal>0) sums += '<div><span>ค่าบริการ + ภาษี</span><span>'+baht(r.chargeTotal)+'</span></div>';
+  var sums = '<div><span>'+ktOf(kind,"sumLabel")+'</span><span>'+baht(r.foodTotal)+'</span></div>';
+  if (r.sharedTotal>0) sums += '<div><span>'+L("ค่าส่วนกลาง")+'</span><span>'+baht(r.sharedTotal)+'</span></div>';
+  if (r.chargeTotal>0) sums += '<div><span>'+L("ค่าบริการ + ภาษี")+'</span><span>'+baht(r.chargeTotal)+'</span></div>';
 
   return '<div class="receipt-wrap'+(opts.reveal?' reveal':'')+'"><div class="receipt">'+
-    '<div class="r-title">ใบสรุปยอด</div>'+
-    '<div class="r-meta">'+r.n+' คน · '+r.list.reduce(function(a,p){return a+p.items.length;},0)+' รายการที่แบ่งกัน</div>'+
+    '<div class="r-title">'+L("ใบสรุปยอด")+'</div>'+
+    '<div class="r-meta">'+L("{n} คน · {items} รายการที่แบ่งกัน", { n:r.n, items:r.list.reduce(function(a,p){return a+p.items.length;},0) })+'</div>'+
     lines+
     '<div class="r-sum">'+sums+'</div>'+
-    '<div class="r-total"><span>รวมทั้งหมด</span><span>'+baht(r.grand)+' ฿</span></div>'+
+    '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>'+baht(r.grand)+' ฿</span></div>'+
     barcode(r.grand)+
   '</div><div class="receipt-edge"></div></div>';
 }
-function demoReceiptHTML(){
-  // ตรงกับปุ่ม "ใส่ข้อมูลตัวอย่าง" (loadDemo) — แก้ข้อมูลตัวอย่างแล้วต้องแก้ตรงนี้ด้วย
-  var rows = [["มาร์ค",151.67],["พูม",81.66],["ไอซ์",250.00],["ชาเน่",91.67],
-              ["โม",135.00],["ยูกะ",121.67],["โฟรค์",61.66],["เจ้าสัว",216.67]];
-  var lines = rows.map(function(p){
-    return '<div class="r-line"><span class="caret" style="visibility:hidden">&#9654;</span>'+
-      '<span class="who">'+p[0]+'</span><span class="val">'+baht(p[1])+'</span></div>';
-  }).join("");
-  return '<div class="receipt-wrap reveal"><div class="receipt">'+
-    '<div class="r-title">ใบสรุปยอด</div>'+
-    '<div class="r-meta">8 คน · 10 เมนู · ร้านส้มตำหน้ามอ</div>'+lines+
-    '<div class="r-sum"><div><span>ค่าอาหาร</span><span>930.00</span></div>'+
-    '<div><span>ค่าส่วนกลาง</span><span>180.00</span></div></div>'+
-    '<div class="r-total"><span>รวมทั้งหมด</span><span>1,110.00 ฿</span></div>'+
-    barcode(1110)+'</div><div class="receipt-edge"></div></div>';
-}
 
 /* ---- v2.5: ใครจ่ายให้ร้าน + ใครโอนให้ใคร ---- */
+function transferRows(s, me, noneText){
+  return '<div class="transfers" aria-live="polite"><h3>'+L("โอนเงินตามนี้")+'</h3>'+
+    (s.transfers.length ? s.transfers.map(function(t){
+      var mine = me && (t.from === me || t.to === me);
+      return '<div class="tf-row'+(mine ? ' me' : '')+'">'+
+        '<span class="tf-who"><b>'+esc(t.fromName)+'</b> <span class="tf-arrow" aria-label="'+L("โอนให้")+'">→</span> <b>'+esc(t.toName)+'</b></span>'+
+        '<span class="tf-amt">'+baht(t.amount)+'</span></div>';
+    }).join("") : '<p class="hint" style="margin:0">'+noneText+'</p>')+
+    '<p class="tf-note">'+(s.transfers.length > 1 ? L("หักลบให้แล้ว โอนแค่ {n} ครั้งก็จบ", { n:s.transfers.length }) : "")+'</p></div>';
+}
 function payerSection(r){
   if (state.kind === "trip") return tripTransferSection(r);
   var anyPayer = state.payers.some(function(p){ return !!nameOf(p.id); });
   if (!anyPayer && !ui.payerOpen){
     // v2.6: ยังไม่ใช้ = แถวเดียวพับไว้ หน้าสรุปจะได้ไม่ยาว
     return '<button class="payer-toggle" data-payer-open="1" aria-expanded="false">'+
-      '<span><b>ใครจ่ายให้ร้านไปก่อน?</b><span>ดูว่าใครต้องโอนให้ใคร</span></span><span aria-hidden="true">›</span></button>';
+      '<span><b>'+L("ใครจ่ายให้ร้านไปก่อน?")+'</b><span>'+L("ดูว่าใครต้องโอนให้ใคร")+'</span></span><span aria-hidden="true">›</span></button>';
   }
   var s = settleBill(r);
   var me = myMemberId();
@@ -80,40 +79,30 @@ function payerSection(r){
   state.payers.forEach(function(p){ chosen[p.id] = p; });
   var active = state.payers.filter(function(p){ return !!nameOf(p.id); });
 
-  var picks = '<div class="pick" role="group" aria-label="คนที่จ่ายเงินให้ร้าน">'+r.list.map(function(p){
+  var picks = '<div class="pick" role="group" aria-label="'+L("คนที่จ่ายเงินให้ร้าน")+'">'+r.list.map(function(p){
     return '<button data-payer="'+p.id+'" aria-pressed="'+(!!chosen[p.id])+'">'+esc(p.name)+'</button>';
   }).join("")+'</div>';
 
   var amounts = active.length < 2 ? "" : '<div class="payer-amts">'+active.map(function(p){
-    return '<label class="payer-row"><span class="payer-name">'+esc(nameOf(p.id))+' จ่าย</span>'+
+    return '<label class="payer-row"><span class="payer-name">'+L("{name} จ่าย", { name:esc(nameOf(p.id)) })+'</span>'+
       '<input type="number" inputmode="decimal" step="0.01" min="0" data-payer-amt="'+p.id+'" '+
-        'value="'+(p.amount == null ? "" : p.amount)+'" placeholder="ส่วนที่เหลือ" aria-label="ยอดที่ '+esc(nameOf(p.id))+' จ่าย">'+
-      '<span class="payer-unit">บาท</span></label>';
+        'value="'+(p.amount == null ? "" : p.amount)+'" placeholder="'+L("ส่วนที่เหลือ")+'" aria-label="'+L("ยอดที่ {name} จ่าย", { name:esc(nameOf(p.id)) })+'">'+
+      '<span class="payer-unit">'+L("บาท")+'</span></label>';
   }).join("")+'</div>';
 
   var msg = ({
-    none:    ["muted", "แตะชื่อคนที่จ่ายเงินให้ร้านไปก่อน จ่ายกันหลายคนก็เลือกได้"],
-    missing: ["muted", "ใส่ยอดที่แต่ละคนจ่าย เว้นว่างไว้ได้คนเดียว ระบบจะคิดเป็นส่วนที่เหลือให้"],
-    short:   ["error", "ยอดที่จ่ายรวมกันยังขาดอีก "+baht(s.diff)+" บาท"],
-    over:    ["error", "ยอดที่จ่ายรวมกันเกินยอดบิล "+baht(s.diff)+" บาท"]
+    none:    ["muted", L("แตะชื่อคนที่จ่ายเงินให้ร้านไปก่อน จ่ายกันหลายคนก็เลือกได้")],
+    missing: ["muted", L("ใส่ยอดที่แต่ละคนจ่าย เว้นว่างไว้ได้คนเดียว ระบบจะคิดเป็นส่วนที่เหลือให้")],
+    short:   ["error", L("ยอดที่จ่ายรวมกันยังขาดอีก {amt} บาท", { amt:baht(s.diff) })],
+    over:    ["error", L("ยอดที่จ่ายรวมกันเกินยอดบิล {amt} บาท", { amt:baht(s.diff) })]
   })[s.reason];
   var open = active.filter(function(p){ return p.amount == null; })[0];
-  if (s.ok && active.length > 1 && open) msg = ["muted", nameOf(open.id)+" จ่ายส่วนที่เหลือ "+baht(s.paid[open.id])+" บาท"];
+  if (s.ok && active.length > 1 && open) msg = ["muted", L("{name} จ่ายส่วนที่เหลือ {amt} บาท", { name:nameOf(open.id), amt:baht(s.paid[open.id]) })];
 
-  var transfers = "";
-  if (s.ok){
-    transfers = '<div class="transfers" aria-live="polite"><h3>โอนเงินตามนี้</h3>'+
-      (s.transfers.length ? s.transfers.map(function(t){
-        var mine = me && (t.from === me || t.to === me);
-        return '<div class="tf-row'+(mine ? ' me' : '')+'">'+
-          '<span class="tf-who"><b>'+esc(t.fromName)+'</b> <span class="tf-arrow" aria-label="โอนให้">→</span> <b>'+esc(t.toName)+'</b></span>'+
-          '<span class="tf-amt">'+baht(t.amount)+'</span></div>';
-      }).join("") : '<p class="hint" style="margin:0">ไม่มีใครต้องโอน ทุกคนจ่ายพอดีกับที่กิน 👍</p>')+
-      '<p class="tf-note">'+(s.transfers.length > 1 ? "หักลบให้แล้ว โอนแค่ "+s.transfers.length+" ครั้งก็จบ" : "")+'</p></div>';
-  }
+  var transfers = s.ok ? transferRows(s, me, L("ไม่มีใครต้องโอน ทุกคนจ่ายพอดีกับที่กิน 👍")) : "";
 
   return '<section class="step-card payer-card" aria-labelledby="h-payers">'+
-    '<div class="step-head"><h2 id="h-payers">ใครจ่ายให้ร้านไปก่อน?</h2></div>'+
+    '<div class="step-head"><h2 id="h-payers">'+L("ใครจ่ายให้ร้านไปก่อน?")+'</h2></div>'+
     picks + amounts +
     (msg ? '<p class="field-msg '+msg[0]+'" aria-live="polite">'+esc(msg[1])+'</p>' : '')+
     transfers+
@@ -125,24 +114,17 @@ function tripTransferSection(r){
   var s = settleBill(r), me = myMemberId();
   var body;
   if (!s.ok && s.reason === "unpaid"){
-    body = '<div class="notice warn" style="margin:0"><p>ยังไม่ได้ใส่ว่าใครจ่าย '+s.count+' รายการ ใส่ให้ครบแล้วจะรู้ว่าใครต้องโอนให้ใคร</p>'+
-      '<a class="btn-quiet" href="'+splitHref()+'">ไปใส่คนจ่าย</a></div>';
+    body = '<div class="notice warn" style="margin:0"><p>'+L("ยังไม่ได้ใส่ว่าใครจ่าย {n} รายการ ใส่ให้ครบแล้วจะรู้ว่าใครต้องโอนให้ใคร", { n:s.count })+'</p>'+
+      '<a class="btn-quiet" href="'+splitHref()+'">'+L("ไปใส่คนจ่าย")+'</a></div>';
   } else if (!s.ok){
-    body = '<p class="hint" style="margin:0">ใส่ค่าใช้จ่ายและคนจ่ายก่อน แล้วจะสรุปการโอนให้</p>';
+    body = '<p class="hint" style="margin:0">'+L("ใส่ค่าใช้จ่ายและคนจ่ายก่อน แล้วจะสรุปการโอนให้")+'</p>';
   } else {
     var paidRows = Object.keys(s.paid).map(function(id){
-      return '<span class="paid-chip">'+esc(nameOf(id))+' จ่ายไป <b>'+baht(s.paid[id])+'</b></span>';
+      return '<span class="paid-chip">'+L("{name} จ่ายไป", { name:esc(nameOf(id)) })+' <b>'+baht(s.paid[id])+'</b></span>';
     }).join("");
     body = '<div class="paid-list">'+paidRows+'</div>'+
-      '<div class="transfers" aria-live="polite"><h3>โอนเงินตามนี้</h3>'+
-      (s.transfers.length ? s.transfers.map(function(t){
-        var mine = me && (t.from === me || t.to === me);
-        return '<div class="tf-row'+(mine ? ' me' : '')+'">'+
-          '<span class="tf-who"><b>'+esc(t.fromName)+'</b> <span class="tf-arrow" aria-label="โอนให้">→</span> <b>'+esc(t.toName)+'</b></span>'+
-          '<span class="tf-amt">'+baht(t.amount)+'</span></div>';
-      }).join("") : '<p class="hint" style="margin:0">ไม่มีใครต้องโอน ทุกคนจ่ายพอดีกับส่วนของตัวเอง 👍</p>')+
-      '<p class="tf-note">'+(s.transfers.length > 1 ? "หักลบให้แล้ว โอนแค่ "+s.transfers.length+" ครั้งก็จบ" : "")+'</p></div>';
+      transferRows(s, me, L("ไม่มีใครต้องโอน ทุกคนจ่ายพอดีกับส่วนของตัวเอง 👍"));
   }
   return '<section class="step-card payer-card" aria-labelledby="h-trip-pay">'+
-    '<div class="step-head"><h2 id="h-trip-pay">ใครโอนให้ใคร</h2></div>'+body+'</section>';
+    '<div class="step-head"><h2 id="h-trip-pay">'+L("ใครโอนให้ใคร")+'</h2></div>'+body+'</section>';
 }

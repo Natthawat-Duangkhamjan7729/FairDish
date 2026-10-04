@@ -65,13 +65,13 @@ async function receiptImageBlob(){
   // หัวใบเสร็จ
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.font = "600 30px "+pal.body;
-  var tag = "ใบสรุปยอด", tw = ctx.measureText(tag).width + 56;
+  var tag = L("ใบสรุปยอด"), tw = ctx.measureText(tag).width + 56;
   ctx.fillStyle = pal.tag; roundRect(ctx, (W-tw)/2, 120, tw, 56, 28); ctx.fill();
   ctx.fillStyle = pal.tagInk; ctx.fillText(tag, W/2, 149);
   ctx.fillStyle = pal.ink; ctx.font = "600 52px "+pal.head;
-  ctx.fillText(fitText(ctx, (ui.ctx && Store.groupName) || kt("head"), CARD_W - 2*PAD), W/2, 236);
+  ctx.fillText(fitText(ctx, currentBillName(), CARD_W - 2*PAD), W/2, 236);
   ctx.fillStyle = pal.ink2; ctx.font = "400 30px "+pal.body;
-  ctx.fillText(r.n+" คน · หารตามที่กินจริง", W/2, 300);
+  ctx.fillText(L("{n} คน", { n:r.n })+" · "+(state.kind === "trip" ? L("หารตามที่ใช้จริง") : L("หารตามที่กินจริง")), W/2, 300);
 
   // รายคน
   var y = 380;
@@ -92,14 +92,14 @@ async function receiptImageBlob(){
   ctx.setLineDash([]); ctx.strokeStyle = pal.ink; ctx.lineWidth = 4;
   ctx.beginPath(); ctx.moveTo(CARD_X+PAD, y+30); ctx.lineTo(W-CARD_X-PAD, y+30); ctx.stroke();
   ctx.fillStyle = pal.ink;
-  ctx.textAlign = "left"; ctx.font = "600 42px "+pal.head; ctx.fillText("รวมทั้งหมด", CARD_X+PAD, y+90);
+  ctx.textAlign = "left"; ctx.font = "600 42px "+pal.head; ctx.fillText(L("รวมทั้งหมด"), CARD_X+PAD, y+90);
   ctx.textAlign = "right"; ctx.font = "600 46px "+pal.num; ctx.fillText(baht(r.grand)+" ฿", W-CARD_X-PAD, y+90);
 
   // v2.5: ใครโอนให้ใคร
   if (tfs.length){
     var ty = y + 190;
     ctx.textAlign = "left"; ctx.fillStyle = pal.ink; ctx.font = "600 34px "+pal.head;
-    ctx.fillText("โอนเงินตามนี้", CARD_X+PAD, ty);
+    ctx.fillText(L("โอนเงินตามนี้"), CARD_X+PAD, ty);
     ty += 66;
     tfs.forEach(function(t){
       ctx.textAlign = "left"; ctx.fillStyle = pal.ink; ctx.font = "400 32px "+pal.body;
@@ -113,7 +113,7 @@ async function receiptImageBlob(){
   // ท้ายใบ
   var fy = H - 130;
   ctx.textAlign = "left"; ctx.fillStyle = pal.ink2; ctx.font = "400 28px "+pal.body;
-  var brand = "หารตามที่กินจริงด้วย FairDish", bw = ctx.measureText(brand).width + (logo ? 64 : 0);
+  var brand = state.kind === "trip" ? L("หารตามที่ใช้จริงด้วย FairDish") : L("หารตามที่กินจริงด้วย FairDish"), bw = ctx.measureText(brand).width + (logo ? 64 : 0);
   var bx = (W - bw)/2;
   if (logo){ ctx.save(); roundRect(ctx, bx, fy-24, 48, 48, 12); ctx.clip(); ctx.drawImage(logo, bx, fy-24, 48, 48); ctx.restore(); bx += 64; }
   ctx.fillText(brand, bx, fy);
@@ -126,25 +126,25 @@ async function receiptImageBlob(){
 /** แชร์รูปผ่านเมนูแชร์ของมือถือ ถ้าเครื่องไม่รองรับก็ดาวน์โหลดไฟล์แทน */
 async function shareReceiptImage(){
   var btn = document.getElementById("shareImgBtn");
-  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>กำลังสร้างรูป'; }
+  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>'+L("กำลังสร้างรูป"); }
   try {
     var blob = await receiptImageBlob();
-    var name = "FairDish-" + ((ui.ctx && Store.groupName) || "bill").replace(/[\\/:*?"<>|\s]+/g,"-") + ".png";
+    var name = "FairDish-" + (currentBillName() || "bill").replace(/[\\/:*?"<>|\s]+/g,"-") + ".png";
     var file = typeof File === "function" ? new File([blob], name, { type:"image/png" }) : null;
     if (file && navigator.canShare && navigator.canShare({ files:[file] })){
-      try { await navigator.share({ files:[file], text:"ยอดของแต่ละคน "+kt("head")+" "+kt("icon") }); }
+      try { await navigator.share({ files:[file], text:L("ยอดของแต่ละคน")+" "+currentBillName()+" "+kt("icon") }); }
       catch(e){ if (e && e.name !== "AbortError") throw e; }
     } else {
       var a = document.createElement("a");
       a.href = URL.createObjectURL(blob); a.download = name;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
-      toast("บันทึกรูปใบเสร็จแล้ว ส่งเข้าแชตได้เลย","ok");
+      toast(L("บันทึกรูปใบเสร็จแล้ว ส่งเข้าแชตได้เลย"),"ok");
     }
   } catch(err){
-    toast("สร้างรูปไม่สำเร็จ ลองคัดลอกข้อความแทน","error");
+    toast(L("สร้างรูปไม่สำเร็จ ลองคัดลอกข้อความแทน"),"error");
   } finally {
     var again = document.getElementById("shareImgBtn");
-    if (again){ again.disabled = false; again.innerHTML = ICON_SHARE+' แชร์รูปใบเสร็จ'; }
+    if (again){ again.disabled = false; again.innerHTML = ICON_SHARE+' '+L("แชร์รูปใบเสร็จ"); }
   }
 }

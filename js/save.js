@@ -9,10 +9,12 @@ function serialize(){
   if (t){
     // v3.1: กำลังแก้มื้ออาหารข้างในทริป — state ตอนนี้คือข้อมูลของมื้อ ประกอบกลับเป็นทริปก่อนบันทึก
     return { members:state.members, menus:t.menus.map(function(m){ return m.id === t.mealId ? mealWithScope(m) : m; }),
-             shared:t.shared, charges:t.charges, payers:t.payers, kind:"trip", savedAt:new Date().toISOString() };
+             shared:t.shared, charges:t.charges, payers:t.payers, kind:"trip", title:state.title, confirms:state.confirms,
+             savedAt:new Date().toISOString() };
   }
   return { members:state.members, menus:state.menus, shared:state.shared,
-           charges:state.charges, payers:state.payers, kind:state.kind, savedAt:new Date().toISOString() };
+           charges:state.charges, payers:state.payers, kind:state.kind, title:state.title, confirms:state.confirms,
+           savedAt:new Date().toISOString() };
 }
 /** รายการมื้อในทริป + ข้อมูลมื้อที่กำลังแก้อยู่ (state.menus/shared/charges) */
 function mealWithScope(m){
@@ -43,6 +45,8 @@ function applyBill(saved){
   state.shared = Array.isArray(saved.shared) ? saved.shared : [];
   state.charges = (saved.charges && saved.charges.length) ? saved.charges : defaultCharges();
   state.kind = saved.kind === "trip" ? "trip" : "meal";
+  state.title = typeof saved.title === "string" ? saved.title.slice(0, MAX_MENU_NAME) : "";
+  state.confirms = cleanConfirms(saved.confirms);
   state.payers = (Array.isArray(saved.payers) ? saved.payers : []).filter(function(p){ return p && p.id; }).map(function(p){
     var n = Number(p.amount);
     return { id:String(p.id), amount:(p.amount == null || !isFinite(n) || n < 0) ? null : n };
@@ -56,14 +60,24 @@ function applyBill(saved){
   });
   uid = maxId;
 }
+/** v4.0: การยืนยันเมนูที่โหลดมา — เก็บเฉพาะรูปแบบที่ถูกต้อง */
+function cleanConfirms(c){
+  var out = {};
+  if (!c || typeof c !== "object" || Array.isArray(c)) return out;
+  Object.keys(c).forEach(function(id){
+    var v = c[id];
+    if (v && typeof v.sig === "string") out[String(id)] = { at:String(v.at || ""), sig:v.sig };
+  });
+  return out;
+}
 function setSave(next){
   ui.save = next;
   var chip = document.getElementById("saveChip");
   var text = document.getElementById("saveChipText");
   if (!chip || !text) return;
   chip.dataset.state = next;
-  text.textContent = ({ loading:"กำลังโหลดข้อมูล", saving:"กำลังบันทึก",
-                        saved:"บันทึกแล้ว", error:"ยังไม่ได้บันทึก" })[next] || "";
+  text.textContent = L(({ loading:"กำลังโหลดข้อมูล", saving:"กำลังบันทึก",
+                          saved:"บันทึกแล้ว", error:"ยังไม่ได้บันทึก" })[next] || "");
 }
 async function commit(successMessage, source){
   setSave("saving");
@@ -71,6 +85,7 @@ async function commit(successMessage, source){
     await Store.save(serialize());
     setSave("saved");
     ui.saveFailedIn = null;
+    noteGroupStats();
     if (successMessage) toast(successMessage,"ok");
     return true;
   } catch(err){
@@ -79,26 +94,27 @@ async function commit(successMessage, source){
       applyBill(err.latest.data);
       Store.version = err.latest.version;
       if (currentPath() === "/split") document.getElementById("view").innerHTML = pageSplit();
+      if (currentPath() === "/confirm") rerenderConfirm();
       setSave("saved");
       ui.saveFailedIn = null;
-      toast("มีเพื่อนแก้บิลนี้ไปก่อน โหลดข้อมูลล่าสุดแล้ว ลองทำรายการเมื่อกี้อีกครั้ง","error");
+      toast(L("มีเพื่อนแก้บิลนี้ไปก่อน โหลดข้อมูลล่าสุดแล้ว ลองทำรายการเมื่อกี้อีกครั้ง"),"error");
       render();
       rerenderBill();
       return false;
     }
     setSave("error");
     ui.saveFailedIn = source || "member";
-    toast("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ","error",{ label:"ลองอีกครั้ง", action:retrySave });
+    toast(L("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ"),"error",{ label:L("ลองอีกครั้ง"), action:retrySave });
     render();
     return false;
   }
 }
 function saveErrorNotice(){
-  return '<div class="notice error"><p>บันทึกลงเครื่องไม่สำเร็จ ข้อมูลที่เห็นยังอยู่ครบ แต่ถ้าปิดหน้านี้จะหาย</p>'+
-    '<button class="btn-quiet" id="retrySave">ลองบันทึกอีกครั้ง</button></div>';
+  return '<div class="notice error"><p>'+L("บันทึกลงเครื่องไม่สำเร็จ ข้อมูลที่เห็นยังอยู่ครบ แต่ถ้าปิดหน้านี้จะหาย")+'</p>'+
+    '<button class="btn-quiet" id="retrySave">'+L("ลองบันทึกอีกครั้ง")+'</button></div>';
 }
 async function retrySave(){
   var ok = await commit();
-  if (ok) toast("บันทึกเรียบร้อยแล้ว","ok");
+  if (ok) toast(L("บันทึกเรียบร้อยแล้ว"),"ok");
   render();
 }

@@ -10,23 +10,24 @@ var MY_GROUPS_LIMIT = 30;
 /** รหัสกลุ่ม = เลขฐานสิบหก 12 ตัว (สุ่มจากฝั่งเซิร์ฟเวอร์) */
 function isGroupId(id){ return /^[0-9a-f]{12}$/.test(String(id||"")); }
 
-/** "/g/<id>" หรือ "/g/<id>/bill" → { id, bill } ไม่ใช่หน้ากลุ่ม → null (id อาจผิดรูปแบบ ให้ผู้เรียกเช็กเอง) */
+/** "/g/<id>", "/g/<id>/bill" หรือ "/g/<id>/me" (v4.0: เพื่อนยืนยันเมนู) → { id, bill, me }
+ *  ไม่ใช่หน้ากลุ่ม → null (id อาจผิดรูปแบบ ให้ผู้เรียกเช็กเอง) */
 function parseGroupPath(path){
-  var m = /^\/g\/([^\/]+)(\/bill)?$/.exec(String(path||""));
-  return m ? { id:m[1], bill:!!m[2] } : null;
+  var m = /^\/g\/([^\/]+)(\/bill|\/me)?$/.exec(String(path||""));
+  return m ? { id:m[1], bill:m[2] === "/bill", me:m[2] === "/me" } : null;
 }
 
 /** รับทั้งลิงก์เต็มหรือรหัสกลุ่มที่ผู้ใช้วางมา → รหัสกลุ่ม หรือ "" */
 function groupIdFromInput(text){
   var s = String(text||"").trim().toLowerCase();
-  var m = /#\/g\/([0-9a-f]{12})(?:[\/?#]|$)/.exec(s);
+  var m = /#\/g\/([0-9a-f]{12})(?:[\/?#]|$)/.exec(s);   // ลิงก์ /bill และ /me ก็ใช้ได้
   if (m) return m[1];
   return isGroupId(s) ? s : "";
 }
 
 /** ชื่อกลุ่มตั้งต้น เช่น "มื้อ 4 ต.ค." — ตอนบิลมาถึงโต๊ะไม่มีใครอยากคิดชื่อ */
 function defaultGroupName(date, kind){
-  return ktOf(kind || "meal", "groupPrefix") + " " + (date || new Date()).toLocaleDateString("th-TH", { day:"numeric", month:"short" });
+  return ktOf(kind || "meal", "groupPrefix") + " " + shortDate(date || new Date());
 }
 function groupLink(id){ return location.origin + location.pathname + "#/g/" + id; }
 function splitHref(){ return ui.ctx ? "#/g/"+ui.ctx : "#/split"; }

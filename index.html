@@ -25,25 +25,26 @@
 <body>
 
 
-<div class="sandbox-bar dev-beta" role="note">🛠️ Developer Beta — ฟีเจอร์ใหม่ยังไม่นิ่ง ข้อมูลแยกจากตัวเต็ม <a href="https://fairdish.vercel.app">ไปตัวเต็ม</a></div>
+<div class="sandbox-bar dev-beta" role="note">🛠️ Developer Beta — <span data-i18n="ฟีเจอร์ใหม่ยังไม่นิ่ง ข้อมูลแยกจากตัวเต็ม">ฟีเจอร์ใหม่ยังไม่นิ่ง ข้อมูลแยกจากตัวเต็ม</span> <a href="https://fairdish.vercel.app" data-i18n="ไปตัวเต็ม">ไปตัวเต็ม</a></div>
 <header class="nav">
   <div class="wrap nav-in">
-    <a class="logo" href="#/" aria-label="FairDish หน้าแรก">
+    <a class="logo" href="#/" aria-label="FairDish หน้าแรก" data-i18n-label="FairDish หน้าแรก">
       <img class="logo-mark" src="img/logo.png" alt="" width="48" height="48">
       <b>FairDish</b>
     </a>
     <span class="nav-ctx" id="navCtx"></span>
-    <nav class="nav-links" aria-label="เมนูหลัก">
-      <a href="#/" data-nav="/">หน้าแรก</a>
-      <a href="#/how" data-nav="/how">วิธีใช้</a>
-      <a href="#/bill" data-nav="/bill" data-link="bill">ใบสรุปยอด</a>
-      <a href="#/groups" data-nav="/groups">กลุ่ม</a>
-      <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
+    <nav class="nav-links" aria-label="เมนูหลัก" data-i18n-label="เมนูหลัก">
+      <a href="#/" data-nav="/" data-i18n="หน้าแรก">หน้าแรก</a>
+      <a href="#/history" data-nav="/history" data-i18n="ประวัติ">ประวัติ</a>
+      <a href="#/bill" data-nav="/bill" data-link="bill" data-i18n="ใบสรุปยอด">ใบสรุปยอด</a>
+      <a href="#/groups" data-nav="/groups" data-i18n="กลุ่ม">กลุ่ม</a>
+      <a href="#/how" data-nav="/how" data-i18n="วิธีใช้">วิธีใช้</a>
+      <a href="#/more" data-nav="/more" data-i18n="อื่น ๆ">อื่น ๆ</a>
     </nav>
-    <a class="nav-cta" href="#/split" data-link="split">หารบิล</a>
+    <a class="nav-cta" href="#/split" data-link="split" data-i18n="หารบิล">หารบิล</a>
     <button class="install-btn" id="installBtn" type="button" aria-haspopup="dialog" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>
-      <span>ติดตั้ง<span class="install-long">แอป</span></span></button>
+      <span data-i18n="ติดตั้ง">ติดตั้ง</span></button>
   </div>
 </header>
 
@@ -51,33 +52,34 @@
 
 <footer class="foot">
   <div class="wrap foot-in">
-    <span>FairDish v3.1 Developer Beta · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
+    <span>FairDish v4.0 Developer Beta · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
     <nav>
-      <a href="#/">หน้าแรก</a>
-      <a href="#/how">วิธีใช้</a>
-      <a href="#/bill">ใบสรุปยอด</a>
-      <a href="#/about">เกี่ยวกับ</a>
+      <a href="#/" data-i18n="หน้าแรก">หน้าแรก</a>
+      <a href="#/how" data-i18n="วิธีใช้">วิธีใช้</a>
+      <a href="#/history" data-i18n="ประวัติ">ประวัติ</a>
+      <a href="#/about" data-i18n="เกี่ยวกับ">เกี่ยวกับ</a>
     </nav>
   </div>
 </footer>
 
-<!-- v2.1: แถบแท็บล่าง (มือถือเท่านั้น) — href ของหารบิล/สรุปถูกตั้งใหม่ใน route() ให้อยู่ในกลุ่มเดิม -->
-<nav class="tabbar" id="tabbar" aria-label="เมนูหลัก">
+<!-- v2.1: แถบแท็บล่าง (มือถือเท่านั้น) — href ของหารบิลถูกตั้งใหม่ใน route() ให้อยู่ในกลุ่มเดิม
+     v4.0: แท็บ "สรุป" เปลี่ยนเป็น "ประวัติ" (ใบสรุปยอดเปิดจากแถบยอดรวมในหน้าหารบิล) -->
+<nav class="tabbar" id="tabbar" aria-label="เมนูหลัก" data-i18n-label="เมนูหลัก">
   <a href="#/" data-tab="home">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5h4v5"/></svg>
-    <span>หน้าแรก</span></a>
+    <span data-i18n="หน้าแรก">หน้าแรก</span></a>
   <a href="#/split" data-tab="split" data-link="split">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg>
-    <span>หารบิล</span></a>
-  <a href="#/bill" data-tab="bill" data-link="bill">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-    <span>สรุป</span></a>
+    <span data-i18n="หารบิล">หารบิล</span></a>
+  <a href="#/history" data-tab="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span data-i18n="ประวัติ">ประวัติ</span></a>
   <a href="#/groups" data-tab="groups">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.4.2 4 1.9 4.5 4.6"/></svg>
-    <span>กลุ่ม</span></a>
+    <span data-i18n="กลุ่ม">กลุ่ม</span></a>
   <a href="#/more" data-tab="more">
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-    <span>อื่น ๆ</span></a>
+    <span data-i18n="อื่น ๆ">อื่น ๆ</span></a>
 </nav>
 
 <!-- v2.3: หน้าต่างวิธีติดตั้งแอป (เนื้อหาสร้างโดย js/install.js) -->
@@ -90,6 +92,8 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/config.js" defer></script>
+<script src="js/i18n.js" defer></script>
+<script src="js/i18n-en.js" defer></script>
 <script src="js/store.js" defer></script>
 <script src="js/state.js" defer></script>
 <script src="js/qr.js" defer></script>
@@ -98,8 +102,10 @@
 <script src="js/utils.js" defer></script>
 <script src="js/save.js" defer></script>
 <script src="js/calc.js" defer></script>
+<script src="js/bills.js" defer></script>
 <script src="js/receipt.js" defer></script>
 <script src="js/pages.js" defer></script>
+<script src="js/screens.js" defer></script>
 <script src="js/render.js" defer></script>
 <script src="js/actions.js" defer></script>
 <script src="js/shared-library.js" defer></script>

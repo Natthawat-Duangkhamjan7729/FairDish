@@ -15,6 +15,7 @@
 | ไฟล์ | หน้าที่ |
 |---|---|
 | `config.js` | `SUPABASE_URL`, `SUPABASE_ANON_KEY` (เว้นว่าง = ปิดระบบกลุ่ม) |
+| `i18n.js`, `i18n-en.js` | v4.0: `L("ข้อความไทย", {ค่า})` แปลตามภาษา (`LANG`) — ข้อความใหม่ต้องครอบ `L()` และเพิ่มคำแปลใน `i18n-en.js` (`tests/i18n.test.js` เช็กให้) |
 | `store.js` | ชั้นเก็บข้อมูล (localStorage หรือบิลกลุ่มผ่าน `Cloud` เมื่อ `Store.groupId` ถูกตั้ง) |
 | `state.js` | `state`, `ui`, ค่าคงที่, `APP_VERSION` |
 | `qr.js` | `QR.encode()` / `QR.svg()` สร้าง QR code เอง (byte, เวอร์ชัน 1–10, ระดับแก้ผิด H) — ไม่แตะ DOM |
@@ -24,11 +25,13 @@
 | `utils.js` | `baht`, `esc`, ไอคอน |
 | `save.js` | `commit()` บันทึกข้อมูล |
 | `calc.js` | `compute()` / `computeBill(bill)` คำนวณเงิน (ทริปเรียกซ้ำกับมื้อข้างใน), `settle()` / `settleBill()` ใครโอนให้ใคร — **ห้ามแตะ DOM** |
+| `bills.js` | v4.0: ประวัติบิล (`archiveLocalBill`, `restoreHistory`) + เพื่อนยืนยันเมนู (`itemsOf`, `applyConfirm`, `confirmStatusOf`, `saveConfirm` รวมกับข้อมูลล่าสุดเองเมื่อชน) |
 | `receipt.js`, `pages.js`, `render.js` | สร้าง HTML ของแต่ละหน้า |
+| `screens.js` | v4.0: หน้าแรก "บิลของฉัน", ประวัติ (`#/history`, `#/h/<id>`), หน้ายืนยันเมนู (`#/g/<id>/me`), หน้าแนะนำ 3 หน้า |
 | `actions.js` | การกระทำของผู้ใช้ |
 | `share-image.js` | วาดใบเสร็จเป็นรูป PNG ด้วย canvas (`receiptImageBlob()`, `shareReceiptImage()`) สีอ่านจากตัวแปร CSS ของ `.receipt-wrap` |
 | `install.js` | ปุ่ม/หน้าต่าง "ติดตั้งแอป" (มือถือเท่านั้น แสดงวิธีของระบบที่ตรวจพบระบบเดียว) — `detectPlatform()`, `detectInApp()`, `beforeinstallprompt` |
-| `router.js` | hash router (`#/split`, `#/bill`, `#/groups`, `#/g/<id>`, `#/g/<id>/bill`, `#/more`) + แท็บล่าง (`tabOf()`: home / split / bill / groups / more) |
+| `router.js` | hash router (`#/split`, `#/bill`, `#/groups`, `#/history`, `#/h/<id>`, `#/g/<id>`, `#/g/<id>/bill`, `#/g/<id>/me`, `#/more`) + แท็บล่าง (`tabOf()`: home / split / history / groups / more) |
 | `events.js` | event delegation ของทั้งหน้า |
 | `main.js` | `boot()`, `loadContext()` สลับบิลส่วนตัว/บิลกลุ่ม, `refreshGroup()` |
 

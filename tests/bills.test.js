@@ -1,0 +1,115 @@
+// v4.0: ประวัติบิล + เพื่อนยืนยันเมนู (ส่วนที่ไม่แตะ DOM) — รันด้วย `node --test`
+"use strict";
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+
+function loadApp(){
+  const ctx = vm.createContext({});
+  for (const f of ["config.js", "i18n.js", "i18n-en.js", "state.js", "cloud.js", "save.js", "calc.js", "bills.js"]){
+    const file = path.join(__dirname, "..", "js", f);
+    vm.runInContext(fs.readFileSync(file, "utf8"), ctx, { filename: file });
+  }
+  return ctx;
+}
+const plain = x => JSON.parse(JSON.stringify(x));
+
+function mealBill(){
+  return {
+    kind: "meal",
+    members: [{ id: "a", name: "เอ" }, { id: "b", name: "บี" }, { id: "c", name: "ซี" }],
+    menus: [
+      { id: "m1", name: "ลาบ", price: 90, eaters: ["a", "b", "c"] },
+      { id: "m2", name: "ซอยจุ๊", price: 150, eaters: ["a"] },
+      { id: "m3", name: "ไข่เจียว", price: 60, eaters: ["b"] }
+    ],
+    shared: [{ id: "s1", name: "น้ำแข็ง", price: 30 }],
+    charges: [{ id: "svc", label: "ค่าบริการ", rate: 10, on: true, fixed: true }]
+  };
+}
+function tripBill(){
+  return {
+    kind: "trip",
+    members: [{ id: "a", name: "เอ" }, { id: "b", name: "บี" }],
+    menus: [
+      { id: "t1", name: "ที่พัก", price: 1000, eaters: ["a", "b"], payer: "a" },
+      { id: "t2", type: "meal", name: "มื้อเย็น", price: 0, eaters: [], payer: "b", meal: {
+        menus: [{ id: "x1", name: "ส้มตำ", price: 60, eaters: ["a", "b"] }, { id: "x2", name: "ไก่ย่าง", price: 120, eaters: ["a"] }],
+        shared: [], charges: [] } }
+    ],
+    shared: [], charges: []
+  };
+}
+
+test("itemsOf: ทริปรวมเมนูในมื้ออาหารด้วย และ key ไม่ซ้ำกัน", () => {
+  const app = loadApp();
+  const items = app.itemsOf(tripBill());
+  assert.deepEqual(plain(items.map(i => i.key)), ["t1", "t2/x1", "t2/x2"]);
+  assert.equal(items[1].group, "มื้อเย็น");
+});
+
+test("ยืนยันเมนู: ติ๊ก = มีชื่อ ไม่ติ๊ก = เอาชื่อออก และบันทึกลายเซ็นไว้", () => {
+  const app = loadApp();
+  const d = mealBill();
+  assert.equal(app.confirmStatusOf(d, "b"), "pending");
+  // บีบอกว่ากินลาบกับซอยจุ๊ ไม่ได้กินไข่เจียว
+  assert.equal(app.applyConfirm(d, "b", { m1: true, m2: true }, "2026-10-04T10:00:00Z"), true);
+  assert.deepEqual(plain(d.menus.map(m => m.eaters)), [["a", "b", "c"], ["a", "b"], []]);
+  assert.equal(app.confirmStatusOf(d, "b"), "confirmed");
+  assert.equal(d.confirms.b.sig, "m1,m2");
+  // คนอื่นแก้รายการของบีทีหลัง → สถานะเปลี่ยนเป็น "แก้หลังยืนยัน"
+  d.menus[0].eaters = ["a", "c"];
+  assert.equal(app.confirmStatusOf(d, "b"), "changed");
+});
+
+test("ยืนยันเมนู: ไม่มีชื่อนี้ในบิลแล้ว = ไม่แก้อะไร", () => {
+  const app = loadApp();
+  const d = mealBill();
+  const before = JSON.stringify(d);
+  assert.equal(app.applyConfirm(d, "zz", { m1: true }), false);
+  assert.equal(JSON.stringify(d), before);
+});
+
+test("ยืนยันเมนูในทริป: แก้เมนูในมื้ออาหารข้างในได้ และยอดรวมยังเท่ายอดบิล", () => {
+  const app = loadApp();
+  const d = tripBill();
+  app.applyConfirm(d, "b", { "t1": true, "t2/x1": true, "t2/x2": true });
+  assert.deepEqual(plain(d.menus[1].meal.menus.map(m => m.eaters)), [["a", "b"], ["a", "b"]]);
+  const r = app.computeBill(d);
+  const sum = Math.round(r.list.reduce((a, p) => a + p.rounded, 0) * 100) / 100;
+  assert.equal(sum, r.grand);
+  assert.equal(r.grand, 1180);
+});
+
+test("billStats + billTitle: ใช้ชื่อที่ตั้งเอง ไม่ตั้ง = ชื่อตามประเภทและวันที่", () => {
+  const app = loadApp();
+  const d = mealBill();
+  const st = app.billStats(d);
+  assert.equal(st.n, 3);
+  assert.equal(st.items, 3);
+  assert.equal(st.grand, Math.round((90 + 150 + 60 + 30) * 1.1 * 100) / 100);
+  d.title = "ร้านลาบ";
+  assert.equal(app.billTitle(d), "ร้านลาบ");
+  d.title = ""; d.savedAt = "2026-10-04T10:00:00Z";
+  assert.match(app.billTitle(d), /^มื้อ /);
+  d.kind = "trip";
+  assert.match(app.billTitle(d), /^ทริป /);
+});
+
+test("billHasContent: บิลว่างไม่ถูกเก็บเข้าประวัติ", () => {
+  const app = loadApp();
+  assert.equal(!!app.billHasContent(null), false);
+  assert.equal(!!app.billHasContent({ members: [], menus: [], shared: [] }), false);
+  assert.equal(!!app.billHasContent({ members: [{ id: "a", name: "เอ" }] }), true);
+});
+
+test("applyBill อ่านชื่อบิลและการยืนยัน ข้อมูลผิดรูปแบบถูกทิ้ง", () => {
+  const app = loadApp();
+  app.applyBill({ title: "ร้านลาบ", confirms: { a: { at: "x", sig: "m1" }, b: "bad", c: { at: "y" } } });
+  assert.equal(app.state.title, "ร้านลาบ");
+  assert.deepEqual(plain(app.state.confirms), { a: { at: "x", sig: "m1" } });
+  app.applyBill({ confirms: [1, 2] });
+  assert.deepEqual(plain(app.state.confirms), {});
+});

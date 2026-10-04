@@ -36,13 +36,14 @@ async function loadContext(groupId){
     }
     ui.loading = false;
     setSave("saved");
+    noteGroupStats();
   } catch(err){
     if (token !== loadToken) return;
     ui.loading = false;
     if (groupId) ui.groupError = "load";
     else {
       setSave("error");
-      toast("โหลดข้อมูลเดิมไม่สำเร็จ เริ่มบิลใหม่ได้เลย","error");
+      toast(L("โหลดข้อมูลเดิมไม่สำเร็จ เริ่มบิลใหม่ได้เลย"),"error");
     }
   }
   refreshView();
@@ -51,7 +52,7 @@ async function loadContext(groupId){
 /** วาดหน้าที่เปิดอยู่ใหม่หลังข้อมูลบิลเปลี่ยน */
 function refreshView(){
   var path = currentPath();
-  if (ui.ctx && Store.groupName) document.title = Store.groupName + " · FairDish";
+  if (ui.ctx && Store.groupName && (path==="/split" || path==="/bill" || path==="/confirm")) document.title = Store.groupName + " · FairDish";
   updateChrome();
   if (path==="/split"){
     if (ui.ctx) document.getElementById("view").innerHTML = pageSplit();
@@ -60,13 +61,14 @@ function refreshView(){
     maybeAskWhoAmI();
   }
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();
+  if (path==="/confirm") rerenderConfirm();
 }
 
 /** ดึงบิลกลุ่มล่าสุด — manual = ผู้ใช้กดปุ่มเอง (ไม่ใช่ตอนกลับมาที่แท็บ) */
 async function refreshGroup(manual){
   var id = ui.ctx;
   if (!id || ui.loading || ui.groupError || ui.syncing || ui.save==="saving") return;
-  var busy = ui.tripStash || state.menuForm || state.sharedForm || state.chargeForm || ui.editingMember ||
+  var busy = ui.tripStash || ui.confirming || (currentPath()==="/confirm" && ui.confirmSel) || state.menuForm || state.sharedForm || state.chargeForm || ui.editingMember ||
              ui.savingMember || ui.savingMenu || ui.confirmMember || ui.confirmReset;
   if (!manual && busy) return;   // กำลังกรอกอะไรอยู่ อย่าวาดทับ
   ui.syncing = true;
@@ -78,11 +80,12 @@ async function refreshGroup(manual){
       applyBill(g.data);
       Store.version = g.version;
       Store.groupName = g.name;
+      noteGroupStats();
       refreshView();
-      toast("อัปเดตบิลล่าสุดจากกลุ่มแล้ว","ok");
-    } else if (manual) toast("บิลนี้เป็นข้อมูลล่าสุดแล้ว","ok");
+      toast(L("อัปเดตบิลล่าสุดจากกลุ่มแล้ว"),"ok");
+    } else if (manual) toast(L("บิลนี้เป็นข้อมูลล่าสุดแล้ว"),"ok");
   } catch(err){
-    if (manual) toast("โหลดข้อมูลล่าสุดไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง","error");
+    if (manual) toast(L("โหลดข้อมูลล่าสุดไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"),"error");
   } finally {
     ui.syncing = false;
   }
@@ -91,6 +94,8 @@ async function refreshGroup(manual){
 async function boot(){
   MENU_LIBRARY = buildMenuLibrary();
   await Store.init();
+  try { applyLang(await Store.readRaw(LANG_KEY)); } catch(e){ applyLang("th"); }
+  await loadHistory();
   try { applyTheme(await Store.readRaw(Store.themeKey)); } catch(e){}
   try { state.menuMemory = await Store.loadMenus(); } catch(e){ state.menuMemory = []; }
   try { ui.myGroups = await Store.loadGroups(); } catch(e){ ui.myGroups = []; }

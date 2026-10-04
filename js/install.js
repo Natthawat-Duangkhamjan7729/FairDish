@@ -43,25 +43,25 @@ var ICON_APP='<img class="i-inline i-app" src="img/icon-192.png" alt="">';
 
 function installSteps(list){
   return '<ol class="install-steps">'+list.map(function(s, i){
-    return '<li><span class="install-ico">'+s[0]+'</span><span><b>ขั้นตอนที่ '+(i+1)+':</b> '+s[1]+'</span></li>';
+    return '<li><span class="install-ico">'+s[0]+'</span><span><b>'+L("ขั้นตอนที่ {n}:", { n:i+1 })+'</b> '+s[1]+'</span></li>';
   }).join("")+'</ol>';
 }
 
 function installBody(platform){
   if (platform === "ios") return installSteps([
-      [ICON_IOS_SHARE, 'แตะปุ่ม <b>"แชร์"</b> บนแถบเครื่องมือของ Safari (ถ้าไม่เห็น ให้แตะ <b>•••</b> ก่อน)'],
-      [ICON_ADD_SQUARE, 'เลื่อนลงแล้วเลือก <b>"เพิ่มไปยังหน้าจอโฮม"</b> (บางรุ่นต้องแตะ "ดูเพิ่มเติม" ก่อน) แล้วแตะ <b>"เพิ่ม"</b>'],
-      [ICON_APP, 'เปิด FairDish จากหน้าจอโฮมของคุณ']
+      [ICON_IOS_SHARE, L('แตะปุ่ม <b>"แชร์"</b> บนแถบเครื่องมือของ Safari (ถ้าไม่เห็น ให้แตะ <b>•••</b> ก่อน)')],
+      [ICON_ADD_SQUARE, L('เลื่อนลงแล้วเลือก <b>"เพิ่มไปยังหน้าจอโฮม"</b> (บางรุ่นต้องแตะ "ดูเพิ่มเติม" ก่อน) แล้วแตะ <b>"เพิ่ม"</b>')],
+      [ICON_APP, L('เปิด FairDish จากหน้าจอโฮมของคุณ')]
     ])+
-    '<p class="install-note">ใช้ Safari หรือ Chrome ก็ได้ แอปที่ติดตั้งจะเก็บบิลส่วนตัวแยกจากในเบราว์เซอร์ ส่วนบิลกลุ่มเปิดจากลิงก์กลุ่มได้เหมือนเดิม</p>';
+    '<p class="install-note">'+L("ใช้ Safari หรือ Chrome ก็ได้ แอปที่ติดตั้งจะเก็บบิลส่วนตัวแยกจากในเบราว์เซอร์ ส่วนบิลกลุ่มเปิดจากลิงก์กลุ่มได้เหมือนเดิม")+'</p>';
   var directBtn = Install.prompt
-    ? '<button class="btn-sm btn-block install-now" id="installNow">ติดตั้ง FairDish เลย</button>'+
-      '<p class="install-or">หรือทำเองตามนี้</p>'
+    ? '<button class="btn-sm btn-block install-now" id="installNow">'+L("ติดตั้ง FairDish เลย")+'</button>'+
+      '<p class="install-or">'+L("หรือทำเองตามนี้")+'</p>'
     : '';
   return directBtn + installSteps([
-      [ICON_KEBAB, 'แตะเมนู <b>⋮</b> มุมขวาบนของ Chrome'],
-      [ICON_ADD_SQUARE, 'เลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b> แล้วแตะ <b>"ติดตั้ง"</b>'],
-      [ICON_APP, 'เปิด FairDish จากหน้าจอหลักหรือลิ้นชักแอป']
+      [ICON_KEBAB, L('แตะเมนู <b>⋮</b> มุมขวาบนของ Chrome')],
+      [ICON_ADD_SQUARE, L('เลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b> แล้วแตะ <b>"ติดตั้ง"</b>')],
+      [ICON_APP, L('เปิด FairDish จากหน้าจอหลักหรือลิ้นชักแอป')]
     ]);
 }
 
@@ -74,14 +74,13 @@ function renderInstall(){
   box.innerHTML =
     '<div class="install-head">'+
       '<img src="img/icon-192.png" alt="" width="48" height="48">'+
-      '<div><h2 id="installTitle">ติดตั้ง FairDish</h2><p>เปิดจากหน้าจอโฮมได้เหมือนแอป ไม่ต้องโหลดจาก Store</p></div>'+
-      '<button class="icon-btn" id="installClose" aria-label="ปิด">'+ICON_X+'</button>'+
+      '<div><h2 id="installTitle">'+L("ติดตั้ง FairDish")+'</h2><p>'+L("เปิดจากหน้าจอโฮมได้เหมือนแอป ไม่ต้องโหลดจาก Store")+'</p></div>'+
+      '<button class="icon-btn" id="installClose" aria-label="'+L("ปิด")+'">'+ICON_X+'</button>'+
     '</div>'+
-    (inApp ? '<div class="notice warn install-inapp"><p>ตอนนี้เปิดอยู่ในแอป '+INSTALL_APPS[inApp]+' ซึ่งติดตั้งไม่ได้ '+
-        'เปิดหน้านี้ใน Safari หรือ Chrome ก่อน แล้วทำตามขั้นตอนด้านล่าง</p>'+
+    (inApp ? '<div class="notice warn install-inapp"><p>'+L("ตอนนี้เปิดอยู่ในแอป {app} ซึ่งติดตั้งไม่ได้ เปิดหน้านี้ใน Safari หรือ Chrome ก่อน แล้วทำตามขั้นตอนด้านล่าง", { app:INSTALL_APPS[inApp] })+'</p>'+
         (inApp === "line"
-          ? '<a class="btn-quiet" href="'+esc(external)+'">เปิดในเบราว์เซอร์</a>'
-          : '<button class="btn-quiet" id="installCopyLink">คัดลอกลิงก์</button>')+
+          ? '<a class="btn-quiet" href="'+esc(external)+'">'+L("เปิดในเบราว์เซอร์")+'</a>'
+          : '<button class="btn-quiet" id="installCopyLink">'+L("คัดลอกลิงก์")+'</button>')+
       '</div>' : '')+
     '<div class="install-body">'+installBody(platform)+'</div>';
 }
@@ -114,9 +113,9 @@ function installNudgeHTML(){
   if (!Install.available() || ui.installNudgeOff) return "";
   return '<div class="notice info install-nudge" id="installNudge">'+
     '<img src="img/icon-192.png" alt="" width="40" height="40">'+
-    '<p><b>มื้อหน้าเปิดได้เร็วกว่านี้</b><br>ติดตั้ง FairDish ไว้บนหน้าจอโฮม ไม่ต้องหาลิงก์อีก</p>'+
-    '<div class="nudge-actions"><button class="btn-sm btn-xs" id="nudgeInstall">ติดตั้งแอป</button>'+
-    '<button class="icon-btn" id="nudgeClose" aria-label="ไม่ต้องชวนอีก">'+ICON_X+'</button></div></div>';
+    '<p><b>'+L("มื้อหน้าเปิดได้เร็วกว่านี้")+'</b><br>'+L("ติดตั้ง FairDish ไว้บนหน้าจอโฮม ไม่ต้องหาลิงก์อีก")+'</p>'+
+    '<div class="nudge-actions"><button class="btn-sm btn-xs" id="nudgeInstall">'+L("ติดตั้งแอป")+'</button>'+
+    '<button class="icon-btn" id="nudgeClose" aria-label="'+L("ไม่ต้องชวนอีก")+'">'+ICON_X+'</button></div></div>';
 }
 async function dismissInstallNudge(){
   ui.installNudgeOff = true;
@@ -141,5 +140,5 @@ window.addEventListener("appinstalled", function(){
   Install.prompt = null;
   closeInstall();
   updateInstallButton();
-  toast("ติดตั้ง FairDish แล้ว เปิดได้จากหน้าจอโฮม","ok");
+  toast(L("ติดตั้ง FairDish แล้ว เปิดได้จากหน้าจอโฮม"),"ok");
 });

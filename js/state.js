@@ -19,8 +19,10 @@ var state = {
   menus: [],
   shared: [],
   charges: defaultCharges(),
-  payers: [],
-  kind: "meal",         // v3.0: "meal" มื้ออาหาร | "trip" ทริป (ทริประบุคนจ่ายในแต่ละรายการ: menus[i].payer)           // v2.5: [{ id:สมาชิก, amount:บาท | null }] null = จ่ายส่วนที่เหลือ
+  payers: [],           // v2.5: [{ id:สมาชิก, amount:บาท | null }] null = จ่ายส่วนที่เหลือ
+  kind: "meal",         // v3.0: "meal" มื้ออาหาร | "trip" ทริป (ทริประบุคนจ่ายในแต่ละรายการ: menus[i].payer)
+  title: "",            // v4.0: ชื่อบิลส่วนตัว (บิลกลุ่มใช้ชื่อกลุ่ม) ว่าง = ใช้ชื่อตั้งต้นตามวันที่
+  confirms: {},         // v4.0: เพื่อนยืนยันเมนู { idสมาชิก: { at:ISO, sig:"รายการที่ติ๊กตอนยืนยัน" } }
   menuMemory: [],
   menuForm:null, sharedForm:null, chargeForm:null, open:{}
 };
@@ -56,14 +58,21 @@ var ui = {
   newGroupKind:"meal",  // v3.0: ประเภทที่เลือกไว้ในฟอร์มสร้างกลุ่ม
   pendingKind:null,     // v3.0: กดเริ่มจากหน้าแรก → ตั้งประเภทบิลส่วนตัวเมื่อโหลดเสร็จ
   lastPayer:null,       // v3.0: คนจ่ายล่าสุดในโหมดทริป ใช้เป็นค่าตั้งต้นของรายการถัดไป
-  tripStash:null        // v3.1: กำลังแก้มื้ออาหารข้างในทริป { mealId, menus, shared, charges, payers } ของทริปที่พักไว้
+  tripStash:null,       // v3.1: กำลังแก้มื้ออาหารข้างในทริป { mealId, menus, shared, charges, payers } ของทริปที่พักไว้
+  history:[],           // v4.0: บิลส่วนตัวที่เก็บเข้าประวัติแล้ว (ใหม่สุดก่อน)
+  homeNew:false,        // v4.0: กาง "เริ่มบิลใหม่" บนหน้าแรก
+  histOpen:{},          // v4.0: ชื่อที่กางดูรายละเอียดในใบเสร็จของประวัติ
+  confirmSel:null,      // v4.0: หน้ายืนยันเมนู — { key:true } รายการที่ติ๊กไว้ (ยังไม่บันทึก)
+  confirmFor:null,      // v4.0: สมาชิกที่กำลังยืนยันเมนูอยู่
+  confirmDone:false,    // v4.0: ยืนยันเสร็จแล้ว แสดงหน้าขอบคุณ
+  confirming:false      // v4.0: กำลังบันทึกการยืนยัน
 };
 
 var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "3.1";
+var APP_VERSION = "4.0";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */
@@ -91,5 +100,5 @@ var KIND_TEXT = {
     addShort:"+ ค่าใช้จ่าย", thanks:"ทริปนี้สนุกมาก ขอบคุณทุกคนที่ไปด้วยกันนะ", groupPrefix:"ทริป"
   }
 };
-function kt(key){ return (KIND_TEXT[state.kind] || KIND_TEXT.meal)[key]; }
-function ktOf(kind, key){ return (KIND_TEXT[kind] || KIND_TEXT.meal)[key]; }
+function kt(key){ return ktOf(state.kind, key); }
+function ktOf(kind, key){ return L((KIND_TEXT[kind] || KIND_TEXT.meal)[key]); }
