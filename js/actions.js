@@ -587,7 +587,6 @@ async function setMe(memberId){
 }
 
 /* ---- v2.7: หน้าต่างชวนเพื่อน (QR + ช่องทางแชร์) ---- */
-var ICON_LINE_CHAT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4c-4.97 0-9 3.13-9 7 0 2.4 1.56 4.52 3.94 5.78L6 20l3.74-2.2c.73.13 1.49.2 2.26.2 4.97 0 9-3.13 9-7s-4.03-7-9-7Z"/></svg>';
 var ICON_SAVE_IMG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12l4 4 4-4"/></svg>';
 /** ข้อความชวนที่ส่งเข้าแชตพร้อมลิงก์ */
 function inviteText(){
@@ -611,8 +610,6 @@ function openShareDialog(){
       '<b class="qr-name">'+esc(Store.groupName)+'</b>'+
       '<span class="qr-hint">เปิดกล้องมือถือแล้วสแกนได้เลย</span></div>' : '')+
     '<div class="share-grid">'+
-      '<a class="share-opt" href="https://line.me/R/share?text='+encodeURIComponent(inviteText())+'" target="_blank" rel="noopener">'+
-        ICON_LINE_CHAT+'<span>ส่งเข้า LINE</span></a>'+
       (navigator.share ? '<button class="share-opt" id="shareNative">'+ICON_SHARE+'<span>แชร์ทางอื่น</span></button>' : '')+
       '<button class="share-opt" id="shareCopy">'+ICON_COPY+'<span>คัดลอกลิงก์</span></button>'+
       (qr ? '<button class="share-opt" id="shareSaveQr">'+ICON_SAVE_IMG+'<span>บันทึกรูป QR</span></button>' : '')+
