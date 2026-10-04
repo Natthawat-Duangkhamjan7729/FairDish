@@ -108,6 +108,23 @@ async function installNow(){
   } catch(e){}
   renderInstall();
 }
+/* ---- v2.4: ชวนติดตั้งตอนหารบิลเสร็จ (ช่วงที่รู้สึกดีกับแอป) แทนการเร่งตั้งแต่แรก ---- */
+var INSTALL_NUDGE_KEY = "fairdish:install-nudge:v1";
+function installNudgeHTML(){
+  if (!Install.available() || ui.installNudgeOff) return "";
+  return '<div class="notice info install-nudge" id="installNudge">'+
+    '<img src="img/icon-192.png" alt="" width="40" height="40">'+
+    '<p><b>มื้อหน้าเปิดได้เร็วกว่านี้</b><br>ติดตั้ง FairDish ไว้บนหน้าจอโฮม ไม่ต้องหาลิงก์อีก</p>'+
+    '<div class="nudge-actions"><button class="btn-sm btn-xs" id="nudgeInstall">ติดตั้งแอป</button>'+
+    '<button class="icon-btn" id="nudgeClose" aria-label="ไม่ต้องชวนอีก">'+ICON_X+'</button></div></div>';
+}
+async function dismissInstallNudge(){
+  ui.installNudgeOff = true;
+  var el = document.getElementById("installNudge");
+  if (el) el.parentNode.removeChild(el);
+  try { await Store.writeRaw(INSTALL_NUDGE_KEY, "off"); } catch(e){}
+}
+
 function updateInstallButton(){
   var btn = document.getElementById("installBtn");
   if (btn) btn.hidden = !Install.available();

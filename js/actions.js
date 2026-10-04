@@ -366,13 +366,19 @@ async function removeMenu(id){
   toast("ลบ "+menu.name+" แล้ว","ok",{ label:"เลิกทำ", action:undoRemove });
 }
 
+/** ข้อความสรุปที่ส่งเข้าแชต — v2.4: เปิดด้วยคำขอบคุณให้อ่านเป็นเรื่องของเพื่อน ไม่ใช่ใบแจ้งหนี้ */
 function summaryText(){
   var r = compute();
-  var lines = [ui.ctx && Store.groupName ? "FairDish · "+Store.groupName : "FairDish"];
-  r.list.forEach(function(p){ lines.push(p.name+"  "+baht(p.rounded)+" บาท"); });
-  lines.push("—");
-  lines.push("รวมทั้งหมด  "+baht(r.grand)+" บาท");
-  if (ui.ctx) lines.push("ดูที่มาของยอด: "+groupLink(ui.ctx)+"/bill");
+  var lines = [];
+  lines.push(ui.ctx && Store.groupName ? "🍲 "+Store.groupName : "🍲 มื้อนี้");
+  lines.push("มื้อนี้อร่อยมาก ขอบคุณทุกคนที่มากินด้วยกันนะ");
+  lines.push("ยอดของแต่ละคนตามนี้เลย 👇");
+  lines.push("");
+  r.list.forEach(function(p){ lines.push("• "+p.name+"  "+baht(p.rounded)+" บาท"); });
+  lines.push("");
+  lines.push("รวมทั้งหมด "+baht(r.grand)+" บาท");
+  if (ui.ctx) lines.push("กดดูได้ว่ายอดมาจากเมนูไหน: "+groupLink(ui.ctx)+"/bill");
+  lines.push("— หารตามที่กินจริงด้วย FairDish");
   return lines.join("\n");
 }
 function copyText(text, okMessage){
@@ -389,6 +395,19 @@ function copyText(text, okMessage){
   } else fallback();
 }
 function copySummary(){ copyText(summaryText(), "คัดลอกสรุปยอดแล้ว"); }
+
+/* ---- v2.4: ล้างข้อมูลแบบปลอดภัย ---- */
+/** ในกลุ่มต้องพิมพ์ชื่อกลุ่มให้ตรงก่อนถึงจะล้างได้ */
+function resetNameMatches(){
+  var el = document.getElementById("resetConfirmName");
+  return !!el && el.value.trim().replace(/\s+/g," ") === Store.groupName;
+}
+async function undoReset(before){
+  applyBill(before);
+  render();
+  await commit("คืนข้อมูลกลับมาแล้ว");
+  render();
+}
 
 /* ---- v2.0: กลุ่มผ่านลิงก์ ---- */
 function setFieldMsg(id, text, isError){
@@ -456,6 +475,59 @@ async function forgetGroup(id){
   document.getElementById("view").innerHTML = pageGroups();
   checkLocalBill();
   toast("เอา "+g.name+" ออกจากรายการแล้ว (กลุ่มยังอยู่ เปิดจากลิงก์ได้)","ok");
+}
+
+/* ---- v2.4: ถาม "คุณคือใคร" ครั้งแรกที่เปิดกลุ่ม ---- */
+function maybeAskWhoAmI(){
+  if (!ui.ctx || ui.loading || ui.groupError || !state.members.length) return;
+  var g = myGroup(ui.ctx);
+  if (!g || g.me || g.asked) return;
+  g.asked = true;            // ถามครั้งเดียวต่อกลุ่มต่อเครื่อง กดข้ามก็ไม่ถามซ้ำ
+  saveMyGroups();
+  openMeDialog();
+}
+function openMeDialog(){
+  var box = document.getElementById("meDialog");
+  if (!box || !ui.ctx) return;
+  box.innerHTML =
+    '<div class="install-head"><div><h2 id="meTitle">คุณคือใครในโต๊ะนี้?</h2>'+
+      '<p>เลือกชื่อตัวเอง แล้วยอดที่คุณต้องจ่ายจะแสดงตัวใหญ่ให้เห็นทันที (จำไว้ในเครื่องนี้)</p></div>'+
+      '<button class="icon-btn" data-me-close="1" aria-label="ปิด">'+ICON_X+'</button></div>'+
+    '<div class="pick me-pick">'+state.members.map(function(p){
+      return '<button data-me-pick="'+p.id+'">'+esc(p.name)+'</button>';
+    }).join("")+'</div>'+
+    '<div class="me-other">'+
+      '<button class="btn-quiet" data-me-add="1">ยังไม่มีชื่อฉัน — เพิ่มชื่อตัวเอง</button>'+
+      '<button class="me-skip" data-me-close="1">ข้ามไปก่อน</button>'+
+    '</div>';
+  if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
+}
+function closeMeDialog(){
+  var box = document.getElementById("meDialog");
+  if (!box) return;
+  if (typeof box.close === "function") box.close(); else box.removeAttribute("open");
+}
+async function chooseMe(memberId){
+  var g = myGroup(ui.ctx);
+  closeMeDialog();
+  if (!g || !nameOf(memberId)) return;
+  g.me = memberId;
+  await saveMyGroups();
+  render();
+  toast("สวัสดี "+nameOf(memberId)+" 👋 ยอดของคุณอยู่ด้านบนแล้ว","ok");
+}
+function addMyselfFromDialog(){
+  closeMeDialog();
+  setStep("members");
+  var input = document.getElementById("memberInput");
+  if (input){ input.focus(); input.scrollIntoView({ block:"center" }); }
+}
+/** ยอดของ "ฉัน" ในบิลนี้ หรือ null */
+function myShare(){
+  var me = myMemberId();
+  if (!me || !hasData()) return null;
+  var r = compute();
+  return r.list.filter(function(p){ return p.id===me; })[0] || null;
 }
 
 async function setMe(memberId){

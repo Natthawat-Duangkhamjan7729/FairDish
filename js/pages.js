@@ -140,9 +140,11 @@ function pageSplit(){
 
       (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="ยืนยันการล้างข้อมูล">'+
         '<h3>ล้างข้อมูลทั้งหมดในบิลนี้?</h3>'+
-        '<p>สมาชิก เมนู และรายการส่วนกลางทั้งหมดจะถูกล้างออก'+(inGroup ? " ทุกคนในกลุ่มจะเห็นบิลว่างด้วย" : "")+'</p>'+
+        '<p>สมาชิก เมนู และรายการส่วนกลางทั้งหมดจะถูกล้างออก'+(inGroup ? " <b>ทุกคนในกลุ่มจะเห็นบิลว่างด้วย</b>" : "")+'</p>'+
+        (inGroup ? '<label class="confirm-type" for="resetConfirmName">พิมพ์ชื่อกลุ่ม <b>'+esc(Store.groupName)+'</b> เพื่อยืนยัน</label>'+
+          '<input type="text" id="resetConfirmName" autocomplete="off" placeholder="'+esc(Store.groupName)+'">' : '')+
         '<div class="btn-row"><button class="btn-quiet" id="cancelReset">ยกเลิก</button>'+
-        '<button class="btn-danger" id="confirmReset">ล้างข้อมูล</button></div></div>' : '')+
+        '<button class="btn-danger" id="confirmReset"'+(inGroup ? ' disabled' : '')+'>'+ICON_DEL+' ล้างข้อมูล</button></div></div>' : '')+
       '<div class="app-foot">'+
         (inGroup ? '' : '<button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button>')+
         '<button id="resetBtn">'+ICON_DEL+' ล้างข้อมูลทั้งหมด</button>'+
@@ -171,10 +173,26 @@ function pageBill(){
       '<a class="btn btn-main" href="'+splitHref()+'">ไปหน้าหารบิล</a></div></div></div>';
   }
   var r = compute();
+  var done = r.orphan === 0;
+  if (done){
+    // v2.4: ตอนจบที่น่าจำ (peak-end) — บิลครบแล้ว ฉลองเล็ก ๆ แล้วพาไปแชร์ต่อ
+    head = '<div class="page"><div class="wrap">'+
+      '<a class="crumb" href="'+splitHref()+'">← กลับไปแก้บิล</a>'+
+      '<div class="page-head finish-head">'+(ui.ctx && Store.groupName ? '<p class="eyebrow">กลุ่ม '+esc(Store.groupName)+'</p>' : '')+
+      '<h1>จบมื้อแล้ว! <span class="finish-pop" aria-hidden="true">🎉</span></h1>'+
+      '<p>ยอดครบทุกคนแล้ว ส่งให้เพื่อนได้เลย กดชื่อใครก็เห็นว่ายอดมาจากเมนูไหน</p></div>';
+  }
+  var mine = myShare();
   return head + '<div class="app-col">'+
       (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' เมนูที่ยังไม่ได้เลือกคนกิน จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
-      receiptHTML(r,{interactive:true})+
-      '<button class="btn-sm btn-block" id="copyBtn" style="margin-top:var(--s5)">คัดลอกสรุปยอด</button>'+
+      (mine ? '<div class="my-total my-total-bill"><span class="my-label">ยอดของคุณ ('+esc(nameOf(mine.id))+')</span>'+
+        '<span class="my-amt">'+baht(mine.rounded)+' <small>บาท</small></span></div>' : '')+
+      receiptHTML(r,{ interactive:true, reveal:done })+
+      '<div class="finish-actions">'+
+        '<button class="btn-sm btn-block" id="shareImgBtn">'+ICON_SHARE+' แชร์รูปใบเสร็จ</button>'+
+        '<button class="btn-quiet btn-block" id="copyBtn">'+ICON_COPY+' คัดลอกเป็นข้อความ</button>'+
+      '</div>'+
+      (done ? installNudgeHTML() : '')+
       '<div class="app-foot"><a href="'+splitHref()+'">แก้ไขรายการ</a></div>'+
     '</div></div></div>';
 }
@@ -216,11 +234,11 @@ function pageGroups(){
         '<div class="step-head"><h2 id="h-new-group">สร้างกลุ่มใหม่</h2></div>'+
         '<div class="field-row">'+
           '<div><label class="sr-only" for="groupName">ชื่อกลุ่ม</label>'+
-          '<input type="text" id="groupName" placeholder="ชื่อกลุ่ม เช่น ส้มตำหน้ามอ" autocomplete="off" maxlength="'+MAX_GROUP_NAME+'" aria-describedby="groupMsg"></div>'+
+          '<input type="text" id="groupName" value="'+esc(defaultGroupName())+'" placeholder="ชื่อกลุ่ม เช่น ส้มตำหน้ามอ" autocomplete="off" maxlength="'+MAX_GROUP_NAME+'" aria-describedby="groupMsg"></div>'+
           '<button class="btn-sm" id="groupCreate">สร้างกลุ่ม</button>'+
         '</div>'+
         '<div id="groupFromSlot"></div>'+
-        '<p class="field-msg muted" id="groupMsg" aria-live="polite">ทุกคนที่มีลิงก์จะดูและแก้บิลนี้ได้ ส่งเฉพาะคนในโต๊ะ</p>'+
+        '<p class="field-msg muted" id="groupMsg" aria-live="polite">ตั้งชื่อให้แล้ว กดสร้างได้เลย หรือแก้ชื่อก่อนก็ได้ · ส่งลิงก์เฉพาะคนในโต๊ะ</p>'+
       '</section>'+
       '<section class="step-card" aria-labelledby="h-join-group">'+
         '<div class="step-head"><h2 id="h-join-group">มีลิงก์จากเพื่อน</h2></div>'+

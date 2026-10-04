@@ -104,8 +104,18 @@ function renderGroupBar(){
         '<button class="btn-sm btn-xs" id="groupShare">'+ICON_SHARE+' แชร์ลิงก์</button>'+
         '<button class="icon-btn" data-group-panel="1" aria-expanded="'+ui.groupPanel+'" aria-controls="groupPanel" aria-label="ตัวเลือกกลุ่ม">'+ICON_MORE+'</button>'+
       '</div>'+
+      myTotalHTML()+
       panel+
     '</section>';
+}
+/** v2.4: ยอดของ "ฉัน" ตัวใหญ่ — คนสนใจตัวเลขของตัวเองที่สุด */
+function myTotalHTML(){
+  var mine = myShare();
+  if (!mine) return "";
+  return '<a class="my-total" href="'+billHref()+'">'+
+    '<span class="my-label">ยอดของคุณ</span>'+
+    '<span class="my-amt">'+baht(mine.rounded)+' <small>บาท</small></span>'+
+    '<span class="my-go" aria-hidden="true">›</span></a>';
 }
 
 /* ---- ฟีเจอร์ที่ 1: จัดการสมาชิก ---- */
@@ -242,7 +252,7 @@ function renderMenus(){
       '<div><label class="sr-only" for="mPrice">ราคาต่อจาน เป็นบาท</label>'+
         '<input type="number" id="mPrice" inputmode="decimal" step="0.01" min="0" placeholder="ราคาต่อจาน (บาท)" value="'+(f.price===""?"":esc(f.price))+'" aria-describedby="mPriceMsg" aria-invalid="'+(e.price?"true":"false")+'">'+
         '<p class="field-msg '+(e.price?"error":"muted")+'" id="mPriceMsg" aria-live="polite">'+(e.price?esc(e.price):"")+'</p></div>'+
-      '<div class="label">ใครกินเมนูนี้บ้าง</div>'+picks+
+      '<div class="label">ใครกินเมนูนี้บ้าง'+(state.members.length>1 && !f.id ? ' <span class="label-hint">เลือกไว้ทุกคนแล้ว แตะชื่อคนที่ไม่ได้กินเพื่อเอาออก</span>' : '')+'</div>'+picks+
       (e.eaters
         ? '<p class="field-msg error" aria-live="polite">'+esc(e.eaters)+'</p>'
         : '<p class="form-preview" id="mPreview" aria-live="polite">'+preview+'</p>')+
