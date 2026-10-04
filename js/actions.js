@@ -102,8 +102,9 @@ async function removeMember(id){
   delete state.open[id];
   ui.confirmMember = null;
   render();
-  await commit(null,"member");
+  var ok = await commit(null,"member");
   render();
+  if (!ok){ ui.undo = null; return; }   // บันทึกไม่ได้/ชนกับเพื่อน อย่าให้ toast เลิกทำทับข้อความแจ้งปัญหา
 
   clearTimeout(ui.undoTimer);
   ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
@@ -357,8 +358,9 @@ async function removeMenu(id){
   state.menus.splice(index,1);
   if (state.menuForm && state.menuForm.id===id){ state.menuForm=null; ui.menuErr={}; }
   render();
-  await commit(null,"menu");
+  var ok = await commit(null,"menu");
   render();
+  if (!ok){ ui.undo = null; return; }   // บันทึกไม่ได้/ชนกับเพื่อน อย่าให้ toast เลิกทำทับข้อความแจ้งปัญหา
   clearTimeout(ui.undoTimer);
   ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
   toast("ลบ "+menu.name+" แล้ว","ok",{ label:"เลิกทำ", action:undoRemove });
@@ -366,25 +368,108 @@ async function removeMenu(id){
 
 function summaryText(){
   var r = compute();
-  var lines = ["FairDish"];
+  var lines = [ui.ctx && Store.groupName ? "FairDish · "+Store.groupName : "FairDish"];
   r.list.forEach(function(p){ lines.push(p.name+"  "+baht(p.rounded)+" บาท"); });
   lines.push("—");
   lines.push("รวมทั้งหมด  "+baht(r.grand)+" บาท");
+  if (ui.ctx) lines.push("ดูที่มาของยอด: "+groupLink(ui.ctx)+"/bill");
   return lines.join("\n");
 }
-function copySummary(){
-  var text = summaryText();
+function copyText(text, okMessage){
   function fallback(){
     var ta = document.createElement("textarea");
     ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
     document.body.appendChild(ta); ta.select();
-    try { document.execCommand("copy"); toast("คัดลอกสรุปยอดแล้ว","ok"); }
-    catch(e){ toast("คัดลอกไม่สำเร็จ ลองเลือกข้อความในบิลแล้วคัดลอกเอง","error"); }
+    try { document.execCommand("copy"); toast(okMessage,"ok"); }
+    catch(e){ toast("คัดลอกไม่สำเร็จ ลองเลือกข้อความแล้วคัดลอกเอง","error"); }
     document.body.removeChild(ta);
   }
   if (navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(function(){ toast("คัดลอกสรุปยอดแล้ว","ok"); }, fallback);
+    navigator.clipboard.writeText(text).then(function(){ toast(okMessage,"ok"); }, fallback);
   } else fallback();
+}
+function copySummary(){ copyText(summaryText(), "คัดลอกสรุปยอดแล้ว"); }
+
+/* ---- v2.0: กลุ่มผ่านลิงก์ ---- */
+function setFieldMsg(id, text, isError){
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = "field-msg " + (isError ? "error" : "muted");
+  el.textContent = text;
+}
+
+/** หน้า #/groups: ถ้าในเครื่องมีบิลค้างอยู่ ให้เลือกย้ายเข้ากลุ่มใหม่ได้ */
+async function checkLocalBill(){
+  var saved = null;
+  try { var raw = await Store.readRaw(Store.key); saved = raw ? JSON.parse(raw) : null; } catch(e){}
+  var slot = document.getElementById("groupFromSlot");
+  if (!slot || !saved || !saved.members || !saved.members.length) return;
+  slot.innerHTML = '<label class="check"><input type="checkbox" id="groupFromLocal" checked> '+
+    'ใช้บิลที่ทำค้างไว้ในเครื่อง ('+saved.members.length+' คน) เป็นบิลเริ่มต้นของกลุ่ม</label>';
+}
+
+async function createGroup(){
+  var input = document.getElementById("groupName");
+  var btn = document.getElementById("groupCreate");
+  if (!input || ui.creatingGroup) return;
+  var name = input.value.trim().replace(/\s+/g," ");
+  if (!name){ setFieldMsg("groupMsg","ตั้งชื่อกลุ่มก่อน เช่น ส้มตำหน้ามอ",true); return input.focus(); }
+  if (name.length > MAX_GROUP_NAME){ setFieldMsg("groupMsg","ชื่อกลุ่มยาวเกิน "+MAX_GROUP_NAME+" ตัวอักษร",true); return input.focus(); }
+
+  var data = { members:[], menus:[], shared:[], charges:defaultCharges() };
+  var from = document.getElementById("groupFromLocal");
+  if (from && from.checked){
+    try { var raw = await Store.readRaw(Store.key); if (raw) data = JSON.parse(raw); } catch(e){}
+  }
+  ui.creatingGroup = true;
+  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>กำลังสร้าง'; }
+  try {
+    var g = await Cloud.create(name, data);
+    await rememberGroup(g.id, g.name);
+    location.hash = "#/g/" + g.id;
+    toast("สร้างกลุ่มแล้ว คัดลอกลิงก์ส่งให้เพื่อนได้เลย","ok");
+  } catch(err){
+    setFieldMsg("groupMsg","สร้างกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง",true);
+  } finally {
+    ui.creatingGroup = false;
+    var again = document.getElementById("groupCreate");
+    if (again){ again.disabled = false; again.textContent = "สร้างกลุ่ม"; }
+  }
+}
+
+function joinGroup(){
+  var input = document.getElementById("groupJoinInput");
+  if (!input) return;
+  var id = groupIdFromInput(input.value);
+  if (!id){
+    setFieldMsg("groupJoinMsg","ไม่ใช่ลิงก์กลุ่มของ FairDish ลองคัดลอกลิงก์จากเพื่อนมาใหม่ทั้งหมด",true);
+    return input.focus();
+  }
+  location.hash = "#/g/" + id;
+}
+
+async function forgetGroup(id){
+  var g = myGroup(id);
+  if (!g) return;
+  ui.myGroups = ui.myGroups.filter(function(x){ return x.id !== id; });
+  await saveMyGroups();
+  document.getElementById("view").innerHTML = pageGroups();
+  checkLocalBill();
+  toast("เอา "+g.name+" ออกจากรายการแล้ว (กลุ่มยังอยู่ เปิดจากลิงก์ได้)","ok");
+}
+
+async function setMe(memberId){
+  var g = myGroup(ui.ctx);
+  if (!g) return;
+  g.me = g.me === memberId ? null : memberId;
+  await saveMyGroups();
+  render();
+}
+
+function shareGroupLink(){
+  if (!ui.ctx || !navigator.share) return;
+  navigator.share({ title:Store.groupName+" · FairDish", text:"มาหารบิล "+Store.groupName+" ด้วยกันใน FairDish", url:groupLink(ui.ctx) })
+    .catch(function(){});   // ผู้ใช้กดยกเลิก = ไม่ใช่ข้อผิดพลาด
 }
 
 async function loadDemo(){

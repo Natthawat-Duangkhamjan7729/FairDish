@@ -8,6 +8,23 @@ function serialize(){
   return { members:state.members, menus:state.menus, shared:state.shared,
            charges:state.charges, savedAt:new Date().toISOString() };
 }
+/** ใส่ข้อมูลบิลที่โหลดมา (จากเครื่องหรือจากกลุ่ม) ลงใน state — ไม่มีข้อมูล = บิลว่าง */
+function applyBill(saved){
+  saved = saved || {};
+  state.members = Array.isArray(saved.members) ? saved.members : [];
+  state.menus = (Array.isArray(saved.menus) ? saved.menus : []).map(function(m){
+    return { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
+  });
+  state.shared = Array.isArray(saved.shared) ? saved.shared : [];
+  state.charges = (saved.charges && saved.charges.length) ? saved.charges : defaultCharges();
+  state.open = {};
+  var maxId = 0;
+  state.members.concat(state.menus, state.shared, state.charges).forEach(function(x){
+    var num = parseInt(String(x.id).replace(/^i/,""),10);
+    if (!isNaN(num) && num > maxId) maxId = num;
+  });
+  uid = maxId;
+}
 function setSave(next){
   ui.save = next;
   var chip = document.getElementById("saveChip");
@@ -26,6 +43,16 @@ async function commit(successMessage, source){
     if (successMessage) toast(successMessage,"ok");
     return true;
   } catch(err){
+    if (err && err.conflict){
+      // เพื่อนในกลุ่มบันทึกไปก่อน — ใช้ข้อมูลล่าสุดของกลุ่ม แล้วให้ผู้ใช้ทำรายการนี้ใหม่
+      applyBill(err.latest.data);
+      Store.version = err.latest.version;
+      setSave("saved");
+      ui.saveFailedIn = null;
+      toast("มีเพื่อนแก้บิลนี้ไปก่อน โหลดข้อมูลล่าสุดแล้ว ลองทำรายการเมื่อกี้อีกครั้ง","error");
+      render();
+      return false;
+    }
     setSave("error");
     ui.saveFailedIn = source || "member";
     toast("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ","error",{ label:"ลองอีกครั้ง", action:retrySave });

@@ -32,6 +32,7 @@
       <a href="#/" data-nav="/">หน้าแรก</a>
       <a href="#/how" data-nav="/how">วิธีใช้</a>
       <a href="#/bill" data-nav="/bill">ใบสรุปยอด</a>
+      <a href="#/groups" data-nav="/groups">กลุ่ม</a>
       <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
     </nav>
     <a class="nav-cta" href="#/split">หารบิล</a>
@@ -44,6 +45,7 @@
     <a href="#/split" data-nav="/split">หารบิล</a>
     <a href="#/how" data-nav="/how">วิธีใช้</a>
     <a href="#/bill" data-nav="/bill">ใบสรุปยอด</a>
+    <a href="#/groups" data-nav="/groups">กลุ่ม</a>
     <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
   </div>
 </header>
@@ -52,7 +54,7 @@
 
 <footer class="foot">
   <div class="wrap foot-in">
-    <span>FairDish v1.9 · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
+    <span>FairDish v2.0 · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
     <nav>
       <a href="#/">หน้าแรก</a>
       <a href="#/how">วิธีใช้</a>
@@ -64,8 +66,10 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="js/config.js" defer></script>
 <script src="js/store.js" defer></script>
 <script src="js/state.js" defer></script>
+<script src="js/cloud.js" defer></script>
 <script src="js/menu-library.js" defer></script>
 <script src="js/utils.js" defer></script>
 <script src="js/save.js" defer></script>
@@ -78,5 +82,7 @@
 <script src="js/router.js" defer></script>
 <script src="js/events.js" defer></script>
 <script src="js/main.js" defer></script>
+<!-- Vercel Web Analytics นับผู้เข้าชม ไฟล์นี้ Vercel ให้มาเองตอน deploy ไม่ต้องมีในโปรเจกต์ -->
+<script src="/_vercel/insights/script.js" defer></script>
 </body>
 </html>

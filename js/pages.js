@@ -64,19 +64,23 @@ function pageHome(){
 }
 
 function pageSplit(){
+  if (ui.ctx && ui.groupError) return pageGroupError();
+  var inGroup = !!ui.ctx;
   return '<div class="page"><div class="wrap app-col">'+
     '<div class="page-head" style="margin-bottom:var(--s5);max-width:none">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);flex-wrap:wrap">'+
-        '<h1>หารบิล</h1>'+
+        '<h1>'+(inGroup ? "หารบิลกลุ่ม" : "หารบิล")+'</h1>'+
         '<button class="btn-quiet" id="resetBtn" style="font-size:var(--fs-small);min-height:var(--tap);padding:var(--s2) var(--s4)">'+ICON_DEL+' ล้างข้อมูลทั้งหมด</button>'+
       '</div>'+
-      '<p>ไล่ทีละขั้นจาก 1 ถึง 4 ระบบบันทึกให้อัตโนมัติทุกครั้งที่แก้ข้อมูล</p>'+
+      '<p>'+(inGroup ? "ทุกคนที่มีลิงก์กลุ่มแก้บิลนี้ได้ ระบบบันทึกขึ้นกลุ่มให้อัตโนมัติทุกครั้งที่แก้ข้อมูล"
+                     : "ไล่ทีละขั้นจาก 1 ถึง 4 ระบบบันทึกให้อัตโนมัติทุกครั้งที่แก้ข้อมูล")+'</p>'+
       (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="ยืนยันการล้างข้อมูล">'+
         '<h3>ล้างข้อมูลทั้งหมดในบิลนี้?</h3>'+
-        '<p>สมาชิก เมนู และรายการส่วนกลางทั้งหมดจะถูกล้างออก</p>'+
+        '<p>สมาชิก เมนู และรายการส่วนกลางทั้งหมดจะถูกล้างออก'+(inGroup ? " ทุกคนในกลุ่มจะเห็นบิลว่างด้วย" : "")+'</p>'+
         '<div class="btn-row"><button class="btn-quiet" id="cancelReset">ยกเลิก</button>'+
         '<button class="btn-danger" id="confirmReset">ล้างข้อมูล</button></div></div>' : '')+
     '</div>'+
+    '<div id="groupBar"></div>'+
 
     '<section class="step-card" aria-labelledby="h-members">'+
       '<div class="step-head"><span class="step-num">1</span><h2 id="h-members">ใครกินบ้าง</h2>'+
@@ -107,27 +111,88 @@ function pageSplit(){
       '<span class="aside" id="summaryAside"></span></div>'+
       '<div id="summary" aria-live="polite"></div></section>'+
 
-    '<div class="app-foot"><button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button></div>'+
+    (inGroup ? '' : '<div class="app-foot"><button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button></div>')+
   '</div></div>';
 }
 
 function pageBill(){
+  if (ui.ctx && ui.groupError) return pageGroupError();
   var head = '<div class="page"><div class="wrap">'+
-    '<a class="crumb" href="#/split">← กลับไปแก้บิล</a>'+
-    '<div class="page-head"><h1>ใบสรุปยอด</h1>'+
+    '<a class="crumb" href="'+splitHref()+'">← กลับไปแก้บิล</a>'+
+    '<div class="page-head">'+(ui.ctx && Store.groupName ? '<p class="eyebrow">กลุ่ม '+esc(Store.groupName)+'</p>' : '')+'<h1>ใบสรุปยอด</h1>'+
     '<p>ยอดที่แต่ละคนต้องจ่าย พร้อมที่มาของทุกบาท กางให้ทั้งโต๊ะดูหรือคัดลอกส่งเข้ากลุ่มได้เลย</p></div>';
   if (ui.loading) return head + '<div class="empty" style="max-width:540px">กำลังโหลดข้อมูลบิล…</div></div></div>';
   if (!hasData()){
     return head + '<div class="empty" style="max-width:540px">ยังไม่มีข้อมูลบิล เริ่มจากใส่ชื่อคนกินและเมนูในหน้าหารบิลก่อน<br><br>'+
-      '<a class="btn btn-main" href="#/split">ไปหน้าหารบิล</a></div></div></div>';
+      '<a class="btn btn-main" href="'+splitHref()+'">ไปหน้าหารบิล</a></div></div></div>';
   }
   var r = compute();
   return head + '<div class="app-col">'+
       (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' เมนูที่ยังไม่ได้เลือกคนกิน จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
       receiptHTML(r,{interactive:true})+
       '<button class="btn-sm btn-block" id="copyBtn" style="margin-top:var(--s5)">คัดลอกสรุปยอด</button>'+
-      '<div class="app-foot"><a href="#/split">แก้ไขรายการ</a></div>'+
+      '<div class="app-foot"><a href="'+splitHref()+'">แก้ไขรายการ</a></div>'+
     '</div></div></div>';
+}
+
+function pageGroupError(){
+  var msg = ({
+    notfound:["ไม่พบกลุ่มนี้","ลิงก์อาจพิมพ์ผิดหรือคัดลอกมาไม่ครบ ลองขอลิงก์จากเพื่อนอีกครั้ง"],
+    disabled:["ระบบกลุ่มยังไม่เปิดใช้","เว็บนี้ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์สำหรับกลุ่ม ยังหารบิลในเครื่องตัวเองได้ตามปกติ"],
+    load:["โหลดกลุ่มไม่สำเร็จ","ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"]
+  })[ui.groupError] || ["โหลดกลุ่มไม่สำเร็จ",""];
+  return '<div class="page"><div class="wrap app-col">'+
+    '<div class="page-head"><h1>'+msg[0]+'</h1><p>'+msg[1]+'</p></div>'+
+    '<div class="btn-row">'+
+      (ui.groupError==="load" ? '<button class="btn-sm" id="groupRetry">ลองอีกครั้ง</button>' : '')+
+      '<a class="btn-quiet" href="#/groups">ไปหน้ากลุ่ม</a>'+
+      '<a class="btn-quiet" href="#/split">หารบิลในเครื่อง</a>'+
+    '</div></div></div>';
+}
+
+function pageGroups(){
+  var on = Cloud.ready();
+  var list = ui.myGroups.length
+    ? ui.myGroups.map(function(g){
+        var when = g.at ? new Date(g.at).toLocaleDateString("th-TH",{ day:"numeric", month:"short" }) : "";
+        return '<div class="row-item">'+
+          '<a class="row-tap" href="#/g/'+esc(g.id)+'"><span class="body">'+
+            '<span class="name">'+esc(g.name)+'</span>'+
+            '<span class="sub">'+(when ? "เปิดล่าสุด "+when : "")+'</span></span></a>'+
+          '<span class="acts"><button class="icon-btn" data-forget-group="'+esc(g.id)+'" aria-label="เอา '+esc(g.name)+' ออกจากรายการ">'+ICON_X+'</button></span>'+
+        '</div>';
+      }).join("")
+    : '<p class="empty">ยังไม่มีกลุ่ม — สร้างกลุ่มใหม่ หรือกดลิงก์ที่เพื่อนส่งมา</p>';
+
+  return '<div class="page"><div class="wrap app-col">'+
+    '<div class="page-head" style="max-width:none"><h1>กลุ่ม</h1>'+
+      '<p>สร้างกลุ่มแล้วส่งลิงก์เข้าแชต เพื่อนกดลิงก์ก็ดูและแก้บิลเดียวกันได้ทันที ไม่ต้องสมัครสมาชิก</p></div>'+
+    (on ? ''+
+      '<section class="step-card" aria-labelledby="h-new-group">'+
+        '<div class="step-head"><h2 id="h-new-group">สร้างกลุ่มใหม่</h2></div>'+
+        '<div class="field-row">'+
+          '<div><label class="sr-only" for="groupName">ชื่อกลุ่ม</label>'+
+          '<input type="text" id="groupName" placeholder="ชื่อกลุ่ม เช่น ส้มตำหน้ามอ" autocomplete="off" maxlength="'+MAX_GROUP_NAME+'" aria-describedby="groupMsg"></div>'+
+          '<button class="btn-sm" id="groupCreate">สร้างกลุ่ม</button>'+
+        '</div>'+
+        '<div id="groupFromSlot"></div>'+
+        '<p class="field-msg muted" id="groupMsg" aria-live="polite">ทุกคนที่มีลิงก์จะดูและแก้บิลนี้ได้ ส่งเฉพาะคนในโต๊ะ</p>'+
+      '</section>'+
+      '<section class="step-card" aria-labelledby="h-join-group">'+
+        '<div class="step-head"><h2 id="h-join-group">มีลิงก์จากเพื่อน</h2></div>'+
+        '<div class="field-row">'+
+          '<div><label class="sr-only" for="groupJoinInput">ลิงก์หรือรหัสกลุ่ม</label>'+
+          '<input type="text" id="groupJoinInput" placeholder="วางลิงก์หรือรหัสกลุ่ม" autocomplete="off" aria-describedby="groupJoinMsg"></div>'+
+          '<button class="btn-sm" id="groupJoin">เข้ากลุ่ม</button>'+
+        '</div>'+
+        '<p class="field-msg muted" id="groupJoinMsg" aria-live="polite">กดลิงก์ที่เพื่อนส่งมาตรง ๆ ก็เข้ากลุ่มได้เหมือนกัน</p>'+
+      '</section>'
+    : '<div class="notice warn"><p>ระบบกลุ่มยังไม่เปิดใช้ในเว็บนี้ (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์) ยังหารบิลในเครื่องได้ตามปกติ</p></div>')+
+    '<section class="step-card" aria-labelledby="h-my-groups">'+
+      '<div class="step-head"><h2 id="h-my-groups">กลุ่มของฉัน</h2><span class="aside">จำไว้ในเครื่องนี้</span></div>'+
+      list+
+    '</section>'+
+  '</div></div>';
 }
 
 function pageHow(){
