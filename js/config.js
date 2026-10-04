@@ -3,5 +3,5 @@
    เว้นว่างไว้ = ปิดระบบกลุ่ม แอปยังหารบิลในเครื่องได้ตามปกติ */
 "use strict";
 
-var SUPABASE_URL = "";        // เช่น "https://abcdefgh.supabase.co"
-var SUPABASE_ANON_KEY = "";   // anon key หรือ publishable key จาก Project Settings → API
+var SUPABASE_URL = "https://wqwnimqbicolrkkkkvem.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_7AtRkblTVd4kBpw7L3x9qw_zak42vw-";   // publishable key (ค่าสาธารณะ)
