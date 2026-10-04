@@ -67,6 +67,12 @@ function demoReceiptHTML(){
 
 /* ---- v2.5: ใครจ่ายให้ร้าน + ใครโอนให้ใคร ---- */
 function payerSection(r){
+  var anyPayer = state.payers.some(function(p){ return !!nameOf(p.id); });
+  if (!anyPayer && !ui.payerOpen){
+    // v2.6: ยังไม่ใช้ = แถวเดียวพับไว้ หน้าสรุปจะได้ไม่ยาว
+    return '<button class="payer-toggle" data-payer-open="1" aria-expanded="false">'+
+      '<span><b>ใครจ่ายให้ร้านไปก่อน?</b><span>ดูว่าใครต้องโอนให้ใคร</span></span><span aria-hidden="true">›</span></button>';
+  }
   var s = settle(r, state.payers);
   var me = myMemberId();
   var chosen = {};
