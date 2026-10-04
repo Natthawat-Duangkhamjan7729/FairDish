@@ -32,6 +32,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
   if (e.target.id === "billNameInput"){ e.preventDefault(); saveBillName(); }
+  if (e.target.id === "ppInput"){ e.preventDefault(); var ps = document.getElementById("ppSave"); if (ps) savePromptPay(ps.getAttribute("data-pp-key")); }
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "mealName"){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
@@ -85,6 +86,7 @@ document.addEventListener("click", async function(e){
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-pay],"+
             "[data-open-kind],[data-new-kind],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
+            "[data-pp],[data-pp-edit],#ppSave,[data-pp-paid],"+
             "[data-paid],[data-show-done],[data-show-receipt],[data-goto-summary],[data-restore-history],[data-del-history],#inviteBtn,"+
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
@@ -119,6 +121,10 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-rename")) return openRenameSheet();
   if (t.id==="billNameSave") return saveBillName();
   if ((v = t.getAttribute("data-paid"))) return togglePaid(v);
+  if ((v = t.getAttribute("data-pp"))) return openPromptPay(v);
+  if ((v = t.getAttribute("data-pp-edit"))) return openPromptPay(v, true);
+  if (t.id==="ppSave") return savePromptPay(t.getAttribute("data-pp-key"));
+  if ((v = t.getAttribute("data-pp-paid"))) return paidFromSheet(v);
   if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return window.scrollTo(0,0); }
   if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return window.scrollTo(0,0); }
   if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; location.hash = splitHref(); return; }
