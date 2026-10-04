@@ -6,6 +6,61 @@
    ========================================================= */
 function render(){
   renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
+  renderStepTabs(); renderTotalBar();
+}
+
+/* ---- v2.1: แท็บขั้นตอน + แถบยอดรวมล่างจอ ---- */
+function renderStepTabs(){
+  if (!document.getElementById("tab-members")) return;
+  var counts = {
+    members: state.members.length,
+    menus: state.menus.length,
+    shared: state.shared.length + state.charges.filter(function(c){ return c.on; }).length
+  };
+  STEPS.forEach(function(st){
+    var tab = document.getElementById("tab-"+st.id);
+    var panel = document.getElementById("panel-"+st.id);
+    var on = ui.step === st.id;
+    tab.setAttribute("aria-selected", on ? "true" : "false");
+    tab.tabIndex = on ? 0 : -1;
+    panel.hidden = !on;
+    var c = document.getElementById("count-"+st.id);
+    if (c) c.textContent = (!ui.loading && counts[st.id]) ? counts[st.id] : "";
+  });
+  var next = document.getElementById("memberNext");
+  if (next) next.innerHTML = (!ui.loading && state.members.length && !state.menus.length)
+    ? '<button class="add-slot" data-step="menus" style="margin-top:var(--s4)">ต่อไป: ใส่เมนูที่สั่ง ›</button>' : "";
+  var hint = document.getElementById("menuNoMembers");
+  if (hint) hint.innerHTML = (!ui.loading && !state.members.length)
+    ? '<div class="notice info" style="margin:0 0 var(--s3)"><p>ยังไม่มีใครในโต๊ะ ใส่ชื่อคนกินก่อน แล้วค่อยเลือกว่าใครกินเมนูไหน</p>'+
+      '<button class="btn-quiet" data-step="members">ไปใส่ชื่อ</button></div>' : "";
+}
+function setStep(step, focusTab){
+  if (!STEPS.some(function(st){ return st.id===step; })) return;
+  ui.step = step;
+  renderStepTabs();
+  var tab = document.getElementById("tab-"+step);
+  if (focusTab && tab) tab.focus();
+  var tabs = document.querySelector(".step-tabs");
+  if (tabs && tabs.getBoundingClientRect().top < 0) tabs.scrollIntoView({ block:"start" });
+}
+function renderTotalBar(){
+  var bar = document.getElementById("totalBar");
+  if (!bar) return;
+  if (ui.loading || !hasData()){
+    bar.hidden = true; bar.innerHTML = "";
+    document.body.classList.remove("has-total");
+    return;
+  }
+  var r = compute();
+  var me = myMemberId();
+  var mine = me ? r.list.filter(function(p){ return p.id===me; })[0] : null;
+  bar.hidden = false;
+  document.body.classList.add("has-total");
+  bar.innerHTML = '<a href="'+billHref()+'" aria-label="ดูใบสรุปยอด รวม '+baht(r.grand)+' บาท">'+
+    '<span class="t-meta">'+r.n+' คน'+(mine ? ' · ฉัน '+baht(mine.rounded) : '')+'</span>'+
+    '<span class="t-sum">'+baht(r.grand)+' ฿</span>'+
+    '<span class="t-go">ดูสรุป ›</span></a>';
 }
 
 /* ---- v2.0: แถบกลุ่ม (ลิงก์แชร์ + ฉันคือใคร) ---- */
@@ -15,32 +70,41 @@ function renderGroupBar(){
   if (ui.loading){ box.innerHTML = ""; return; }
   if (!ui.ctx){
     box.innerHTML = Cloud.ready()
-      ? '<div class="notice info"><p>อยากให้เพื่อนช่วยกันแก้บิลนี้? สร้างกลุ่มแล้วส่งลิงก์ให้เพื่อนได้เลย</p>'+
+      ? '<div class="notice info group-hint"><p>ให้เพื่อนช่วยกันแก้บิลนี้? สร้างกลุ่มแล้วส่งลิงก์</p>'+
         '<a class="btn-quiet" href="#/groups">สร้างกลุ่ม</a></div>'
       : "";
     return;
   }
   var me = myMemberId();
-  var picks = state.members.length
-    ? '<div class="pick" role="group" aria-label="ฉันคือใคร">'+state.members.map(function(p){
-        return '<button data-me="'+p.id+'" aria-pressed="'+(p.id===me)+'">'+esc(p.name)+'</button>';
-      }).join("")+'</div>'
-    : '<p class="hint" style="margin:0">เพิ่มชื่อในขั้นที่ 1 ก่อน แล้วเลือกว่าคุณคือใคร</p>';
-  box.innerHTML =
-    '<section class="group-bar" aria-labelledby="h-group">'+
-      '<div class="group-top">'+
-        '<div class="group-title"><span class="eyebrow">กลุ่ม</span><h2 id="h-group">'+esc(Store.groupName)+'</h2></div>'+
-        '<button class="btn-quiet btn-xs" id="groupRefresh">โหลดล่าสุด</button>'+
-      '</div>'+
+  var sub = me
+    ? '<button class="group-sub" data-group-panel="1">คุณคือ <b>'+esc(nameOf(me))+'</b></button>'
+    : (state.members.length ? '<button class="group-sub prompt" data-group-panel="1">เลือกว่าคุณคือใคร ›</button>' : '');
+  var panel = !ui.groupPanel ? '' :
+    '<div class="group-panel" id="groupPanel">'+
       '<div class="group-link">'+
         '<label class="sr-only" for="groupLinkInput">ลิงก์กลุ่ม</label>'+
         '<input type="text" id="groupLinkInput" readonly value="'+esc(groupLink(ui.ctx))+'">'+
-        '<button class="btn-sm" id="groupCopy">คัดลอกลิงก์</button>'+
-        (navigator.share ? '<button class="btn-quiet" id="groupShare">แชร์</button>' : '')+
+        '<button class="btn-quiet" id="groupCopy">คัดลอก</button>'+
       '</div>'+
       '<p class="sub-head">ฉันคือใคร <span class="muted">(จำไว้ในเครื่องนี้ ยอดของคุณจะถูกไฮไลต์)</span></p>'+
-      picks+
-      '<a class="group-leave" href="#/split">← กลับไปบิลส่วนตัว</a>'+
+      (state.members.length
+        ? '<div class="pick" role="group" aria-label="ฉันคือใคร">'+state.members.map(function(p){
+            return '<button data-me="'+p.id+'" aria-pressed="'+(p.id===me)+'">'+esc(p.name)+'</button>';
+          }).join("")+'</div>'
+        : '<p class="hint" style="margin:0">เพิ่มชื่อในแท็บ "คน" ก่อน แล้วเลือกว่าคุณคือใคร</p>')+
+      '<div class="group-actions">'+
+        '<button class="btn-quiet btn-xs" id="groupRefresh">โหลดข้อมูลล่าสุด</button>'+
+        '<a class="group-leave" href="#/split">← กลับไปบิลส่วนตัว</a>'+
+      '</div>'+
+    '</div>';
+  box.innerHTML =
+    '<section class="group-bar" aria-labelledby="h-group">'+
+      '<div class="group-top">'+
+        '<div class="group-title"><span class="eyebrow">กลุ่ม</span><h2 id="h-group">'+esc(Store.groupName)+'</h2>'+sub+'</div>'+
+        '<button class="btn-sm btn-xs" id="groupShare">'+ICON_SHARE+' แชร์ลิงก์</button>'+
+        '<button class="icon-btn" data-group-panel="1" aria-expanded="'+ui.groupPanel+'" aria-controls="groupPanel" aria-label="ตัวเลือกกลุ่ม">'+ICON_MORE+'</button>'+
+      '</div>'+
+      panel+
     '</section>';
 }
 

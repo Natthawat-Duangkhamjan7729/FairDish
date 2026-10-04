@@ -63,56 +63,78 @@ function pageHome(){
   '</div></div></section>';
 }
 
+var STEPS = [
+  { id:"members", label:"คน" },
+  { id:"menus",   label:"เมนู" },
+  { id:"shared",  label:"ส่วนกลาง" }
+];
+function stepTab(st, i){
+  var on = ui.step === st.id;
+  return '<button type="button" role="tab" id="tab-'+st.id+'" aria-controls="panel-'+st.id+'" aria-selected="'+on+'" tabindex="'+(on?0:-1)+'" data-step="'+st.id+'">'+
+    '<span class="tab-num" aria-hidden="true">'+(i+1)+'</span>'+st.label+' <span class="tab-count" id="count-'+st.id+'"></span></button>';
+}
+function stepPanel(id, body){
+  return '<section class="step-card step-panel" role="tabpanel" id="panel-'+id+'" aria-labelledby="tab-'+id+'"'+(ui.step===id?'':' hidden')+'>'+body+'</section>';
+}
+
 function pageSplit(){
   if (ui.ctx && ui.groupError) return pageGroupError();
   var inGroup = !!ui.ctx;
-  return '<div class="page"><div class="wrap app-col">'+
-    '<div class="page-head" style="margin-bottom:var(--s5);max-width:none">'+
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);flex-wrap:wrap">'+
+  return '<div class="page page-app"><div class="wrap split-layout">'+
+    '<div class="split-main">'+
+      '<div class="split-head">'+
         '<h1>'+(inGroup ? "หารบิลกลุ่ม" : "หารบิล")+'</h1>'+
-        '<button class="btn-quiet" id="resetBtn" style="font-size:var(--fs-small);min-height:var(--tap);padding:var(--s2) var(--s4)">'+ICON_DEL+' ล้างข้อมูลทั้งหมด</button>'+
+        '<p>'+(inGroup ? "ทุกคนที่มีลิงก์กลุ่มแก้บิลนี้ได้ ระบบบันทึกขึ้นกลุ่มให้อัตโนมัติ"
+                       : "ไล่ทีละแท็บ ระบบบันทึกในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล")+'</p>'+
       '</div>'+
-      '<p>'+(inGroup ? "ทุกคนที่มีลิงก์กลุ่มแก้บิลนี้ได้ ระบบบันทึกขึ้นกลุ่มให้อัตโนมัติทุกครั้งที่แก้ข้อมูล"
-                     : "ไล่ทีละขั้นจาก 1 ถึง 4 ระบบบันทึกให้อัตโนมัติทุกครั้งที่แก้ข้อมูล")+'</p>'+
+      '<div id="groupBar"></div>'+
+      '<div class="step-tabs" role="tablist" aria-label="ขั้นตอนการหารบิล">'+STEPS.map(stepTab).join("")+'</div>'+
+
+      stepPanel("members",
+        '<div class="step-head"><h2 id="h-members">ใครกินบ้าง</h2><span class="aside" id="memberCount"></span></div>'+
+        '<div class="field-row">'+
+          '<div>'+
+            '<label class="sr-only" for="memberInput">ชื่อคนที่ร่วมมื้อนี้</label>'+
+            '<input type="text" id="memberInput" placeholder="พิมพ์ชื่อ เช่น มาร์ค" autocomplete="off" maxlength="'+MAX_NAME+'" aria-describedby="memberMsg">'+
+          '</div>'+
+          '<button class="btn-sm" id="memberAdd">เพิ่ม</button>'+
+        '</div>'+
+        '<p class="field-msg muted" id="memberMsg" aria-live="polite"></p>'+
+        '<div id="memberList"></div>'+
+        '<div id="memberExtra"></div>'+
+        '<div id="memberNext"></div>')+
+
+      stepPanel("menus",
+        '<div class="step-head"><h2 id="h-menus">รายการอาหาร</h2><span class="aside" id="menuMeta"></span></div>'+
+        '<div id="menuNoMembers"></div>'+
+        '<div id="menuList"></div><div id="menuFormSlot"></div>')+
+
+      stepPanel("shared",
+        '<div class="step-head"><h2>ค่าส่วนกลาง</h2></div>'+
+        '<p class="hint">คิดเป็น % จากยอดของแต่ละคน</p>'+
+        '<div class="pick" id="chargeList"></div><div id="chargeFormSlot"></div>'+
+        '<p class="sub-head">หารเท่ากันทุกคน</p>'+
+        '<div id="sharedList"></div><div id="sharedFormSlot"></div>')+
+
       (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="ยืนยันการล้างข้อมูล">'+
         '<h3>ล้างข้อมูลทั้งหมดในบิลนี้?</h3>'+
         '<p>สมาชิก เมนู และรายการส่วนกลางทั้งหมดจะถูกล้างออก'+(inGroup ? " ทุกคนในกลุ่มจะเห็นบิลว่างด้วย" : "")+'</p>'+
         '<div class="btn-row"><button class="btn-quiet" id="cancelReset">ยกเลิก</button>'+
         '<button class="btn-danger" id="confirmReset">ล้างข้อมูล</button></div></div>' : '')+
-    '</div>'+
-    '<div id="groupBar"></div>'+
-
-    '<section class="step-card" aria-labelledby="h-members">'+
-      '<div class="step-head"><span class="step-num">1</span><h2 id="h-members">ใครกินบ้าง</h2>'+
-      '<span class="aside" id="memberCount"></span></div>'+
-      '<div class="field-row">'+
-        '<div>'+
-          '<label class="sr-only" for="memberInput">ชื่อคนที่ร่วมมื้อนี้</label>'+
-          '<input type="text" id="memberInput" placeholder="พิมพ์ชื่อ เช่น มาร์ค" autocomplete="off" maxlength="'+MAX_NAME+'" aria-describedby="memberMsg">'+
-        '</div>'+
-        '<button class="btn-sm" id="memberAdd">เพิ่ม</button>'+
+      '<div class="app-foot">'+
+        (inGroup ? '' : '<button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button>')+
+        '<button id="resetBtn">'+ICON_DEL+' ล้างข้อมูลทั้งหมด</button>'+
       '</div>'+
-      '<p class="field-msg muted" id="memberMsg" aria-live="polite"></p>'+
-      '<div id="memberList"></div>'+
-      '<div id="memberExtra"></div>'+
-    '</section>'+
+    '</div>'+
 
-    '<section class="step-card" aria-labelledby="h-menus"><div class="step-head"><span class="step-num">2</span><h2 id="h-menus">รายการอาหาร</h2>'+
-      '<span class="aside" id="menuMeta"></span></div>'+
-      '<div id="menuList"></div><div id="menuFormSlot"></div></section>'+
-
-    '<section class="step-card"><div class="step-head"><span class="step-num">3</span><h2>ค่าส่วนกลาง</h2></div>'+
-      '<p class="hint">คิดเป็น % จากยอดของแต่ละคน</p>'+
-      '<div class="pick" id="chargeList"></div><div id="chargeFormSlot"></div>'+
-      '<p class="sub-head">หารเท่ากันทุกคน</p>'+
-      '<div id="sharedList"></div><div id="sharedFormSlot"></div></section>'+
-
-    '<section class="step-card"><div class="step-head"><span class="step-num">4</span><h2>สรุปยอด</h2>'+
-      '<span class="aside" id="summaryAside"></span></div>'+
-      '<div id="summary" aria-live="polite"></div></section>'+
-
-    (inGroup ? '' : '<div class="app-foot"><button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button></div>')+
-  '</div></div>';
+    '<aside class="split-side" aria-labelledby="h-summary">'+
+      '<section class="step-card">'+
+        '<div class="step-head"><h2 id="h-summary">สรุปยอด</h2><span class="aside" id="summaryAside"></span></div>'+
+        '<div id="summary" aria-live="polite"></div>'+
+      '</section>'+
+    '</aside>'+
+  '</div></div>'+
+  '<div class="total-bar" id="totalBar" hidden></div>';
 }
 
 function pageBill(){
@@ -191,7 +213,32 @@ function pageGroups(){
     '<section class="step-card" aria-labelledby="h-my-groups">'+
       '<div class="step-head"><h2 id="h-my-groups">กลุ่มของฉัน</h2><span class="aside">จำไว้ในเครื่องนี้</span></div>'+
       list+
+      '<a class="add-slot" href="#/split" style="margin-top:var(--s2)">เปิดบิลส่วนตัว (ไม่แชร์)</a>'+
     '</section>'+
+  '</div></div>';
+}
+
+var THEMES = [ { id:"system", label:"ตามเครื่อง" }, { id:"light", label:"สว่าง" }, { id:"dark", label:"มืด" } ];
+function pageMore(){
+  function link(href, name, sub){
+    return '<div class="row-item"><a class="row-tap" href="'+href+'"><span class="body">'+
+      '<span class="name">'+name+'</span><span class="sub">'+sub+'</span></span><span aria-hidden="true">›</span></a></div>';
+  }
+  return '<div class="page"><div class="wrap app-col">'+
+    '<div class="page-head" style="max-width:none"><h1>อื่น ๆ</h1></div>'+
+    '<section class="step-card" aria-labelledby="h-theme">'+
+      '<div class="step-head"><h2 id="h-theme">ธีม</h2></div>'+
+      '<div class="pick" role="group" aria-labelledby="h-theme">'+THEMES.map(function(t){
+        return '<button data-theme-pick="'+t.id+'" aria-pressed="'+(ui.theme===t.id)+'">'+t.label+'</button>';
+      }).join("")+'</div>'+
+    '</section>'+
+    '<section class="step-card" aria-labelledby="h-pages">'+
+      '<div class="step-head"><h2 id="h-pages">เกี่ยวกับ FairDish</h2></div>'+
+      link("#/","หน้าแรก","FairDish คืออะไร หารต่างจากหารเท่ากันยังไง")+
+      link("#/how","วิธีใช้","ทีละขั้น + คำถามที่ถูกถามบ่อย")+
+      link("#/about","เกี่ยวกับ","ทีมผู้จัดทำและขอบเขตของเวอร์ชันนี้")+
+    '</section>'+
+    '<p class="hint" style="text-align:center">FairDish v'+APP_VERSION+'</p>'+
   '</div></div>';
 }
 

@@ -303,7 +303,7 @@ function validateMenuForm(f){
   else if (price < 0) errs.price = "ราคาต้องไม่ติดลบ";
   else if (price > MAX_PRICE) errs.price = "ราคาสูงเกินจริง ลองตรวจจำนวนศูนย์อีกครั้ง";
 
-  if (state.members.length === 0) errs.eaters = "ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในขั้นที่ 1 ก่อน";
+  if (state.members.length === 0) errs.eaters = "ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในแท็บ "คน" ก่อน";
   else if (f.eaters.length === 0) errs.eaters = "เลือกคนที่กินเมนูนี้อย่างน้อย 1 คน";
   return errs;
 }
@@ -467,9 +467,24 @@ async function setMe(memberId){
 }
 
 function shareGroupLink(){
-  if (!ui.ctx || !navigator.share) return;
-  navigator.share({ title:Store.groupName+" · FairDish", text:"มาหารบิล "+Store.groupName+" ด้วยกันใน FairDish", url:groupLink(ui.ctx) })
+  if (!ui.ctx) return;
+  var link = groupLink(ui.ctx);
+  if (!navigator.share) return copyText(link, "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
+  navigator.share({ title:Store.groupName+" · FairDish", text:"มาหารบิล "+Store.groupName+" ด้วยกันใน FairDish", url:link })
     .catch(function(){});   // ผู้ใช้กดยกเลิก = ไม่ใช่ข้อผิดพลาด
+}
+
+/* ---- v2.1: ธีม ---- */
+function applyTheme(theme){
+  ui.theme = (theme==="light" || theme==="dark") ? theme : "system";
+  var root = document.documentElement;
+  if (ui.theme==="system") root.removeAttribute("data-theme");
+  else root.setAttribute("data-theme", ui.theme);
+}
+async function setTheme(theme){
+  applyTheme(theme);
+  try { await Store.writeRaw(Store.themeKey, ui.theme); } catch(e){}
+  if (currentPath()==="/more") document.getElementById("view").innerHTML = pageMore();
 }
 
 async function loadDemo(){
