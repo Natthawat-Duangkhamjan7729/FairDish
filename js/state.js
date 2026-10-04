@@ -46,12 +46,13 @@ var ui = {
   syncing:false,
   step:"members",       // v2.1: แท็บขั้นตอนที่เปิดอยู่ในหน้าหารบิล
   groupPanel:false,     // v2.1: แผงตัวเลือกกลุ่ม (⋯) เปิดอยู่ไหม
-  theme:"system"        // v2.1: "system" | "light" | "dark"
+  theme:"system",       // v2.1: "system" | "light" | "dark"
+  focusGroupName:false  // v2.2: กด "สร้างกลุ่มก่อน" ที่หน้าแรก → โฟกัสช่องชื่อกลุ่มเมื่อเปิดหน้ากลุ่ม
 };
 
 var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "2.1";
+var APP_VERSION = "2.2";
 var MENU_MEMORY_LIMIT = 60;

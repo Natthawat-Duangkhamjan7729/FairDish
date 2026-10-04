@@ -474,6 +474,29 @@ function shareGroupLink(){
     .catch(function(){});   // ผู้ใช้กดยกเลิก = ไม่ใช่ข้อผิดพลาด
 }
 
+/* ---- v2.2: หน้าแรก "ทำต่อ" ---- */
+async function fillHomeResume(){
+  var saved = null;
+  try { var raw = await Store.readRaw(Store.key); saved = raw ? JSON.parse(raw) : null; } catch(e){}
+  var box = document.getElementById("homeResume");
+  if (!box) return;
+  var rows = [];
+  if (saved && saved.members && saved.members.length){
+    var nMenus = (saved.menus || []).length;
+    rows.push(['#/split', 'บิลส่วนตัว', saved.members.length+' คน · '+nMenus+' เมนู · ในเครื่องนี้']);
+  }
+  ui.myGroups.slice(0,3).forEach(function(g){
+    var when = g.at ? new Date(g.at).toLocaleDateString("th-TH",{ day:"numeric", month:"short" }) : "";
+    rows.push(['#/g/'+esc(g.id), esc(g.name), 'กลุ่ม'+(when ? ' · เปิดล่าสุด '+when : '')]);
+  });
+  if (!rows.length){ box.innerHTML = ""; return; }
+  box.innerHTML = '<h2 class="resume-head">ทำต่อ</h2>'+rows.map(function(r){
+    return '<div class="row-item"><a class="row-tap" href="'+r[0]+'"><span class="body">'+
+      '<span class="name">'+r[1]+'</span><span class="sub">'+r[2]+'</span></span><span aria-hidden="true">›</span></a></div>';
+  }).join("")+
+  (ui.myGroups.length > 3 ? '<a class="add-slot" href="#/groups">ดูกลุ่มทั้งหมด ('+ui.myGroups.length+')</a>' : '');
+}
+
 /* ---- v2.1: ธีม ---- */
 function applyTheme(theme){
   ui.theme = (theme==="light" || theme==="dark") ? theme : "system";

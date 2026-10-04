@@ -6,12 +6,34 @@
    ========================================================= */
 function item(k,h,p){ return '<li><span class="k">'+k+'</span><div><h3>'+h+'</h3><p>'+p+'</p></div></li>'; }
 
+/* ---- v2.2: ปุ่มเริ่มใหญ่บนหน้าแรก ---- */
+var ICON_START_BILL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg>';
+var ICON_START_GROUP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.4.2 4 1.9 4.5 4.6"/></svg>';
+function startCard(tag, attrs, kind, icon, title, sub){
+  return '<'+tag+' class="start-card '+kind+'" '+attrs+'>'+
+    '<span class="start-icon">'+icon+'</span>'+
+    '<span class="start-text"><b>'+title+'</b><span>'+sub+'</span></span>'+
+    '<span class="start-go" aria-hidden="true">›</span></'+tag+'>';
+}
+function homeStart(){
+  return '<section class="home-start" aria-labelledby="h-start"><div class="wrap">'+
+    '<h1 id="h-start">มื้อนี้หารยังไงดี?</h1>'+
+    '<div class="start-grid">'+
+      startCard("a", 'href="#/split"', "coral", ICON_START_BILL, "เริ่มหารบิลเลย", "คนเดียวกรอกทั้งโต๊ะ บันทึกไว้ในเครื่องนี้")+
+      (Cloud.ready()
+        ? startCard("button", 'type="button" data-start-group="1"', "purple", ICON_START_GROUP, "สร้างกลุ่มก่อน", "แล้วค่อยเริ่มหารบิล ส่งลิงก์ให้เพื่อนช่วยกันกรอก")
+        : '')+
+    '</div>'+
+    '<div id="homeResume"></div>'+
+  '</div></section>';
+}
+
 function pageHome(){
-  return ''+
+  return homeStart()+
   '<section class="hero"><div class="wrap hero-grid">'+
     '<div>'+
       '<p class="eyebrow">หารบิลให้สนุกขึ้นอีกนิด</p>'+
-      '<h1>จ่ายตามที่กินจริง<br>จบทุกมื้ออย่างแฟร์</h1>'+
+      '<h2 class="hero-title">จ่ายตามที่กินจริง<br>จบทุกมื้ออย่างแฟร์</h2>'+
       '<p class="lede">FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปออกมาเป็นบิลรายคนที่ส่งเข้ากลุ่มได้ทันที จบปัญหาคนกินน้อยต้องจ่ายเท่าคนกินเยอะ</p>'+
       '<p class="note"><span class="spark">&#9829; มื้อสนุก ไม่ต้องเกี่ยงยอด</span></p>'+
       '<div class="hero-steps"><span><b>1</b>เพิ่มเพื่อน</span><span><b>2</b>ใส่เมนู</span><span><b>3</b>ดูยอด</span></div>'+
@@ -43,7 +65,7 @@ function pageHome(){
   '</div></section>'+
 
   '<section><div class="wrap">'+
-    '<div class="sec-head"><h2>สิ่งที่ FairDish ทำให้</h2><p>ทุกอย่างอยู่ในหน้าเดียว ไล่จากบนลงล่างแล้วได้บิลเลย</p></div>'+
+    '<div class="sec-head"><h2>สิ่งที่ FairDish ทำให้</h2><p>ไล่ทีละแท็บ คน · เมนู · ส่วนกลาง แล้วได้บิลเลย</p></div>'+
     '<ul class="bill-list">'+
       item("01","เพิ่มคนในโต๊ะ","ใส่ชื่อสมาชิกที่ร่วมมื้อนี้ แก้ชื่อหรือลบออกได้ตลอด พร้อมเลิกทำถ้าลบผิดคน")+
       item("02","ใส่เมนูและราคา","พิมพ์ไม่กี่ตัวอักษรก็มีเมนูแนะนำกว่า 1,000 รายการขึ้นมาให้เลือก และเมนูที่คุณสั่งเองระบบจำไว้ให้พร้อมราคาครั้งก่อน")+
@@ -234,7 +256,6 @@ function pageMore(){
     '</section>'+
     '<section class="step-card" aria-labelledby="h-pages">'+
       '<div class="step-head"><h2 id="h-pages">เกี่ยวกับ FairDish</h2></div>'+
-      link("#/","หน้าแรก","FairDish คืออะไร หารต่างจากหารเท่ากันยังไง")+
       link("#/how","วิธีใช้","ทีละขั้น + คำถามที่ถูกถามบ่อย")+
       link("#/about","เกี่ยวกับ","ทีมผู้จัดทำและขอบเขตของเวอร์ชันนี้")+
     '</section>'+

@@ -70,7 +70,7 @@ document.addEventListener("click", async function(e){
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
-            "[data-step],[data-group-panel],[data-theme-pick],"+
+            "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],"+
             "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -85,6 +85,9 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
   if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
+
+  /* v2.2: หน้าแรก → สร้างกลุ่ม */
+  if (t.getAttribute("data-start-group")){ ui.focusGroupName = true; location.hash = "#/groups"; return; }
 
   /* v2.1: แท็บขั้นตอน, แผงกลุ่ม, ธีม */
   if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");
