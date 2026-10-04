@@ -5,7 +5,7 @@
    8.5 ติดตั้งแอป (v2.3)
    ========================================================= */
 
-/** ระบบของเครื่อง → "ios" | "android" | "desktop" (iPadOS รุ่นใหม่แสร้งเป็น Mac จึงดูจากจอสัมผัสด้วย) */
+/** ระบบของเครื่อง → "ios" | "android" | "desktop" (คอมไม่มีปุ่มติดตั้ง) (iPadOS รุ่นใหม่แสร้งเป็น Mac จึงดูจากจอสัมผัสด้วย) */
 function detectPlatform(ua, platform, touchPoints){
   ua = String(ua || "");
   if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
@@ -24,8 +24,10 @@ function detectInApp(ua){
 }
 
 var Install = {
-  prompt: null,       // beforeinstallprompt ที่เก็บไว้ (Chrome/Edge บน Android และคอม)
-  tab: null,          // แท็บที่เปิดอยู่ในหน้าต่าง: "ios" | "android" | "desktop"
+  prompt: null,       // beforeinstallprompt ที่เก็บไว้ (Chrome บน Android)
+  platform(){ return detectPlatform(navigator.userAgent, navigator.platform, navigator.maxTouchPoints); },
+  /** ปุ่มติดตั้งมีเฉพาะมือถือ (iOS / Android) ที่ยังไม่ได้เปิดจากแอปที่ติดตั้งแล้ว */
+  available(){ return this.platform() !== "desktop" && !this.standalone(); },
   standalone(){
     try {
       return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -45,26 +47,23 @@ function installSteps(list){
   }).join("")+'</ol>';
 }
 
-function installBody(tab){
-  var directBtn = Install.prompt && tab !== "ios"
-    ? '<button class="btn-sm btn-block install-now" id="installNow">ติดตั้ง FairDish เลย</button>'+
-      '<p class="install-or">หรือทำเองตามนี้</p>'
-    : '';
-  if (tab === "ios") return installSteps([
+var INSTALL_SYSTEMS = { ios:"iPhone / iPad (iOS)", android:"Android" };
+
+function installBody(platform){
+  if (platform === "ios") return installSteps([
       [ICON_IOS_SHARE, 'แตะปุ่ม <b>"แชร์"</b> บนแถบเครื่องมือของ Safari (ถ้าไม่เห็น ให้แตะ <b>•••</b> ก่อน)'],
       [ICON_ADD_SQUARE, 'เลื่อนลงแล้วเลือก <b>"เพิ่มไปยังหน้าจอโฮม"</b> (บางรุ่นต้องแตะ "ดูเพิ่มเติม" ก่อน) แล้วแตะ <b>"เพิ่ม"</b>'],
       [ICON_APP, 'เปิด FairDish จากหน้าจอโฮมของคุณ']
     ])+
     '<p class="install-note">ใช้ Safari หรือ Chrome ก็ได้ แอปที่ติดตั้งจะเก็บบิลส่วนตัวแยกจากในเบราว์เซอร์ ส่วนบิลกลุ่มเปิดจากลิงก์กลุ่มได้เหมือนเดิม</p>';
-  if (tab === "android") return directBtn + installSteps([
+  var directBtn = Install.prompt
+    ? '<button class="btn-sm btn-block install-now" id="installNow">ติดตั้ง FairDish เลย</button>'+
+      '<p class="install-or">หรือทำเองตามนี้</p>'
+    : '';
+  return directBtn + installSteps([
       [ICON_KEBAB, 'แตะเมนู <b>⋮</b> มุมขวาบนของ Chrome'],
       [ICON_ADD_SQUARE, 'เลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b> แล้วแตะ <b>"ติดตั้ง"</b>'],
       [ICON_APP, 'เปิด FairDish จากหน้าจอหลักหรือลิ้นชักแอป']
-    ]);
-  return directBtn + installSteps([
-      [ICON_ADD_SQUARE, '<b>Chrome / Edge:</b> กดไอคอนติดตั้งท้ายช่องที่อยู่เว็บ หรือเมนู <b>⋮</b> → <b>"ติดตั้ง FairDish"</b>'],
-      [ICON_IOS_SHARE, '<b>Safari บน Mac:</b> เมนู <b>ไฟล์</b> → <b>"เพิ่มไปยัง Dock"</b>'],
-      [ICON_APP, 'เปิด FairDish จาก Dock, ทาสก์บาร์ หรือเมนูแอป']
     ]);
 }
 
@@ -72,7 +71,7 @@ function renderInstall(){
   var box = document.getElementById("installDialog");
   if (!box) return;
   var inApp = detectInApp(navigator.userAgent);
-  var tabs = [ ["ios","iOS"], ["android","Android"], ["desktop","คอม"] ];
+  var platform = Install.platform();
   var external = location.origin + location.pathname + "?openExternalBrowser=1" + location.hash;
   box.innerHTML =
     '<div class="install-head">'+
@@ -86,17 +85,13 @@ function renderInstall(){
           ? '<a class="btn-quiet" href="'+esc(external)+'">เปิดในเบราว์เซอร์</a>'
           : '<button class="btn-quiet" id="installCopyLink">คัดลอกลิงก์</button>')+
       '</div>' : '')+
-    '<div class="step-tabs install-tabs" role="tablist" aria-label="เลือกระบบ">'+tabs.map(function(t){
-      var on = Install.tab === t[0];
-      return '<button type="button" role="tab" aria-selected="'+on+'" data-install-tab="'+t[0]+'">'+t[1]+'</button>';
-    }).join("")+'</div>'+
-    '<div class="install-body" role="tabpanel">'+installBody(Install.tab)+'</div>';
+    '<p class="install-system">ตรวจพบ: <b>'+INSTALL_SYSTEMS[platform]+'</b></p>'+
+    '<div class="install-body">'+installBody(platform)+'</div>';
 }
 
 function openInstall(){
   var box = document.getElementById("installDialog");
-  if (!box) return;
-  Install.tab = detectPlatform(navigator.userAgent, navigator.platform, navigator.maxTouchPoints);
+  if (!box || !Install.available()) return;
   renderInstall();
   if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
 }
@@ -118,10 +113,11 @@ async function installNow(){
 }
 function updateInstallButton(){
   var btn = document.getElementById("installBtn");
-  if (btn) btn.hidden = Install.standalone();
+  if (btn) btn.hidden = !Install.available();
 }
 
 window.addEventListener("beforeinstallprompt", function(e){
+  if (Install.platform() !== "android") return;   // คอมใช้ปุ่มติดตั้งของเบราว์เซอร์เองตามปกติ
   e.preventDefault();             // ไม่ให้เบราว์เซอร์เด้งเอง เก็บไว้ใช้ตอนผู้ใช้กด "ติดตั้งเลย"
   Install.prompt = e;
   var box = document.getElementById("installDialog");

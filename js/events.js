@@ -71,7 +71,7 @@ document.addEventListener("click", async function(e){
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],"+
-            "#installBtn,#installClose,#installNow,#installCopyLink,[data-install-tab],"+
+            "#installBtn,#installClose,#installNow,#installCopyLink,"+
             "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -92,7 +92,6 @@ document.addEventListener("click", async function(e){
   if (t.id==="installClose") return closeInstall();
   if (t.id==="installNow") return installNow();
   if (t.id==="installCopyLink") return copyText(location.href, "คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย");
-  if ((v = t.getAttribute("data-install-tab"))){ Install.tab = v; return renderInstall(); }
 
   /* v2.2: หน้าแรก → สร้างกลุ่ม */
   if (t.getAttribute("data-start-group")){ ui.focusGroupName = true; location.hash = "#/groups"; return; }

@@ -605,7 +605,8 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 72px + env(safe-area-inset-b
 .install-head p{font-size:var(--fs-small);color:var(--ink-2);margin-top:var(--s1)}
 .install-head .icon-btn{margin:calc(-1 * var(--s2)) calc(-1 * var(--s2)) 0 0}
 .install-inapp{margin:0 0 var(--s4)}
-.install-tabs{position:static;margin-bottom:var(--s4);box-shadow:none}
+.install-system{font-size:var(--fs-small);color:var(--ink-2);margin-bottom:var(--s4);padding:var(--s2) var(--s3);border-radius:var(--r-sm);background:var(--link-soft)}
+.install-system b{color:var(--link)}
 .install-steps{display:grid;gap:var(--s4);padding:0;margin:0;list-style:none}
 .install-steps li{display:flex;gap:var(--s3);align-items:flex-start;line-height:1.6}
 .install-ico{flex:0 0 auto;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--ink)}
