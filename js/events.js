@@ -43,6 +43,10 @@ document.addEventListener("input", function(e){
       renderSuggestions();
     }
   }
+  if (e.target && e.target.id === "resetConfirmName"){
+    var ok = document.getElementById("confirmReset");
+    if (ok) ok.disabled = !resetNameMatches();
+  }
   if (e.target && e.target.id === "memberInput" && ui.memberError){
     ui.memberError = "";
     var value = e.target.value;
@@ -72,6 +76,7 @@ document.addEventListener("click", async function(e){
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
+            "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,"+
             "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -86,6 +91,16 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
   if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
+
+  /* v2.4: ตอนจบมื้อ */
+  if (t.id==="shareImgBtn") return shareReceiptImage();
+  if (t.id==="nudgeInstall") return openInstall();
+  if (t.id==="nudgeClose") return dismissInstallNudge();
+
+  /* v2.4: ถามคุณคือใคร */
+  if ((v = t.getAttribute("data-me-pick"))) return chooseMe(v);
+  if (t.getAttribute("data-me-close")) return closeMeDialog();
+  if (t.getAttribute("data-me-add")) return addMyselfFromDialog();
 
   /* v2.3: ติดตั้งแอป */
   if (t.id==="installBtn") return openInstall();
@@ -117,7 +132,12 @@ document.addEventListener("click", async function(e){
   if (t.id==="resetBtn"){
     ui.confirmReset = true;
     document.getElementById("view").innerHTML = pageSplit();
-    return render();
+    render();
+    var box = document.querySelector(".confirm");   // ให้กล่องยืนยันอยู่กลางจอ ไม่จมใต้แถบยอดรวม
+    if (box) box.scrollIntoView({ block:"center" });
+    var typed = document.getElementById("resetConfirmName");
+    if (typed) typed.focus({ preventScroll:true });
+    return;
   }
   if (t.id==="cancelReset"){
     ui.confirmReset = false;
@@ -125,7 +145,9 @@ document.addEventListener("click", async function(e){
     return render();
   }
   if (t.id==="confirmReset"){
+    if (ui.ctx && !resetNameMatches()) return;
     ui.confirmReset = false;
+    var before = JSON.parse(JSON.stringify({ members:state.members, menus:state.menus, shared:state.shared, charges:state.charges }));
     state.members=[]; state.menus=[]; state.shared=[];
     state.charges = state.charges.filter(function(c){ return c.fixed; });
     state.charges.forEach(function(c){ c.on=false; });
@@ -133,12 +155,15 @@ document.addEventListener("click", async function(e){
     ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
     document.getElementById("view").innerHTML = pageSplit();
     render();
-    await commit("ล้างข้อมูลแล้ว");
-    return render();
+    var cleared = await commit(null);
+    render();
+    if (cleared) toast("ล้างข้อมูลแล้ว","ok",{ label:"เลิกทำ", action:function(){ undoReset(before); } });
+    return;
   }
 
   if (t.id==="menuOpen"){
-    state.menuForm={ id:null, name:"", price:"", eaters:[] };
+    // v2.4: โต๊ะไทยส่วนใหญ่กินด้วยกัน เริ่มที่ "ทุกคน" แล้วแตะเอาคนที่ไม่กินออก
+    state.menuForm={ id:null, name:"", price:"", eaters:state.members.map(function(p){ return p.id; }) };
     ui.menuErr={}; ui.focusMenuField="mName";
     ui.suggest={ open:true, items:[], active:-1, total:0 };
     return renderMenus();
@@ -228,4 +253,7 @@ document.addEventListener("visibilitychange", function(){
 /* v2.3: แตะพื้นหลังมืดรอบหน้าต่างติดตั้ง = ปิด */
 document.getElementById("installDialog").addEventListener("click", function(e){
   if (e.target === this) closeInstall();
+});
+document.getElementById("meDialog").addEventListener("click", function(e){
+  if (e.target === this) closeMeDialog();
 });

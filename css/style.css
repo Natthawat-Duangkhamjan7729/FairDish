@@ -148,8 +148,11 @@ body::after{content:"";position:fixed;right:-90px;bottom:-80px;width:280px;heigh
 .btn-line,.btn-quiet{background:var(--card);border-color:var(--line-2);color:var(--ink);box-shadow:0 4px 0 var(--line-2)}
 .btn-line:hover,.btn-quiet:hover{border-color:var(--link-line);color:var(--link);transform:translateY(-1px);box-shadow:0 5px 0 var(--link-line)}
 .btn-line:active,.btn-quiet:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line-2)}
-.btn-danger{background:var(--danger-fill);color:var(--on-fill);box-shadow:0 4px 0 var(--danger-edge)}
-.btn-danger:hover{background:var(--danger-hover)}
+.btn-danger{background:var(--card);color:var(--danger);border:1.5px solid var(--danger);box-shadow:0 4px 0 var(--error-line)}
+.btn-danger:hover{background:var(--danger-soft)}
+.btn-danger:active{transform:translateY(3px);box-shadow:0 1px 0 var(--error-line)}
+.btn-danger[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.btn-danger svg{width:16px;height:16px}
 .btn-sm[disabled],.btn[disabled]{opacity:.6;cursor:not-allowed}
 .btn-block{width:100%;display:flex}
 .btn-row{display:flex;flex-wrap:wrap;gap:var(--s3)}
@@ -412,6 +415,8 @@ a.row-tap{text-decoration:none}
 .confirm p{font-size:var(--fs-small);color:var(--ink-2);margin-top:var(--s1)}
 .confirm .btn-row{margin-top:var(--s4)}
 .confirm .btn-row>*{flex:1}
+.confirm-type{display:block;font-size:var(--fs-small);color:var(--ink-2);margin:var(--s3) 0 var(--s1)}
+.confirm-type b{color:var(--ink)}
 
 /* แถวรายการ */
 .row-item{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s2);margin-bottom:var(--s2);display:flex;align-items:center;gap:var(--s2)}
@@ -429,6 +434,7 @@ a.row-tap{text-decoration:none}
 
 .form-box{border:1px dashed var(--line-2);border-radius:var(--r-sm);padding:var(--s3);display:grid;gap:var(--s2);background:var(--surface)}
 .form-box .label{font-size:var(--fs-small);color:var(--ink-2);font-weight:600}
+.label-hint{display:block;font-weight:400;color:var(--ink-3)}
 .form-box .field-msg{margin-top:var(--s1)}
 .form-title{font-size:var(--fs-body);color:var(--ink)}
 .form-preview{font-size:var(--fs-small);color:var(--primary-ink);font-weight:600;min-height:20px;margin:0}
@@ -613,6 +619,34 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 72px + env(safe-area-inset-b
 .install-note{margin-top:var(--s4);font-size:var(--fs-small);color:var(--ink-2)}
 .install-now{margin-bottom:var(--s2)}
 .install-or{text-align:center;font-size:var(--fs-small);color:var(--ink-3);margin-bottom:var(--s4)}
+
+/* ---- v2.4: ยอดของฉัน + ถามคุณคือใคร ---- */
+.my-total{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s3);padding:var(--s3) var(--s4);
+  border-radius:var(--r-sm);background:var(--primary-soft);border:1.5px solid var(--chip-line);color:var(--primary-ink)}
+.my-label{font-size:var(--fs-small);font-weight:600}
+.my-amt{margin-left:auto;font-family:var(--font-num);font-size:var(--fs-display);font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.my-amt small{font-family:var(--font-body);font-size:var(--fs-small);font-weight:600}
+.my-go{font-size:var(--fs-title);font-weight:600;opacity:.7}
+.me-pick{margin:var(--s2) 0 var(--s5)}
+.me-pick button{font-size:var(--fs-body);min-height:48px;padding:var(--s2) var(--s5)}
+.me-other{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s3)}
+.me-other .btn-quiet{font-size:var(--fs-small);padding:var(--s2) var(--s4)}
+.me-skip{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);min-height:var(--tap);padding:0 var(--s2)}
+
+/* ---- v2.4: จบมื้อ + ชวนติดตั้ง ---- */
+.finish-pop{display:inline-block}
+@media(prefers-reduced-motion:no-preference){
+  .finish-pop{animation:pop .7s cubic-bezier(.2,1.6,.4,1) .15s both}
+  @keyframes pop{0%{transform:scale(0) rotate(-30deg);opacity:0}100%{transform:none;opacity:1}}
+}
+.my-total-bill{margin:0 auto var(--s4);max-width:390px}
+.finish-actions{display:grid;gap:var(--s3);max-width:390px;margin:var(--s5) auto 0}
+.finish-actions svg{width:18px;height:18px}
+.install-nudge{max-width:390px;margin:var(--s5) auto 0;flex-wrap:nowrap;align-items:center}
+.install-nudge img{width:40px;height:40px;border-radius:10px;flex:0 0 auto}
+.install-nudge p{min-width:0}
+.install-nudge b{color:var(--ink)}
+.nudge-actions{display:flex;flex-direction:column;align-items:center;gap:var(--s1);flex:0 0 auto}
 
 /* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)

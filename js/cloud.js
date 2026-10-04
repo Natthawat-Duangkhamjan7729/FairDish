@@ -24,6 +24,10 @@ function groupIdFromInput(text){
   return isGroupId(s) ? s : "";
 }
 
+/** ชื่อกลุ่มตั้งต้น เช่น "มื้อ 4 ต.ค." — ตอนบิลมาถึงโต๊ะไม่มีใครอยากคิดชื่อ */
+function defaultGroupName(date){
+  return "มื้อ " + (date || new Date()).toLocaleDateString("th-TH", { day:"numeric", month:"short" });
+}
 function groupLink(id){ return location.origin + location.pathname + "#/g/" + id; }
 function splitHref(){ return ui.ctx ? "#/g/"+ui.ctx : "#/split"; }
 function billHref(){ return ui.ctx ? "#/g/"+ui.ctx+"/bill" : "#/bill"; }

@@ -56,6 +56,7 @@ function refreshView(){
   if (path==="/split"){
     if (ui.ctx) document.getElementById("view").innerHTML = pageSplit();
     render();
+    maybeAskWhoAmI();
   }
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();
 }
@@ -92,6 +93,7 @@ async function boot(){
   try { applyTheme(await Store.readRaw(Store.themeKey)); } catch(e){}
   try { state.menuMemory = await Store.loadMenus(); } catch(e){ state.menuMemory = []; }
   try { ui.myGroups = await Store.loadGroups(); } catch(e){ ui.myGroups = []; }
+  try { ui.installNudgeOff = (await Store.readRaw(INSTALL_NUDGE_KEY)) === "off"; } catch(e){}
   updateInstallButton();
   route();
 }

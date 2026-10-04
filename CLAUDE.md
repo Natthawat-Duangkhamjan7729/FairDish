@@ -25,6 +25,7 @@
 | `calc.js` | `compute()` คำนวณเงิน — **ห้ามแตะ DOM** |
 | `receipt.js`, `pages.js`, `render.js` | สร้าง HTML ของแต่ละหน้า |
 | `actions.js` | การกระทำของผู้ใช้ |
+| `share-image.js` | วาดใบเสร็จเป็นรูป PNG ด้วย canvas (`receiptImageBlob()`, `shareReceiptImage()`) สีอ่านจากตัวแปร CSS ของ `.receipt-wrap` |
 | `install.js` | ปุ่ม/หน้าต่าง "ติดตั้งแอป" (มือถือเท่านั้น แสดงวิธีของระบบที่ตรวจพบระบบเดียว) — `detectPlatform()`, `detectInApp()`, `beforeinstallprompt` |
 | `router.js` | hash router (`#/split`, `#/bill`, `#/groups`, `#/g/<id>`, `#/g/<id>/bill`, `#/more`) + แท็บล่าง (`tabOf()`: home / split / bill / groups / more) |
 | `events.js` | event delegation ของทั้งหน้า |

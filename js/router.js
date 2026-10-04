@@ -50,6 +50,7 @@ function route(){
   var r = routes[path];
   if ((path==="/split" || path==="/bill") && groupId !== ui.ctx) loadContext(groupId);
   document.title = groupId && Store.groupName ? Store.groupName + " · FairDish" : r.title;
+  closeMeDialog(); closeInstall();     // เปลี่ยนหน้าแล้วหน้าต่างที่ค้างอยู่ต้องปิดตาม
   document.getElementById("view").innerHTML = r.view();
   var nav = groupId ? "/groups" : path;
   Array.prototype.forEach.call(document.querySelectorAll("[data-nav]"), function(a){
@@ -70,7 +71,7 @@ function route(){
   if (path==="/groups" && ui.focusGroupName){
     ui.focusGroupName = false;
     var input = document.getElementById("groupName");
-    if (input){ input.focus(); input.scrollIntoView({ block:"center" }); }
+    if (input){ input.focus(); input.select(); input.scrollIntoView({ block:"center" }); }
   }
 }
 window.addEventListener("hashchange", route);
