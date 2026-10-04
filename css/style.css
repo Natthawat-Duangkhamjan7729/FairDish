@@ -770,3 +770,7 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 64px + env(safe-area-inset-b
   --qr-ink:#31224D; --qr-paper:#FFFFFF;
 }
 :root[data-theme="light"]{color-scheme:light}
+
+/* ---------------- แถบบอกว่าอยู่ใน Developer Beta (branch claude/dev-beta เท่านั้น) ---------------- */
+.sandbox-bar{background:var(--link-soft);color:var(--link);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
+.sandbox-bar a{text-decoration:underline;margin-left:var(--s2)}
