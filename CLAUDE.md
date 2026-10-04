@@ -16,9 +16,11 @@
 | ไฟล์ | หน้าที่ |
 |---|---|
 | `config.js` | `SUPABASE_URL`, `SUPABASE_ANON_KEY` (เว้นว่าง = ปิดระบบกลุ่ม) |
+| `i18n.js`, `i18n-en.js` | v4.1: `L("ข้อความไทย", {ค่าแทรก})` แปลตาม `LANG` (th/en), คำแปลอังกฤษคีย์เป็นข้อความไทย, `shortDate()` / `monthLabel()` / `longDate()` |
 | `store.js` | ชั้นเก็บข้อมูล (localStorage หรือบิลกลุ่มผ่าน `Cloud` เมื่อ `Store.groupId` ถูกตั้ง) |
 | `state.js` | `state`, `ui`, ค่าคงที่, `APP_VERSION` |
 | `qr.js` | `QR.encode()` / `QR.svg()` สร้าง QR code เอง (byte, เวอร์ชัน 1–10, ระดับแก้ผิด H) — ไม่แตะ DOM |
+| `promptpay.js` | v4.1: `promptPayPayload(เบอร์, ยอด)` ข้อความ QR พร้อมเพย์ตามมาตรฐาน EMVCo — ไม่แตะ DOM |
 | `cloud.js` | `Cloud` เรียก RPC ของ Supabase ด้วย `fetch`, รหัส/ลิงก์กลุ่ม, "กลุ่มของฉัน" |
 | `menu-library.js` | คลังเมนูแนะนำ |
 | `shared-library.js` | รายการแนะนำค่าส่วนกลาง (แยกจากคลังเมนู) |
@@ -28,14 +30,17 @@
 | `receipt.js`, `pages.js`, `render.js` | สร้าง HTML ของแต่ละหน้า |
 | `actions.js` | การกระทำของผู้ใช้ |
 | `share-image.js` | วาดใบเสร็จเป็นรูป PNG ด้วย canvas (`receiptImageBlob()`, `shareReceiptImage()`) สีอ่านจากตัวแปร CSS ของ `.receipt-wrap` |
+| `confirm.js` | v4.1: เพื่อนยืนยันเมนู (`applyConfirm`, `confirmStatusOf`, `saveConfirm` รวมกับข้อมูลล่าสุดเมื่อชน) + หน้า `#/g/<id>/share` และ `#/g/<id>/me` |
 | `install.js` | ปุ่ม/หน้าต่าง "ติดตั้งแอป" (มือถือเท่านั้น แสดงวิธีของระบบที่ตรวจพบระบบเดียว) — `detectPlatform()`, `detectInApp()`, `beforeinstallprompt` |
-| `router.js` | hash router (`#/split`, `#/bill`, `#/history`, `#/h/<id>` บิลในประวัติ, `#/g/<id>`, `#/g/<id>/bill`, `#/more`; `#/groups` เดิม = หน้าประวัติ) + แท็บล่าง (`tabOf()`: home / history — หน้าหารบิลและใบสรุปไม่มีแท็บล่าง) |
+| `router.js` | hash router (`#/split`, `#/bill`, `#/history`, `#/h/<id>` บิลในประวัติ, `#/g/<id>`, `#/g/<id>/bill`, `#/g/<id>/share`, `#/g/<id>/me`, `#/more`; `#/groups` เดิม = หน้าประวัติ) + แท็บล่าง (`tabOf()`: home / history — หน้าหารบิลและใบสรุปไม่มีแท็บล่าง) |
 | `events.js` | event delegation ของทั้งหน้า |
 | `main.js` | `boot()`, `loadContext()` สลับบิลส่วนตัว/บิลกลุ่ม, `refreshGroup()` |
 
 ## กฎ
 
 - ข้อความที่มาจากผู้ใช้ต้องผ่าน `esc()` ก่อนใส่ใน HTML ทุกครั้ง
+- v4.1: ข้อความที่ผู้ใช้เห็นทุกข้อความต้องผ่าน `L()` เขียนทั้งประโยคพร้อมค่าแทรก เช่น `L("ลบ {name} แล้ว", { name:x })` ห้ามต่อคำทีละท่อน
+  แล้วเพิ่มคำแปลใน `js/i18n-en.js` (`tests/i18n.test.js` เช็กว่าครบ) — ตารางข้อความที่ประกาศตอนโหลดไฟล์ให้เรียก `L()` ตอนแสดง ไม่ใช่ตอนประกาศ
 - แก้ `js/calc.js` แล้วต้องรัน `node --test` และเพิ่ม test ใน `tests/calc.test.js` ถ้าเป็นกรณีใหม่
   ยอดรายคน (`rounded`) รวมกันต้องเท่ายอดบิล (`grand`) เสมอ
 - เปลี่ยนเวอร์ชัน: แก้ `APP_VERSION` ใน `js/state.js`, footer ใน `index.html` และ README ให้ตรงกัน
@@ -57,6 +62,7 @@
   เริ่มบิลใหม่ = บิลส่วนตัวเดิมที่มีข้อมูลถูกเก็บเข้า **ประวัติ** (`ui.history`, `Store.historyKey`) ก่อนเสมอ ห้ามเขียนทับบิลเดิมตรง ๆ
 - บิลมี `name` (บิลกลุ่มใช้ชื่อกลุ่มผ่าน `billName()`) และ `paid` = การโอนที่ติ๊กแล้ว คีย์จาก `transferKey()` ใน `calc.js` (รวมยอดเป็นสตางค์ ยอดเปลี่ยน = ติ๊กเดิมไม่นับ)
   ข้อมูลที่บันทึกไว้ทุกแหล่งผ่าน `normalizeBill()` ใน `save.js` ก่อนใช้
+- v4.1: เบอร์พร้อมเพย์ของแต่ละคนเก็บที่ `members[i].pp` และการยืนยันเมนูที่ `confirms` (บันทึกไปกับบิล/กลุ่ม)
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย
 
 ## ทดสอบ
