@@ -84,8 +84,8 @@ function setSave(next){
   var text = document.getElementById("saveChipText");
   if (!chip || !text) return;
   chip.dataset.state = next;
-  text.textContent = ({ loading:"กำลังโหลดข้อมูล", saving:"กำลังบันทึก",
-                        saved:"บันทึกแล้ว", error:"ยังไม่ได้บันทึก" })[next] || "";
+  text.textContent = ({ loading:L("กำลังโหลดข้อมูล"), saving:L("กำลังบันทึก"),
+                        saved:L("บันทึกแล้ว"), error:L("ยังไม่ได้บันทึก") })[next] || "";
 }
 async function commit(successMessage, source){
   setSave("saving");
@@ -103,24 +103,24 @@ async function commit(successMessage, source){
       if (currentPath() === "/split") document.getElementById("view").innerHTML = pageSplit();
       setSave("saved");
       ui.saveFailedIn = null;
-      toast("มีเพื่อนแก้บิลนี้ไปก่อน โหลดข้อมูลล่าสุดแล้ว ลองทำรายการเมื่อกี้อีกครั้ง","error");
+      toast(L("มีเพื่อนแก้บิลนี้ไปก่อน โหลดข้อมูลล่าสุดแล้ว ลองทำรายการเมื่อกี้อีกครั้ง"),"error");
       render();
       rerenderBill();
       return false;
     }
     setSave("error");
     ui.saveFailedIn = source || "member";
-    toast("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ","error",{ label:"ลองอีกครั้ง", action:retrySave });
+    toast(L("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ"),"error",{ label:L("ลองอีกครั้ง"), action:retrySave });
     render();
     return false;
   }
 }
 function saveErrorNotice(){
-  return '<div class="notice error"><p>บันทึกลงเครื่องไม่สำเร็จ ข้อมูลที่เห็นยังอยู่ครบ แต่ถ้าปิดหน้านี้จะหาย</p>'+
-    '<button class="btn-quiet" id="retrySave">ลองบันทึกอีกครั้ง</button></div>';
+  return '<div class="notice error"><p>'+L("บันทึกลงเครื่องไม่สำเร็จ ข้อมูลที่เห็นยังอยู่ครบ แต่ถ้าปิดหน้านี้จะหาย")+'</p>'+
+    '<button class="btn-quiet" id="retrySave">'+L("ลองบันทึกอีกครั้ง")+'</button></div>';
 }
 async function retrySave(){
   var ok = await commit();
-  if (ok) toast("บันทึกเรียบร้อยแล้ว","ok");
+  if (ok) toast(L("บันทึกเรียบร้อยแล้ว"),"ok");
   render();
 }

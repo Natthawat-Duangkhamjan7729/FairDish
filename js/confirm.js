@@ -98,48 +98,48 @@ var CONFIRM_BADGE = {
   confirmed:["ok", "ยืนยันแล้ว"], pending:["warn", "รอยืนยัน"], changed:["changed", "แก้หลังยืนยัน"]
 };
 function pageShare(){
-  if (!ui.ctx) return appBar({ back:"#/", title:"ชวนเพื่อนเข้ากลุ่ม" })+
-    '<div class="page"><p class="empty">เปิดจากบิลกลุ่มเท่านั้น</p></div>';
+  if (!ui.ctx) return appBar({ back:"#/", title:L("ชวนเพื่อนเข้ากลุ่ม") })+
+    '<div class="page"><p class="empty">'+L("เปิดจากบิลกลุ่มเท่านั้น")+'</p></div>';
   if (ui.groupError) return pageGroupError();
-  var bar = appBar({ back:billHref(), title:"ชวนเพื่อนเข้ากลุ่ม", sub:ui.loading ? "" : esc(Store.groupName) });
-  if (ui.loading) return bar + '<div class="page"><p class="empty">กำลังโหลดข้อมูลกลุ่ม…</p></div>';
+  var bar = appBar({ back:billHref(), title:L("ชวนเพื่อนเข้ากลุ่ม"), sub:ui.loading ? "" : esc(Store.groupName) });
+  if (ui.loading) return bar + '<div class="page"><p class="empty">'+L("กำลังโหลดข้อมูลกลุ่ม…")+'</p></div>';
   var link = confirmLink(ui.ctx), q = QR.encode(link);
   var c = confirmSummary();
   var amounts = {};
   if (hasData()) compute().list.forEach(function(p){ amounts[p.id] = p.rounded; });
   var me = myMemberId();
   return bar + '<div class="page">'+
-    '<p class="share-intro">ส่งลิงก์นี้เข้ากลุ่ม เพื่อนสแกนหรือเปิดลิงก์ได้เลย ไม่ต้องสมัคร แต่ละคนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดในบิลอัปเดตให้ทันที</p>'+
-    '<section class="share-card" aria-label="QR และลิงก์ของกลุ่ม">'+
-      (q ? '<div class="qr-card share-qr"><div class="qr-code">'+QR.svg(link, "QR code ลิงก์กลุ่ม "+esc(Store.groupName))+
+    '<p class="share-intro">'+L("ส่งลิงก์นี้เข้ากลุ่ม เพื่อนสแกนหรือเปิดลิงก์ได้เลย ไม่ต้องสมัคร แต่ละคนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดในบิลอัปเดตให้ทันที")+'</p>'+
+    '<section class="share-card" aria-label="'+L("QR และลิงก์ของกลุ่ม")+'">'+
+      (q ? '<div class="qr-card share-qr"><div class="qr-code">'+QR.svg(link, L("QR code ลิงก์กลุ่ม {name}", { name:esc(Store.groupName) }))+
         (q.version >= 4 ? '<span class="qr-logo"><img src="img/icon-192.png" alt=""></span>' : '')+'</div></div>' : '')+
       '<div class="share-info"><span class="share-name">'+esc(Store.groupName)+'</span>'+
         '<span class="share-url mono">'+esc(link.replace(/^https?:\/\//,""))+'</span>'+
-        '<button class="btn-sm btn-xs" type="button" id="shareCopy">'+ICON_COPY+' คัดลอกลิงก์</button></div>'+
+        '<button class="btn-sm btn-xs" type="button" id="shareCopy">'+ICON_COPY+' '+L("คัดลอกลิงก์")+'</button></div>'+
     '</section>'+
     '<div class="btn-pair">'+
-      '<button class="btn-line" type="button" id="shareNative">'+ICON_SHARE+' แชร์ทางอื่น</button>'+
-      '<button class="btn-line" type="button" id="shareSaveQr">'+ICON_SAVE_IMG+' บันทึกรูป QR</button>'+
+      '<button class="btn-line" type="button" id="shareNative">'+ICON_SHARE+' '+L("แชร์ทางอื่น")+'</button>'+
+      '<button class="btn-line" type="button" id="shareSaveQr">'+ICON_SAVE_IMG+' '+L("บันทึกรูป QR")+'</button>'+
     '</div>'+
     (c.total
-      ? '<div class="list-title"><h2>ยืนยันแล้ว '+c.done+' จาก '+c.total+' คน</h2></div>'+
+      ? '<div class="list-title"><h2>'+L("ยืนยันแล้ว {done} จาก {total} คน", { done:c.done, total:c.total })+'</h2></div>'+
         '<div class="progress share-progress" role="progressbar" aria-valuemin="0" aria-valuemax="'+c.total+'" aria-valuenow="'+c.done+'"><i style="width:'+Math.round(c.done * 100 / c.total)+'%"></i></div>'+
         c.rows.map(function(x){
           var b = CONFIRM_BADGE[x.status];
           return '<div class="status-row'+(x.id === me ? ' me' : '')+'"><b>'+esc(x.name)+'</b>'+
-            '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+b[1]+'</span></div>';
+            '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+L(b[1])+'</span></div>';
         }).join("")
-      : '<p class="empty" style="margin-top:var(--s5)">ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์</p>')+
-    '<div class="btn-stack"><a class="btn-line btn-block" href="'+confirmHref()+'">ยืนยันเมนูของฉัน · ดูหน้าที่เพื่อนเห็น</a></div>'+
+      : '<p class="empty" style="margin-top:var(--s5)">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
+    '<div class="btn-stack"><a class="btn-line btn-block" href="'+confirmHref()+'">'+L("ยืนยันเมนูของฉัน · ดูหน้าที่เพื่อนเห็น")+'</a></div>'+
   '</div>';
 }
 function inviteText(){
-  return 'มาช่วยกันหารบิล "'+Store.groupName+'" ใน FairDish กัน 🍲\n'+
-    'กดลิงก์ เลือกชื่อตัวเอง แล้วติ๊กเมนูที่กิน ไม่ต้องสมัคร\n'+confirmLink(ui.ctx);
+  return L("มาช่วยกันหารบิล \"{name}\" ใน FairDish กัน 🍲", { name:Store.groupName })+"\n"+
+    L("กดลิงก์ เลือกชื่อตัวเอง แล้วติ๊กเมนูที่กิน ไม่ต้องสมัคร")+"\n"+confirmLink(ui.ctx);
 }
 function shareGroupLink(){
   if (!ui.ctx) return;
-  if (!navigator.share) return copyText(inviteText(), "คัดลอกลิงก์พร้อมคำชวนแล้ว วางในแชตได้เลย");
+  if (!navigator.share) return copyText(inviteText(), L("คัดลอกลิงก์พร้อมคำชวนแล้ว วางในแชตได้เลย"));
   navigator.share({ title:Store.groupName+" · FairDish", text:inviteText() }).catch(function(){});   // ผู้ใช้กดยกเลิก = ไม่ใช่ข้อผิดพลาด
 }
 function fitShareQr(){
@@ -172,18 +172,18 @@ function guestPreview(me, sel){
   return { total:mine ? mine.rounded : 0, items:itemsOf(d), shared:r.sharedTotal > 0, n:r.n };
 }
 function guestHead(){
-  var host = state.members[0] ? state.members[0].name : "เพื่อน";
+  var host = state.members[0] ? state.members[0].name : L("เพื่อน");
   return '<div class="guest-top">'+
       '<img class="logo-mark" src="img/logo.png" alt="" width="32" height="32"><b class="home-brand">FairDish</b>'+
-      '<a class="icon-btn guest-close" href="'+billHref()+'" aria-label="ปิด ไปใบสรุปยอด">'+ICON_X+'</a></div>'+
-    '<p class="eyebrow guest-invite">'+esc(host)+' ชวนคุณหารบิล</p>'+
+      '<a class="icon-btn guest-close" href="'+billHref()+'" aria-label="'+L("ปิด ไปใบสรุปยอด")+'">'+ICON_X+'</a></div>'+
+    '<p class="eyebrow guest-invite">'+L("{name} ชวนคุณหารบิล", { name:esc(host) })+'</p>'+
     '<h1 class="guest-title">'+kt("icon")+' '+esc(Store.groupName)+'</h1>'+
-    '<p class="guest-meta">'+state.members.length+' คน · '+itemsOf(serialize()).length+' '+kt("items")+'</p>';
+    '<p class="guest-meta">'+L("{n} คน · {k} {items}", { n:state.members.length, k:itemsOf(serialize()).length, items:kt("items") })+'</p>';
 }
 function pageGuest(){
-  if (!ui.ctx) return appBar({ back:"#/", title:"ยืนยันเมนู" })+'<div class="page"><p class="empty">เปิดจากลิงก์กลุ่มเท่านั้น</p></div>';
+  if (!ui.ctx) return appBar({ back:"#/", title:L("ยืนยันเมนู") })+'<div class="page"><p class="empty">'+L("เปิดจากลิงก์กลุ่มเท่านั้น")+'</p></div>';
   if (ui.groupError) return pageGroupError();
-  if (ui.loading) return '<div class="page page-guest"><p class="empty" style="margin-top:var(--s7)">กำลังโหลดบิล…</p></div>';
+  if (ui.loading) return '<div class="page page-guest"><p class="empty" style="margin-top:var(--s7)">'+L("กำลังโหลดบิล…")+'</p></div>';
   var me = guestMember();
   var html = '<div class="page page-guest">'+guestHead();
 
@@ -191,27 +191,27 @@ function pageGuest(){
     var mine = compute().list.filter(function(p){ return p.id === me; })[0];
     return html + '<section class="guest-done">'+
       '<span class="guest-done-ico">'+ICON_CHECK+'</span>'+
-      '<h2>ยืนยันแล้ว</h2>'+
+      '<h2>'+L("ยืนยันแล้ว")+'</h2>'+
       '<div class="guest-done-amt">'+baht(mine ? mine.rounded : 0)+' ฿</div>'+
-      '<p>ยอดของคุณถูกส่งให้ทั้งโต๊ะแล้ว</p>'+
-      '<div class="btn-stack"><a class="btn-main btn-block" href="'+billHref()+'">ดูใบสรุปยอด</a>'+
-      '<button class="btn-line btn-block" type="button" data-guest-again="1">แก้เมนูที่ติ๊ก</button></div>'+
+      '<p>'+L("ยอดของคุณถูกส่งให้ทั้งโต๊ะแล้ว")+'</p>'+
+      '<div class="btn-stack"><a class="btn-main btn-block" href="'+billHref()+'">'+L("ดูใบสรุปยอด")+'</a>'+
+      '<button class="btn-line btn-block" type="button" data-guest-again="1">'+L("แก้เมนูที่ติ๊ก")+'</button></div>'+
     '</section></div>';
   }
 
   if (!me){
     var d = serialize();
     return html + '<section class="guest-card" aria-labelledby="h-guest-who">'+
-      '<h2 id="h-guest-who">คุณคือใคร</h2><p>เลือกชื่อของคุณในโต๊ะนี้</p>'+
+      '<h2 id="h-guest-who">'+L("คุณคือใคร")+'</h2><p>'+L("เลือกชื่อของคุณในโต๊ะนี้")+'</p>'+
       (state.members.length
         ? '<div class="guest-who">'+state.members.map(function(p){
             var ok = confirmStatusOf(d, p.id) === "confirmed";
-            return '<button type="button" data-guest-who="'+p.id+'">'+esc(p.name)+(ok ? ' <span class="guest-tick" aria-label="ยืนยันแล้ว">✓</span>' : '')+'</button>';
+            return '<button type="button" data-guest-who="'+p.id+'">'+esc(p.name)+(ok ? ' <span class="guest-tick" aria-label="'+L("ยืนยันแล้ว")+'">✓</span>' : '')+'</button>';
           }).join("")+'</div>'
-        : '<p class="empty">ยังไม่มีใครในบิลนี้</p>')+
-      '<div class="guest-add"><label class="label" for="guestName">ไม่มีชื่อคุณ? เพิ่มชื่อตัวเอง</label>'+
-        '<div class="field-row"><div><input type="text" id="guestName" maxlength="'+MAX_NAME+'" autocomplete="off" placeholder="พิมพ์ชื่อ เช่น มาร์ค" aria-describedby="guestMsg"></div>'+
-        '<button class="btn-quiet" type="button" data-guest-add="1">เพิ่ม</button></div>'+
+        : '<p class="empty">'+L("ยังไม่มีใครในบิลนี้")+'</p>')+
+      '<div class="guest-add"><label class="label" for="guestName">'+L("ไม่มีชื่อคุณ? เพิ่มชื่อตัวเอง")+'</label>'+
+        '<div class="field-row"><div><input type="text" id="guestName" maxlength="'+MAX_NAME+'" autocomplete="off" placeholder="'+L("พิมพ์ชื่อ เช่น มาร์ค")+'" aria-describedby="guestMsg"></div>'+
+        '<button class="btn-quiet" type="button" data-guest-add="1">'+L("เพิ่ม")+'</button></div>'+
         '<p class="field-msg muted" id="guestMsg" aria-live="polite"></p></div>'+
     '</section></div>';
   }
@@ -229,24 +229,24 @@ function pageGuest(){
     var k = others.length + (on ? 1 : 0) || 1;
     var sub = others.length
       ? others.slice(0,3).map(function(e){ return esc(nameOf(e)); }).join(" · ")+(others.length > 3 ? " +"+(others.length-3) : "")
-      : (on ? "คุณคนเดียว" : "ยังไม่มีใครเลือก");
+      : (on ? L("คุณคนเดียว") : L("ยังไม่มีใครเลือก"));
     list += '<button type="button" class="guest-item'+(on ? ' on' : '')+'" data-guest-item="'+esc(it.key)+'" role="checkbox" aria-checked="'+on+'">'+
       '<span class="tf-box" aria-hidden="true">'+(on ? ICON_CHECK : '')+'</span>'+
       '<span class="guest-body"><b>'+esc(it.name)+'</b><span>'+sub+'</span></span>'+
-      '<span class="guest-each mono">คนละ '+baht(it.price / k)+'</span></button>';
+      '<span class="guest-each mono">'+L("คนละ {amt}", { amt:baht(it.price / k) })+'</span></button>';
   });
   var st = confirmStatusOf(serialize(), me);
   return html +
-    '<div class="guest-hello"><h2>สวัสดี '+esc(nameOf(me))+'</h2><button class="link-btn" type="button" data-guest-change="1">ไม่ใช่ฉัน</button></div>'+
-    (st === "changed" ? '<div class="notice warn" style="margin:0 0 var(--s3)"><p>มีคนแก้รายการหลังคุณยืนยัน ลองตรวจอีกครั้งแล้วกดยืนยันใหม่</p></div>' : '')+
-    '<p class="list-head">ติ๊ก'+kt("items")+'ที่คุณมีส่วน</p>'+
-    (list || '<p class="empty">บิลนี้ยังไม่มีรายการ</p>')+
+    '<div class="guest-hello"><h2>'+L("สวัสดี {name}", { name:esc(nameOf(me)) })+'</h2><button class="link-btn" type="button" data-guest-change="1">'+L("ไม่ใช่ฉัน")+'</button></div>'+
+    (st === "changed" ? '<div class="notice warn" style="margin:0 0 var(--s3)"><p>'+L("มีคนแก้รายการหลังคุณยืนยัน ลองตรวจอีกครั้งแล้วกดยืนยันใหม่")+'</p></div>' : '')+
+    '<p class="list-head">'+L("ติ๊ก{items}ที่คุณมีส่วน", { items:kt("items") })+'</p>'+
+    (list || '<p class="empty">'+L("บิลนี้ยังไม่มีรายการ")+'</p>')+
   '</div>'+
   '<div class="total-bar guest-bar">'+
-    '<div class="t-sum"><span class="t-label">ยอดของคุณ</span><span class="t-amt">'+baht(pv.total)+' ฿</span>'+
-      (pv.shared ? '<span class="t-note">รวมค่าส่วนกลาง ÷ '+pv.n+' แล้ว</span>' : '')+'</div>'+
+    '<div class="t-sum"><span class="t-label">'+L("ยอดของคุณ")+'</span><span class="t-amt">'+baht(pv.total)+' ฿</span>'+
+      (pv.shared ? '<span class="t-note">'+L("รวมค่าส่วนกลาง ÷ {n} แล้ว", { n:pv.n })+'</span>' : '')+'</div>'+
     '<button class="btn-main" type="button" data-guest-save="1"'+(ui.guestSaving ? ' disabled' : '')+'>'+
-      (ui.guestSaving ? '<span class="spinner" aria-hidden="true"></span>กำลังบันทึก' : 'ยืนยันเมนู')+'</button>'+
+      (ui.guestSaving ? '<span class="spinner" aria-hidden="true"></span>'+L("กำลังบันทึก") : L("ยืนยันเมนู"))+'</button>'+
   '</div>';
 }
 function rerenderGuest(keepScroll){
@@ -271,7 +271,7 @@ async function addGuest(){
   if (problem){ setFieldMsg("guestMsg", problem, true); return input.focus(); }
   var id = nid();
   state.members.push({ id:id, name:name });
-  var ok = await commit("เพิ่ม "+name+" แล้ว");
+  var ok = await commit(L("เพิ่ม {name} แล้ว", { name:name }));
   if (!ok) return rerenderGuest();
   pickGuest(id);
 }
@@ -295,10 +295,10 @@ async function submitGuest(){
   if (res === true){
     ui.guestDone = true; ui.guestSel = null;
     rerenderGuest();
-    toast("ยืนยันเมนูแล้ว ขอบคุณนะ 🙏", "ok");
+    toast(L("ยืนยันเมนูแล้ว ขอบคุณนะ 🙏"), "ok");
   } else {
     if (res === "missing"){ ui.guestFor = null; ui.guestSel = null; }
     rerenderGuest(true);
-    toast(res === "missing" ? "ไม่พบชื่อคุณในบิลแล้ว ลองเลือกชื่ออีกครั้ง" : "ยืนยันไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง", "error");
+    toast(res === "missing" ? L("ไม่พบชื่อคุณในบิลแล้ว ลองเลือกชื่ออีกครั้ง") : L("ยืนยันไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"), "error");
   }
 }

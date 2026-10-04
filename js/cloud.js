@@ -26,7 +26,7 @@ function groupIdFromInput(text){
 
 /** ชื่อกลุ่มตั้งต้น เช่น "มื้อ 4 ต.ค." — ตอนบิลมาถึงโต๊ะไม่มีใครอยากคิดชื่อ */
 function defaultGroupName(date, kind){
-  return ktOf(kind || "meal", "groupPrefix") + " " + (date || new Date()).toLocaleDateString("th-TH", { day:"numeric", month:"short" });
+  return ktOf(kind || "meal", "groupPrefix") + " " + shortDate(date || new Date());
 }
 function groupLink(id){ return location.origin + location.pathname + "#/g/" + id; }
 function splitHref(){ return ui.ctx ? "#/g/"+ui.ctx : "#/split"; }

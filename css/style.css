@@ -914,6 +914,12 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .onb-dots i.on{width:24px;background:var(--link)}
 .list-btn{width:100%;text-align:left}
 
+
+/* v4.1: สลับภาษา */
+.lang-switch{display:inline-flex;flex:0 0 auto;padding:3px;border:1px solid var(--line-2);border-radius:var(--r-pill);background:var(--card)}
+.lang-switch button{min-width:44px;min-height:34px;border-radius:var(--r-pill);font-size:13px;font-weight:700;color:var(--ink-2)}
+.lang-switch button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+
 /* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)
    =================================================================== */

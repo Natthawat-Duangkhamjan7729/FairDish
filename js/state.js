@@ -68,7 +68,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "3.2";
+var APP_VERSION = "4.1";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */
@@ -100,10 +100,10 @@ var KIND_TEXT = {
     noPeople:"ยังไม่มีใครในทริป — ใส่ชื่อคนแรกได้เลย", emptySummary:"ใส่ชื่อคนและค่าใช้จ่ายก่อน แล้วสรุปจะขึ้นตรงนี้"
   }
 };
-function kt(key){ return (KIND_TEXT[state.kind] || KIND_TEXT.meal)[key]; }
-function ktOf(kind, key){ return (KIND_TEXT[kind] || KIND_TEXT.meal)[key]; }
+function kt(key){ return L((KIND_TEXT[state.kind] || KIND_TEXT.meal)[key]); }
+function ktOf(kind, key){ return L((KIND_TEXT[kind] || KIND_TEXT.meal)[key]); }
 var HISTORY_LIMIT = 50;
 /** ชื่อบิลตั้งต้น เช่น "มื้อ 4 ต.ค." — ตอนบิลมาถึงโต๊ะไม่มีใครอยากคิดชื่อ */
 function defaultBillName(kind, date){
-  return ktOf(kind || "meal", "groupPrefix") + " " + (date || new Date()).toLocaleDateString("th-TH", { day:"numeric", month:"short" });
+  return ktOf(kind || "meal", "groupPrefix") + " " + shortDate(date || new Date());
 }

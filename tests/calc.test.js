@@ -9,7 +9,7 @@ const vm = require("node:vm");
 // โหลดไฟล์ js/ แบบเดียวกับเบราว์เซอร์ (สคริปต์ธรรมดาที่แชร์ global)
 function loadApp(){
   const ctx = vm.createContext({});
-  for (const f of ["state.js", "calc.js"]){
+  for (const f of ["i18n.js", "state.js", "calc.js"]){
     const file = path.join(__dirname, "..", "js", f);
     vm.runInContext(fs.readFileSync(file, "utf8"), ctx, { filename: file });
   }

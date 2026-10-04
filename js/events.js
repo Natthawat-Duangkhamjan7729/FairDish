@@ -93,7 +93,7 @@ document.addEventListener("click", async function(e){
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "#shareNative,#shareCopy,#shareSaveQr,"+
-            "[data-onb-next],[data-onb-skip],[data-onb-again],"+
+            "[data-lang],[data-onb-next],[data-onb-skip],[data-onb-again],"+
             "[data-guest-who],[data-guest-add],[data-guest-item],[data-guest-save],[data-guest-change],[data-guest-again],"+
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
@@ -124,6 +124,7 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-rename")) return openRenameSheet();
   if (t.id==="billNameSave") return saveBillName();
   if ((v = t.getAttribute("data-paid"))) return togglePaid(v);
+  if ((v = t.getAttribute("data-lang"))) return setLang(v);
   if (t.getAttribute("data-onb-next")) return onboardNext();
   if (t.getAttribute("data-onb-skip")) return finishOnboard();
   if (t.getAttribute("data-onb-again")) return onboardAgain();
@@ -177,7 +178,7 @@ document.addEventListener("click", async function(e){
   if (t.id==="installBtn") return openInstall();
   if (t.id==="installClose") return closeInstall();
   if (t.id==="installNow") return installNow();
-  if (t.id==="installCopyLink") return copyText(location.href, "คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย");
+  if (t.id==="installCopyLink") return copyText(location.href, L("คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย"));
 
   /* v2.1: แท็บขั้นตอน, แผงกลุ่ม, ธีม */
   if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");
@@ -186,10 +187,10 @@ document.addEventListener("click", async function(e){
 
   /* v2.0: กลุ่ม */
   if (t.id==="groupJoin") return joinGroup();
-  if (t.id==="groupCopy") return copyText(groupLink(ui.ctx), "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
+  if (t.id==="groupCopy") return copyText(groupLink(ui.ctx), L("คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย"));
   if (t.id==="groupShare"){ location.hash = shareHref(); return; }
   if (t.id==="shareNative") return shareGroupLink();
-  if (t.id==="shareCopy") return copyText(inviteText(), "คัดลอกลิงก์พร้อมคำชวนแล้ว วางในแชตได้เลย");
+  if (t.id==="shareCopy") return copyText(inviteText(), L("คัดลอกลิงก์พร้อมคำชวนแล้ว วางในแชตได้เลย"));
   if (t.id==="shareSaveQr") return saveQrImage();
   if (t.id==="groupRefresh") return refreshGroup(true);
   if (t.id==="groupRetry") return loadContext(ui.ctx);
@@ -227,7 +228,7 @@ document.addEventListener("click", async function(e){
     render();
     var cleared = await commit(null);
     render();
-    if (cleared) toast("ล้างข้อมูลแล้ว","ok",{ label:"เลิกทำ", action:function(){ undoReset(before); } });
+    if (cleared) toast(L("ล้างข้อมูลแล้ว"),"ok",{ label:L("เลิกทำ"), action:function(){ undoReset(before); } });
     return;
   }
 
@@ -271,7 +272,7 @@ document.addEventListener("click", async function(e){
     e.stopPropagation();
     state.charges = state.charges.filter(function(c){ return c.id!==v; });
     render();
-    await commit("ลบค่าใช้จ่ายแล้ว");
+    await commit(L("ลบค่าใช้จ่ายแล้ว"));
     return render();
   }
   if ((v = t.getAttribute("data-charge"))){
@@ -285,12 +286,12 @@ document.addEventListener("click", async function(e){
   if (t.id==="cSave"){
     var cl = document.getElementById("cLabel").value.trim();
     var cr = parseFloat(document.getElementById("cRate").value);
-    if (!cl) return toast("ใส่ชื่อค่าใช้จ่ายก่อน","error");
-    if (!(cr>=0)) return toast("ใส่เปอร์เซ็นต์เป็นตัวเลข","error");
+    if (!cl) return toast(L("ใส่ชื่อค่าใช้จ่ายก่อน"),"error");
+    if (!(cr>=0)) return toast(L("ใส่เปอร์เซ็นต์เป็นตัวเลข"),"error");
     state.charges.push({ id:nid(), label:cl, rate:cr, on:true, fixed:false });
     state.chargeForm=null;
     render();
-    await commit("เพิ่มค่าใช้จ่ายแล้ว");
+    await commit(L("เพิ่มค่าใช้จ่ายแล้ว"));
     return render();
   }
 
@@ -299,18 +300,18 @@ document.addEventListener("click", async function(e){
   if (t.id==="sSave"){
     var sn = document.getElementById("sName").value.trim();
     var sp = parseFloat(document.getElementById("sPrice").value);
-    if (!sn) return toast("ใส่ชื่อรายการก่อน","error");
-    if (!(sp>=0)) return toast("ใส่ราคาเป็นตัวเลข","error");
+    if (!sn) return toast(L("ใส่ชื่อรายการก่อน"),"error");
+    if (!(sp>=0)) return toast(L("ใส่ราคาเป็นตัวเลข"),"error");
     state.shared.push({ id:nid(), name:sn, price:sp });
     state.sharedForm=null;
     render();
-    await commit("เพิ่มค่าส่วนกลางแล้ว");
+    await commit(L("เพิ่มค่าส่วนกลางแล้ว"));
     return render();
   }
   if ((v = t.getAttribute("data-del-shared"))){
     state.shared = state.shared.filter(function(s){ return s.id!==v; });
     render();
-    await commit("ลบรายการแล้ว");
+    await commit(L("ลบรายการแล้ว"));
     return render();
   }
 

@@ -42,7 +42,7 @@ async function loadContext(groupId){
     if (groupId) ui.groupError = "load";
     else {
       setSave("error");
-      toast("โหลดข้อมูลเดิมไม่สำเร็จ เริ่มบิลใหม่ได้เลย","error");
+      toast(L("โหลดข้อมูลเดิมไม่สำเร็จ เริ่มบิลใหม่ได้เลย"),"error");
     }
   }
   refreshView();
@@ -64,7 +64,7 @@ function refreshView(){
   // v3.2: เพิ่งย้ายบิลส่วนตัวขึ้นกลุ่ม (เปิดหน้าชวนเพื่อนอยู่แล้ว)
   if (ui.shareAfterLoad && ui.ctx && !ui.loading){
     ui.shareAfterLoad = false;
-    if (!ui.groupError) toast("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย","ok");
+    if (!ui.groupError) toast(L("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย"),"ok");
   }
 }
 
@@ -86,10 +86,10 @@ async function refreshGroup(manual){
       Store.version = g.version;
       Store.groupName = g.name;
       refreshView();
-      toast("อัปเดตบิลล่าสุดจากกลุ่มแล้ว","ok");
-    } else if (manual) toast("บิลนี้เป็นข้อมูลล่าสุดแล้ว","ok");
+      toast(L("อัปเดตบิลล่าสุดจากกลุ่มแล้ว"),"ok");
+    } else if (manual) toast(L("บิลนี้เป็นข้อมูลล่าสุดแล้ว"),"ok");
   } catch(err){
-    if (manual) toast("โหลดข้อมูลล่าสุดไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง","error");
+    if (manual) toast(L("โหลดข้อมูลล่าสุดไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"),"error");
   } finally {
     ui.syncing = false;
   }
@@ -99,6 +99,8 @@ async function boot(){
   MENU_LIBRARY = buildMenuLibrary();
   await Store.init();
   try { applyTheme(await Store.readRaw(Store.themeKey)); } catch(e){}
+  try { LANG = (await Store.readRaw(LANG_KEY)) === "en" ? "en" : "th"; } catch(e){}
+  applyStaticText();
   try { state.menuMemory = await Store.loadMenus(); } catch(e){ state.menuMemory = []; }
   try { ui.myGroups = await Store.loadGroups(); } catch(e){ ui.myGroups = []; }
   try { ui.history = await Store.loadHistory(); } catch(e){ ui.history = []; }
