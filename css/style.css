@@ -710,6 +710,23 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 64px + env(safe-area-inset-b
 .join-fold .field-row{margin-top:var(--s2)}
 .finish-actions{margin-top:var(--s4)}
 
+/* ---- v2.7: หน้าต่างชวนเพื่อน (QR) ---- */
+:root{--qr-ink:#31224D;--qr-paper:#FFFFFF}   /* QR ต้องเข้มบนขาวเสมอ กล้องถึงสแกนติด — โหมดมืดใช้ค่าเดิม */
+.qr-card{display:flex;flex-direction:column;align-items:center;gap:var(--s1);margin:0 auto var(--s5);padding:var(--s4) var(--s4) var(--s3);
+  max-width:300px;border-radius:var(--r-lg);background:var(--qr-paper);color:var(--qr-ink);box-shadow:var(--shadow)}
+.qr-code{position:relative;width:100%;max-width:240px;aspect-ratio:1}
+.qr-svg{display:block;width:100%;height:100%;color:var(--qr-ink)}
+.qr-logo{position:absolute;left:50%;top:50%;width:24%;aspect-ratio:1;transform:translate(-50%,-50%);padding:3%;border-radius:22%;background:var(--qr-paper)}
+.qr-logo img{display:block;width:100%;height:100%;border-radius:18%}
+.qr-name{font-family:var(--font-head);font-size:var(--fs-title);font-weight:600;text-align:center;word-break:break-word;line-height:1.35}
+.qr-hint{font-size:var(--fs-small);color:var(--qr-ink);opacity:.7}
+.share-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:var(--s2)}
+.share-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s1);min-height:76px;padding:var(--s2);
+  border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);font-size:var(--fs-small);font-weight:600;text-align:center}
+.share-opt svg{width:24px;height:24px;color:var(--link)}
+.share-opt:hover{border-color:var(--link);color:var(--link)}
+.share-link{margin-top:var(--s4);font-family:var(--font-num);font-size:var(--fs-small);color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+
 /* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)
    =================================================================== */
@@ -730,6 +747,7 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 64px + env(safe-area-inset-b
     --glow-1:rgba(255,109,122,.14); --glow-2:rgba(61,191,146,.10); --glow-3:rgba(240,163,60,.08);
     --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
     --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
+    --qr-ink:#31224D; --qr-paper:#FFFFFF;
   }
 }
 :root[data-theme="dark"]{
@@ -748,5 +766,6 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 64px + env(safe-area-inset-b
   --glow-1:rgba(255,109,122,.14); --glow-2:rgba(61,191,146,.10); --glow-3:rgba(240,163,60,.08);
   --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
   --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
+  --qr-ink:#31224D; --qr-paper:#FFFFFF;
 }
 :root[data-theme="light"]{color-scheme:light}

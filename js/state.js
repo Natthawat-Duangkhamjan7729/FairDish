@@ -58,5 +58,5 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "2.6";
+var APP_VERSION = "2.7";
 var MENU_MEMORY_LIMIT = 60;
