@@ -6,17 +6,20 @@
    ========================================================= */
 function serialize(){
   return { members:state.members, menus:state.menus, shared:state.shared,
-           charges:state.charges, payers:state.payers, savedAt:new Date().toISOString() };
+           charges:state.charges, payers:state.payers, kind:state.kind, savedAt:new Date().toISOString() };
 }
 /** ใส่ข้อมูลบิลที่โหลดมา (จากเครื่องหรือจากกลุ่ม) ลงใน state — ไม่มีข้อมูล = บิลว่าง */
 function applyBill(saved){
   saved = saved || {};
   state.members = Array.isArray(saved.members) ? saved.members : [];
   state.menus = (Array.isArray(saved.menus) ? saved.menus : []).map(function(m){
-    return { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
+    var item = { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
+    if (m.payer) item.payer = String(m.payer);
+    return item;
   });
   state.shared = Array.isArray(saved.shared) ? saved.shared : [];
   state.charges = (saved.charges && saved.charges.length) ? saved.charges : defaultCharges();
+  state.kind = saved.kind === "trip" ? "trip" : "meal";
   state.payers = (Array.isArray(saved.payers) ? saved.payers : []).filter(function(p){ return p && p.id; }).map(function(p){
     var n = Number(p.amount);
     return { id:String(p.id), amount:(p.amount == null || !isFinite(n) || n < 0) ? null : n };

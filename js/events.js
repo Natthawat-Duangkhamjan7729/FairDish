@@ -9,7 +9,7 @@ document.addEventListener("keydown", function(e){
   var stepId = e.target.getAttribute && e.target.getAttribute("data-step");
   if (stepId && e.target.getAttribute("role")==="tab" && /^(ArrowLeft|ArrowRight|Home|End)$/.test(e.key)){
     e.preventDefault();
-    var ids = STEPS.map(function(st){ return st.id; });
+    var ids = steps().map(function(st){ return st.id; });
     var i = ids.indexOf(stepId);
     var next = e.key==="Home" ? 0 : e.key==="End" ? ids.length-1 : (i + (e.key==="ArrowRight" ? 1 : -1) + ids.length) % ids.length;
     return setStep(ids[next], true);
@@ -75,7 +75,7 @@ document.addEventListener("click", async function(e){
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
-            "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],"+
+            "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],[data-kind],[data-start-kind],[data-group-kind],[data-pay],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "#shareNative,#shareCopy,#shareSaveQr,[data-share-close],"+
@@ -112,6 +112,17 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-me-pick"))) return chooseMe(v);
   if (t.getAttribute("data-me-close")) return closeMeDialog();
   if (t.getAttribute("data-me-add")) return addMyselfFromDialog();
+
+  /* v3.0: ประเภทบิล + คนจ่ายของรายการทริป */
+  if ((v = t.getAttribute("data-kind"))) return setKind(v);
+  if ((v = t.getAttribute("data-start-kind"))) return startKind(v);
+  if ((v = t.getAttribute("data-group-kind"))) return setNewGroupKind(v);
+  if ((v = t.getAttribute("data-pay"))){
+    syncMenuForm();
+    state.menuForm.payer = v;
+    if (ui.menuErr) ui.menuErr.payer = "";
+    return renderMenus();
+  }
 
   /* v2.3: ติดตั้งแอป */
   if (t.id==="installBtn") return openInstall();
@@ -179,6 +190,8 @@ document.addEventListener("click", async function(e){
   if (t.id==="menuOpen"){
     // v2.4: โต๊ะไทยส่วนใหญ่กินด้วยกัน เริ่มที่ "ทุกคน" แล้วแตะเอาคนที่ไม่กินออก
     state.menuForm={ id:null, name:"", price:"", eaters:state.members.map(function(p){ return p.id; }) };
+    // v3.0: ทริป — คนจ่ายตั้งต้น = คนที่เลือกครั้งก่อน หรือ "ฉัน"
+    if (state.kind === "trip") state.menuForm.payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
     ui.menuErr={}; ui.focusMenuField="mName";
     ui.suggest={ open:true, items:[], active:-1, total:0 };
     return renderMenus();
@@ -186,7 +199,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-suggest")) !== null) return pickSuggestion(parseInt(v,10));
   if ((v = t.getAttribute("data-edit-menu"))){
     var m = state.menus.filter(function(x){ return x.id===v; })[0];
-    if (m){ state.menuForm={ id:m.id, name:m.name, price:m.price, eaters:m.eaters.slice() }; ui.menuErr={}; }
+    if (m){ state.menuForm={ id:m.id, name:m.name, price:m.price, eaters:m.eaters.slice(), payer:m.payer || null }; ui.menuErr={}; }
     closeSuggestions();
     return renderMenus();
   }

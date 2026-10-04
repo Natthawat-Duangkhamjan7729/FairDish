@@ -17,11 +17,13 @@ function startCard(tag, attrs, kind, icon, title, sub){
 }
 function homeStart(){
   return '<section class="home-start" aria-labelledby="h-start"><div class="wrap">'+
-    '<h1 id="h-start">มื้อนี้หารยังไงดี?</h1>'+
+    '<h1 id="h-start">วันนี้หารอะไรดี?</h1>'+
     '<div class="start-grid">'+
-      startCard("a", 'href="#/split"', "coral", ICON_START_BILL, "เริ่มหารบิลเลย", "คนเดียวกรอกทั้งโต๊ะ บันทึกไว้ในเครื่องนี้")+
+      // v3.0: เลือกประเภทตั้งแต่ปุ่มแรก
+      startCard("button", 'type="button" data-start-kind="meal"', "coral", '<span class="start-emoji" aria-hidden="true">🍲</span>', ktOf("meal","start"), ktOf("meal","startSub"))+
+      startCard("button", 'type="button" data-start-kind="trip"', "mint", '<span class="start-emoji" aria-hidden="true">✈️</span>', ktOf("trip","start"), ktOf("trip","startSub"))+
       (Cloud.ready()
-        ? startCard("button", 'type="button" data-start-group="1"', "purple", ICON_START_GROUP, "สร้างกลุ่มก่อน", "แล้วค่อยเริ่มหารบิล ส่งลิงก์ให้เพื่อนช่วยกันกรอก")
+        ? startCard("button", 'type="button" data-start-group="1"', "purple", ICON_START_GROUP, "สร้างกลุ่มก่อน", "ส่งลิงก์ให้เพื่อนช่วยกันกรอก ใช้ได้ทั้งมื้ออาหารและทริป")
         : '')+
     '</div>'+
     '<div id="homeResume"></div>'+
@@ -85,11 +87,17 @@ function pageHome(){
   '</div></div></section>';
 }
 
-var STEPS = [
-  { id:"members", label:"คน" },
-  { id:"menus",   label:"เมนู" },
-  { id:"shared",  label:"ส่วนกลาง" }
-];
+/** แท็บของหน้าหารบิล — ทริปไม่มีแท็บส่วนกลาง (ไม่มีค่าบริการ/VAT และ "หารทุกคน" คือเลือกทุกคนอยู่แล้ว) */
+function steps(){
+  var list = [ { id:"members", label:"คน" }, { id:"menus", label:kt("items") } ];
+  if (state.kind !== "trip") list.push({ id:"shared", label:"ส่วนกลาง" });
+  return list;
+}
+function kindSwitch(attr, current){
+  return '<div class="kind-switch" role="group" aria-label="ประเภทบิล">'+["meal","trip"].map(function(k){
+    return '<button type="button" '+attr+'="'+k+'" aria-pressed="'+(current===k)+'">'+ktOf(k,"icon")+' '+ktOf(k,"name")+'</button>';
+  }).join("")+'</div>';
+}
 function stepTab(st, i){
   var on = ui.step === st.id;
   return '<button type="button" role="tab" id="tab-'+st.id+'" aria-controls="panel-'+st.id+'" aria-selected="'+on+'" tabindex="'+(on?0:-1)+'" data-step="'+st.id+'">'+
@@ -102,21 +110,23 @@ function stepPanel(id, body){
 function pageSplit(){
   if (ui.ctx && ui.groupError) return pageGroupError();
   var inGroup = !!ui.ctx;
+  if (!steps().some(function(st){ return st.id === ui.step; })) ui.step = "members";
   return '<div class="page page-app"><div class="wrap split-layout">'+
     '<div class="split-main">'+
       '<div class="split-head">'+
         '<h1>'+(inGroup ? "หารบิลกลุ่ม" : "หารบิล")+'</h1>'+
         '<p>'+(inGroup ? "ทุกคนที่มีลิงก์กลุ่มแก้บิลนี้ได้ ระบบบันทึกขึ้นกลุ่มให้อัตโนมัติ"
                        : "ไล่ทีละแท็บ ระบบบันทึกในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล")+'</p>'+
+        '<div id="kindSlot"></div>'+
       '</div>'+
       '<div id="groupBar"></div>'+
-      '<div class="step-tabs" role="tablist" aria-label="ขั้นตอนการหารบิล">'+STEPS.map(stepTab).join("")+'</div>'+
+      '<div class="step-tabs" role="tablist" aria-label="ขั้นตอนการหารบิล">'+steps().map(stepTab).join("")+'</div>'+
 
       stepPanel("members",
-        '<div class="step-head"><h2 id="h-members">ใครกินบ้าง</h2></div>'+
+        '<div class="step-head"><h2 id="h-members">'+kt("people")+'</h2></div>'+
         '<div class="field-row">'+
           '<div>'+
-            '<label class="sr-only" for="memberInput">ชื่อคนที่ร่วมมื้อนี้</label>'+
+            '<label class="sr-only" for="memberInput">ชื่อคนในบิลนี้</label>'+
             '<input type="text" id="memberInput" placeholder="พิมพ์ชื่อ เช่น มาร์ค" autocomplete="off" maxlength="'+MAX_NAME+'" aria-describedby="memberMsg">'+
           '</div>'+
           '<button class="btn-sm" id="memberAdd">เพิ่ม</button>'+
@@ -127,20 +137,20 @@ function pageSplit(){
         '<div id="memberNext"></div>')+
 
       stepPanel("menus",
-        '<div class="step-head"><h2 id="h-menus">รายการอาหาร</h2><span class="aside" id="menuMeta"></span></div>'+
+        '<div class="step-head"><h2 id="h-menus">'+kt("itemsTitle")+'</h2><span class="aside" id="menuMeta"></span></div>'+
         '<div id="menuNoMembers"></div>'+
         '<div id="menuList"></div><div id="menuFormSlot"></div>')+
 
-      stepPanel("shared",
+      (state.kind === "trip" ? '' : stepPanel("shared",
         '<div class="step-head"><h2>ค่าส่วนกลาง</h2></div>'+
         '<p class="hint">คิดเป็น % จากยอดของแต่ละคน</p>'+
         '<div class="pick" id="chargeList"></div><div id="chargeFormSlot"></div>'+
         '<p class="sub-head">หารเท่ากันทุกคน</p>'+
-        '<div id="sharedList"></div><div id="sharedFormSlot"></div>')+
+        '<div id="sharedList"></div><div id="sharedFormSlot"></div>'))+
 
       (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="ยืนยันการล้างข้อมูล">'+
         '<h3>ล้างข้อมูลทั้งหมดในบิลนี้?</h3>'+
-        '<p>สมาชิก เมนู และรายการส่วนกลางทั้งหมดจะถูกล้างออก'+(inGroup ? " <b>ทุกคนในกลุ่มจะเห็นบิลว่างด้วย</b>" : "")+'</p>'+
+        '<p>รายชื่อและรายการทั้งหมดจะถูกล้างออก'+(inGroup ? " <b>ทุกคนในกลุ่มจะเห็นบิลว่างด้วย</b>" : "")+'</p>'+
         (inGroup ? '<label class="confirm-type" for="resetConfirmName">พิมพ์ชื่อกลุ่ม <b>'+esc(Store.groupName)+'</b> เพื่อยืนยัน</label>'+
           '<input type="text" id="resetConfirmName" autocomplete="off" placeholder="'+esc(Store.groupName)+'">' : '')+
         '<div class="btn-row"><button class="btn-quiet" id="cancelReset">ยกเลิก</button>'+
@@ -180,12 +190,12 @@ function pageBill(){
     head = '<div class="page"><div class="wrap">'+
       '<a class="crumb" href="'+splitHref()+'">← กลับไปแก้บิล</a>'+
       '<div class="page-head finish-head">'+(ui.ctx && Store.groupName ? '<p class="eyebrow">กลุ่ม '+esc(Store.groupName)+'</p>' : '')+
-      '<h1>จบมื้อแล้ว! <span class="finish-pop" aria-hidden="true">🎉</span></h1>'+
+      '<h1>'+kt("done")+' <span class="finish-pop" aria-hidden="true">🎉</span></h1>'+
       '<p>ยอดครบทุกคนแล้ว ส่งให้เพื่อนได้เลย กดชื่อใครก็เห็นว่ายอดมาจากเมนูไหน</p></div>';
   }
   var mine = myShare();
   return head + '<div class="app-col">'+
-      (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' เมนูที่ยังไม่ได้เลือกคนกิน จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
+      (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' '+kt("orphan")+' จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
       (mine ? '<div class="my-total my-total-bill"><span class="my-label">ยอดของคุณ ('+esc(nameOf(mine.id))+')'+
         (myTransferText() ? '<span class="my-sub">'+esc(myTransferText())+'</span>' : '')+'</span>'+
         '<span class="my-amt">'+baht(mine.rounded)+' <small>บาท</small></span></div>' : '')+
@@ -222,7 +232,7 @@ function pageGroups(){
         var when = g.at ? new Date(g.at).toLocaleDateString("th-TH",{ day:"numeric", month:"short" }) : "";
         return '<div class="row-item">'+
           '<a class="row-tap" href="#/g/'+esc(g.id)+'"><span class="body">'+
-            '<span class="name">'+esc(g.name)+'</span>'+
+            '<span class="name">'+ktOf(g.kind,"icon")+' '+esc(g.name)+'</span>'+
             '<span class="sub">'+(when ? "เปิดล่าสุด "+when : "")+'</span></span></a>'+
           '<span class="acts"><button class="icon-btn" data-forget-group="'+esc(g.id)+'" aria-label="เอา '+esc(g.name)+' ออกจากรายการ">'+ICON_X+'</button></span>'+
         '</div>';
@@ -233,9 +243,10 @@ function pageGroups(){
     ? '<div class="notice warn"><p>ระบบกลุ่มยังไม่เปิดใช้ในเว็บนี้ (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์) ยังหารบิลในเครื่องได้ตามปกติ</p></div>'
     : '<section class="step-card" aria-labelledby="h-new-group">'+
         '<div class="step-head"><h2 id="h-new-group">สร้างกลุ่มใหม่</h2></div>'+
+        kindSwitch("data-group-kind", ui.newGroupKind)+
         '<div class="field-row">'+
           '<div><label class="sr-only" for="groupName">ชื่อกลุ่ม</label>'+
-          '<input type="text" id="groupName" value="'+esc(defaultGroupName())+'" placeholder="ชื่อกลุ่ม เช่น ส้มตำหน้ามอ" autocomplete="off" maxlength="'+MAX_GROUP_NAME+'" aria-describedby="groupMsg"></div>'+
+          '<input type="text" id="groupName" value="'+esc(defaultGroupName(null, ui.newGroupKind))+'" placeholder="ชื่อกลุ่ม เช่น ส้มตำหน้ามอ" autocomplete="off" maxlength="'+MAX_GROUP_NAME+'" aria-describedby="groupMsg"></div>'+
           '<button class="btn-sm" id="groupCreate">สร้างกลุ่ม</button>'+
         '</div>'+
         '<div id="groupFromSlot"></div>'+

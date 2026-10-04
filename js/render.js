@@ -5,8 +5,15 @@
    7. แสดงผลหน้าแอป
    ========================================================= */
 function render(){
-  renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
+  renderKindSlot(); renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
   renderStepTabs(); renderTotalBar();
+}
+
+/* ---- v3.0: สลับประเภทบิล (สลับได้เมื่อยังไม่มีรายการ) ---- */
+function renderKindSlot(){
+  var box = document.getElementById("kindSlot");
+  if (!box) return;
+  box.innerHTML = ui.loading ? "" : kindSwitch("data-kind", state.kind);
 }
 
 /* ---- v2.1: แท็บขั้นตอน + แถบยอดรวมล่างจอ ---- */
@@ -17,9 +24,10 @@ function renderStepTabs(){
     menus: state.menus.length,
     shared: state.shared.length + state.charges.filter(function(c){ return c.on; }).length
   };
-  STEPS.forEach(function(st){
+  steps().forEach(function(st){
     var tab = document.getElementById("tab-"+st.id);
     var panel = document.getElementById("panel-"+st.id);
+    if (!tab || !panel) return;
     var on = ui.step === st.id;
     tab.setAttribute("aria-selected", on ? "true" : "false");
     tab.tabIndex = on ? 0 : -1;
@@ -29,14 +37,14 @@ function renderStepTabs(){
   });
   var next = document.getElementById("memberNext");
   if (next) next.innerHTML = (!ui.loading && state.members.length && !state.menus.length)
-    ? '<button class="add-slot" data-step="menus" style="margin-top:var(--s4)">ต่อไป: ใส่เมนูที่สั่ง ›</button>' : "";
+    ? '<button class="add-slot" data-step="menus" style="margin-top:var(--s4)">'+kt("next")+'</button>' : "";
   var hint = document.getElementById("menuNoMembers");
   if (hint) hint.innerHTML = (!ui.loading && !state.members.length)
-    ? '<div class="notice info" style="margin:0 0 var(--s3)"><p>ยังไม่มีใครในโต๊ะ ใส่ชื่อคนกินก่อน แล้วค่อยเลือกว่าใครกินเมนูไหน</p>'+
+    ? '<div class="notice info" style="margin:0 0 var(--s3)"><p>ยังไม่มีใครในบิลนี้ ใส่ชื่อก่อน แล้วค่อยเลือกว่าใครมีส่วนในรายการไหน</p>'+
       '<button class="btn-quiet" data-step="members">ไปใส่ชื่อ</button></div>' : "";
 }
 function setStep(step, focusTab){
-  if (!STEPS.some(function(st){ return st.id===step; })) return;
+  if (!steps().some(function(st){ return st.id===step; })) return;
   ui.step = step;
   renderStepTabs();
   var tab = document.getElementById("tab-"+step);
@@ -199,15 +207,18 @@ function renderMenus(){
   if (meta) meta.textContent = state.menus.length ? "รวม "+baht(total)+" ฿" : "";
 
   if (state.menus.length===0 && !state.menuForm){
-    list.innerHTML = '<p class="empty">ยังไม่มีเมนู — เพิ่มจานแรกแล้วเลือกว่าใครกิน</p>';
+    list.innerHTML = '<p class="empty">'+kt("empty")+'</p>';
   } else {
     list.innerHTML = state.menus.map(function(m){
       var known = m.eaters.filter(function(id){ return !!nameOf(id); });
-      var who = known.length ? eatersLabel(known) : "ยังไม่ได้เลือกคนกิน — ยังไม่ถูกนำไปคำนวณ";
+      var who = known.length ? eatersLabel(known) : "ยังไม่ได้เลือกคนมีส่วน — ยังไม่ถูกนำไปคำนวณ";
+      var trip = state.kind === "trip";
+      var unpaid = trip && known.length && !nameOf(m.payer);
+      if (trip && known.length) who = (unpaid ? '<span class="unpaid">ยังไม่เลือกคนจ่าย</span>' : '<b class="payer-tag">'+esc(nameOf(m.payer))+' จ่าย</b>')+' · '+who;
       var each = known.length > 1 ? '<small>คนละ '+baht(m.price/known.length)+'</small>' : '';
       var editing = state.menuForm && state.menuForm.id===m.id;
       // v2.6: แถวไม่มีไอคอน แตะแถวเพื่อแก้ ปุ่มอีกจาน/ลบอยู่ในฟอร์มแก้
-      return '<div class="row-item'+(known.length?"":" warn")+(editing?" editing":"")+'">'+
+      return '<div class="row-item'+(known.length && !unpaid ? "" : " warn")+(editing?" editing":"")+'">'+
         '<button class="row-tap" data-edit-menu="'+m.id+'" aria-label="แก้ไข '+esc(m.name)+'">'+
           '<span class="body"><span class="name">'+esc(m.name)+'</span><span class="sub">'+who+'</span></span>'+
           '<span class="amt">'+baht(m.price)+each+'</span>'+
@@ -218,7 +229,7 @@ function renderMenus(){
   var notice = (ui.save === "error" && ui.saveFailedIn === "menu") ? saveErrorNotice() : "";
 
   if (!state.menuForm){
-    slot.innerHTML = '<button class="add-slot" id="menuOpen">+ เพิ่มเมนู</button>'+notice;
+    slot.innerHTML = '<button class="add-slot" id="menuOpen">'+kt("add")+'</button>'+notice;
     return;
   }
 
@@ -232,30 +243,40 @@ function renderMenus(){
       }).join("")+'</div>'
     : '';
   var preview = menuPreviewText(f);
+  // v3.0: ทริป — ใครจ่ายรายการนี้ (เลือกได้คนเดียว)
+  var payerPick = state.kind === "trip" && state.members.length
+    ? '<div class="label">ใครจ่ายรายการนี้</div>'+
+      '<div class="pick payer-pick" role="radiogroup" aria-label="ใครจ่ายรายการนี้">'+state.members.map(function(p){
+        var on = f.payer === p.id;
+        return '<button role="radio" data-pay="'+p.id+'" aria-pressed="'+on+'" aria-checked="'+on+'">'+esc(p.name)+'</button>';
+      }).join("")+'</div>'+
+      (e.payer ? '<p class="field-msg error" aria-live="polite">'+esc(e.payer)+'</p>' : '')
+    : '';
 
   slot.innerHTML =
-    '<div class="form-box" role="group" aria-label="'+(f.id?"แก้ไขเมนู":"เพิ่มเมนูใหม่")+'">'+
-      '<div class="form-title">'+(f.id?"แก้ไขเมนู":"เพิ่มเมนูใหม่")+'</div>'+
-      '<div><label class="sr-only" for="mName">ชื่อเมนู</label>'+
-        '<input type="text" id="mName" placeholder="ชื่อเมนู เช่น ต้มยำ" value="'+esc(f.name)+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-describedby="mNameMsg" role="combobox" aria-expanded="false" aria-controls="mSuggestList" aria-autocomplete="list" aria-invalid="'+(e.name?"true":"false")+'">'+
+    '<div class="form-box" role="group" aria-label="'+(f.id?kt("editItem"):kt("newItem"))+'">'+
+      '<div class="form-title">'+(f.id?kt("editItem"):kt("newItem"))+'</div>'+
+      '<div><label class="sr-only" for="mName">'+kt("nameLabel")+'</label>'+
+        '<input type="text" id="mName" placeholder="'+kt("namePh")+'" value="'+esc(f.name)+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-describedby="mNameMsg" role="combobox" aria-expanded="false" aria-controls="mSuggestList" aria-autocomplete="list" aria-invalid="'+(e.name?"true":"false")+'">'+
         '<div id="mSuggest"></div>'+
         '<p class="field-msg '+(e.name?"error":"muted")+'" id="mNameMsg" aria-live="polite">'+(e.name?esc(e.name):"")+'</p></div>'+
-      '<div><label class="sr-only" for="mPrice">ราคาต่อจาน เป็นบาท</label>'+
-        '<input type="number" id="mPrice" inputmode="decimal" step="0.01" min="0" placeholder="ราคาต่อจาน (บาท)" value="'+(f.price===""?"":esc(f.price))+'" aria-describedby="mPriceMsg" aria-invalid="'+(e.price?"true":"false")+'">'+
+      '<div><label class="sr-only" for="mPrice">'+kt("pricePh")+'</label>'+
+        '<input type="number" id="mPrice" inputmode="decimal" step="0.01" min="0" placeholder="'+kt("pricePh")+'" value="'+(f.price===""?"":esc(f.price))+'" aria-describedby="mPriceMsg" aria-invalid="'+(e.price?"true":"false")+'">'+
         '<p class="field-msg '+(e.price?"error":"muted")+'" id="mPriceMsg" aria-live="polite">'+(e.price?esc(e.price):"")+'</p></div>'+
-      '<div class="label">ใครกินเมนูนี้บ้าง'+(state.members.length>1 && !f.id ? ' <span class="label-hint">แตะชื่อคนที่ไม่ได้กินออก</span>' : '')+'</div>'+picks+
+      payerPick+
+      '<div class="label">'+kt("who")+(state.members.length>1 && !f.id ? ' <span class="label-hint">'+kt("whoHint")+'</span>' : '')+'</div>'+picks+
       (e.eaters
         ? '<p class="field-msg error" aria-live="polite">'+esc(e.eaters)+'</p>'
         : '<p class="form-preview" id="mPreview" aria-live="polite">'+preview+'</p>')+
       '<div class="form-actions">'+
         '<button class="btn-quiet" id="mCancel">ยกเลิก</button>'+
         '<button class="btn-sm" id="mSave"'+(ui.savingMenu?" disabled":"")+'>'+
-          (ui.savingMenu ? '<span class="spinner" aria-hidden="true"></span>กำลังบันทึก' : (f.id?"บันทึก":"เพิ่มเมนู"))+
+          (ui.savingMenu ? '<span class="spinner" aria-hidden="true"></span>กำลังบันทึก' : (f.id?"บันทึก":kt("addBtn")))+
         '</button>'+
       '</div>'+
       (f.id ? '<div class="form-more">'+
-        '<button class="link-btn" data-dup-menu="'+f.id+'">'+ICON_COPY+' เพิ่มอีกจาน</button>'+
-        '<button class="link-btn danger" data-del-menu="'+f.id+'">'+ICON_DEL+' ลบเมนูนี้</button></div>' : '')+
+        '<button class="link-btn" data-dup-menu="'+f.id+'">'+ICON_COPY+' '+kt("another")+'</button>'+
+        '<button class="link-btn danger" data-del-menu="'+f.id+'">'+ICON_DEL+' '+kt("del")+'</button></div>' : '')+
     '</div>'+notice;
 
   if (ui.suggest.open) renderSuggestions();
@@ -328,7 +349,7 @@ function renderSummary(){
   var r = compute();
   if (aside) aside.textContent = "แตะชื่อเพื่อดูรายละเอียด";
   box.innerHTML =
-    (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' เมนูที่ยังไม่ได้เลือกคนกิน จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
+    (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' '+kt("orphan")+' จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
     receiptHTML(r,{interactive:true})+
     '<button class="btn-sm btn-block" id="copyBtn" style="margin-top:var(--s4)">คัดลอกสรุปยอด</button>'+
     '<a href="'+billHref()+'" class="add-slot" style="display:flex;align-items:center;justify-content:center;margin-top:var(--s2)">เปิดใบสรุปยอดเต็มหน้า</a>';

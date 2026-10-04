@@ -138,6 +138,7 @@ var SUGGEST_LIMIT = 8;
 function menuSuggestions(query){
   var q = normText(query);
   var seen = {}, hits = [];
+  if (state.kind === "trip") return tripSuggestions(q);
   function consider(name, norm, price, remembered, tierBase){
     if (seen[norm]) return;
     var pos = q ? norm.indexOf(q) : 0;
@@ -198,10 +199,10 @@ function renderSuggestions(){
   }
   var head = String(query||"").trim()
     ? (found.total > items.length
-        ? "เมนูแนะนำ "+items.length+" จาก "+found.total+" รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง"
-        : "เมนูแนะนำ "+items.length+" รายการ")
-    : "เมนูที่คุณสั่งบ่อย";
-  box.innerHTML = '<div class="suggest" id="mSuggestList" role="listbox" aria-label="เมนูแนะนำ">'+
+        ? kt("suggest")+" "+items.length+" จาก "+found.total+" รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง"
+        : kt("suggest")+" "+items.length+" รายการ")
+    : kt("suggestOften");
+  box.innerHTML = '<div class="suggest" id="mSuggestList" role="listbox" aria-label="'+kt("suggest")+'">'+
     '<div class="s-head">'+head+'</div>'+
     items.map(function(it,i){
       return '<button type="button" role="option" id="mSuggest'+i+'" data-suggest="'+i+'" aria-selected="'+(i===ui.suggest.active)+'">'+
@@ -250,7 +251,15 @@ function pickSuggestion(i){
 }
 
 /** จำเมนูที่เพิ่งบันทึกไว้ใช้ครั้งต่อไป — ล้มเหลวก็ไม่กระทบบิลที่บันทึกแล้ว */
+/** v3.0: ทริปใช้คลังค่าใช้จ่ายทริป (ไม่มีราคาจำ) — ยังไม่พิมพ์ = รายการยอดนิยม */
+function tripSuggestions(q){
+  var hits = TRIP_LIBRARY.filter(function(l){ return q ? l.norm.indexOf(q) >= 0 : l.popular; })
+    .map(function(l){ return { name:l.name, price:null, remembered:false, tier:(q && l.norm.indexOf(q) === 0) ? 0 : 1, len:l.name.length }; });
+  hits.sort(function(a,b){ return a.tier - b.tier || a.len - b.len; });
+  return { items:hits.slice(0, SUGGEST_LIMIT), total:hits.length };
+}
 async function rememberMenu(name, price){
+  if (state.kind === "trip") return;   // จำราคาเฉพาะเมนูอาหาร
   var key = normText(name);
   var found = null;
   state.menuMemory.forEach(function(m){ if (normText(m.name)===key) found = m; });
@@ -291,9 +300,9 @@ function updateMenuPreview(){
   el.textContent = menuPreviewText(state.menuForm);
 }
 function validateMenuForm(f){
-  var errs = { name:"", price:"", eaters:"" };
+  var errs = { name:"", price:"", eaters:"", payer:"" };
   var name = String(f.name||"").trim();
-  if (!name) errs.name = "ยังไม่ได้ใส่ชื่อเมนู";
+  if (!name) errs.name = kt("noName");
   else if (name.length > MAX_MENU_NAME) errs.name = "ชื่อเมนูยาวเกิน "+MAX_MENU_NAME+" ตัวอักษร";
 
   var raw = String(f.price===undefined?"":f.price).trim();
@@ -304,7 +313,8 @@ function validateMenuForm(f){
   else if (price > MAX_PRICE) errs.price = "ราคาสูงเกินจริง ลองตรวจจำนวนศูนย์อีกครั้ง";
 
   if (state.members.length === 0) errs.eaters = "ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในแท็บ \"คน\" ก่อน";
-  else if (f.eaters.length === 0) errs.eaters = "เลือกคนที่กินเมนูนี้อย่างน้อย 1 คน";
+  else if (f.eaters.length === 0) errs.eaters = kt("noEater");
+  if (state.kind === "trip" && state.members.length && !nameOf(f.payer)) errs.payer = "เลือกว่าใครจ่ายรายการนี้";
   return errs;
 }
 async function saveMenuForm(){
@@ -312,7 +322,7 @@ async function saveMenuForm(){
   if (!f || ui.savingMenu) return;
   syncMenuForm();
   ui.menuErr = validateMenuForm(f);
-  if (ui.menuErr.name || ui.menuErr.price || ui.menuErr.eaters){
+  if (ui.menuErr.name || ui.menuErr.price || ui.menuErr.eaters || ui.menuErr.payer){
     ui.focusMenuField = ui.menuErr.name ? "mName" : (ui.menuErr.price ? "mPrice" : null);
     return renderMenus();
   }
@@ -325,11 +335,14 @@ async function saveMenuForm(){
 
   if (editing){
     state.menus.forEach(function(x){
-      if (x.id===f.id){ x.name=name; x.price=price; x.eaters=f.eaters.slice(); }
+      if (x.id===f.id){ x.name=name; x.price=price; x.eaters=f.eaters.slice(); if (f.payer) x.payer=f.payer; }
     });
   } else {
-    state.menus.push({ id:nid(), name:name, price:price, eaters:f.eaters.slice() });
+    var item = { id:nid(), name:name, price:price, eaters:f.eaters.slice() };
+    if (state.kind === "trip" && f.payer) item.payer = f.payer;
+    state.menus.push(item);
   }
+  if (f.payer) ui.lastPayer = f.payer;
   state.menuForm = null;
   ui.menuErr = {};
 
@@ -344,9 +357,11 @@ async function duplicateMenu(id){
   state.menus.forEach(function(m,i){ if (m.id===id) index = i; });
   if (index < 0) return;
   var src = state.menus[index];
-  state.menus.splice(index+1, 0, { id:nid(), name:src.name, price:src.price, eaters:src.eaters.slice() });
+  var copy = { id:nid(), name:src.name, price:src.price, eaters:src.eaters.slice() };
+  if (src.payer) copy.payer = src.payer;
+  state.menus.splice(index+1, 0, copy);
   render();
-  await commit("เพิ่ม "+src.name+" อีกจานแล้ว","menu");
+  await commit((state.kind === "trip" ? "ทำซ้ำ " : "เพิ่ม ")+src.name+(state.kind === "trip" ? " แล้ว" : " อีกจานแล้ว"),"menu");
   render();
 }
 async function removeMenu(id){
@@ -370,21 +385,21 @@ async function removeMenu(id){
 function summaryText(){
   var r = compute();
   var lines = [];
-  lines.push(ui.ctx && Store.groupName ? "🍲 "+Store.groupName : "🍲 มื้อนี้");
-  lines.push("มื้อนี้อร่อยมาก ขอบคุณทุกคนที่มากินด้วยกันนะ");
+  lines.push(kt("icon")+" "+(ui.ctx && Store.groupName ? Store.groupName : kt("head")));
+  lines.push(kt("thanks"));
   lines.push("ยอดของแต่ละคนตามนี้เลย 👇");
   lines.push("");
   r.list.forEach(function(p){ lines.push("• "+p.name+"  "+baht(p.rounded)+" บาท"); });
   lines.push("");
   lines.push("รวมทั้งหมด "+baht(r.grand)+" บาท");
-  var s = settle(r, state.payers);
+  var s = settleBill(r);
   if (s.ok && s.transfers.length){
     lines.push("");
     lines.push("โอนเงินตามนี้นะ 🙏");
     s.transfers.forEach(function(t){ lines.push("• "+t.fromName+" → "+t.toName+"  "+baht(t.amount)+" บาท"); });
   }
-  if (ui.ctx) lines.push("กดดูได้ว่ายอดมาจากเมนูไหน: "+groupLink(ui.ctx)+"/bill");
-  lines.push("— หารตามที่กินจริงด้วย FairDish");
+  if (ui.ctx) lines.push("กดดูได้ว่ายอดมาจาก"+(state.kind === "trip" ? "รายการไหน: " : "เมนูไหน: ")+groupLink(ui.ctx)+"/bill");
+  lines.push(state.kind === "trip" ? "— หารตามที่ใช้จริงด้วย FairDish" : "— หารตามที่กินจริงด้วย FairDish");
   return lines.join("\n");
 }
 function copyText(text, okMessage){
@@ -435,7 +450,7 @@ async function setPayerAmount(id, raw){
 function myTransferText(){
   var me = myMemberId();
   if (!me || !hasData()) return "";
-  var s = settle(compute(), state.payers);
+  var s = settleBill(compute());
   if (!s.ok) return "";
   var out = s.transfers.filter(function(t){ return t.from === me; });
   var inn = s.transfers.filter(function(t){ return t.to === me; });
@@ -483,16 +498,19 @@ async function createGroup(){
   if (!name){ setFieldMsg("groupMsg","ตั้งชื่อกลุ่มก่อน เช่น ส้มตำหน้ามอ",true); return input.focus(); }
   if (name.length > MAX_GROUP_NAME){ setFieldMsg("groupMsg","ชื่อกลุ่มยาวเกิน "+MAX_GROUP_NAME+" ตัวอักษร",true); return input.focus(); }
 
-  var data = { members:[], menus:[], shared:[], charges:defaultCharges() };
+  var data = { members:[], menus:[], shared:[], charges:defaultCharges(), kind:ui.newGroupKind };
   var from = document.getElementById("groupFromLocal");
   if (from && from.checked){
     try { var raw = await Store.readRaw(Store.key); if (raw) data = JSON.parse(raw); } catch(e){}
+    // บิลในเครื่องยังไม่มีรายการ = ใช้ประเภทที่เลือกในฟอร์ม, มีรายการแล้ว = ใช้ประเภทของบิลนั้น
+    if (!((data.menus || []).length || (data.shared || []).length)) data.kind = ui.newGroupKind;
+    else data.kind = data.kind === "trip" ? "trip" : "meal";
   }
   ui.creatingGroup = true;
   if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>กำลังสร้าง'; }
   try {
     var g = await Cloud.create(name, data);
-    await rememberGroup(g.id, g.name);
+    await rememberGroup(g.id, g.name, data.kind);
     location.hash = "#/g/" + g.id;
     toast("สร้างกลุ่มแล้ว คัดลอกลิงก์ส่งให้เพื่อนได้เลย","ok");
   } catch(err){
@@ -690,11 +708,12 @@ async function fillHomeResume(){
   var rows = [];
   if (saved && saved.members && saved.members.length){
     var nMenus = (saved.menus || []).length;
-    rows.push(['#/split', 'บิลส่วนตัว', saved.members.length+' คน · '+nMenus+' เมนู · ในเครื่องนี้']);
+    var sk = saved.kind === "trip" ? "trip" : "meal";
+    rows.push(['#/split', ktOf(sk,"icon")+' บิลส่วนตัว', saved.members.length+' คน · '+nMenus+' '+ktOf(sk,"items")+' · ในเครื่องนี้']);
   }
   ui.myGroups.slice(0,3).forEach(function(g){
     var when = g.at ? new Date(g.at).toLocaleDateString("th-TH",{ day:"numeric", month:"short" }) : "";
-    rows.push(['#/g/'+esc(g.id), esc(g.name), 'กลุ่ม'+(when ? ' · เปิดล่าสุด '+when : '')]);
+    rows.push(['#/g/'+esc(g.id), ktOf(g.kind,"icon")+' '+esc(g.name), 'กลุ่ม'+(when ? ' · เปิดล่าสุด '+when : '')]);
   });
   if (!rows.length){ box.innerHTML = ""; return; }
   box.innerHTML = '<h2 class="resume-head">ทำต่อ</h2>'+rows.map(function(r){
@@ -702,6 +721,49 @@ async function fillHomeResume(){
       '<span class="name">'+r[1]+'</span><span class="sub">'+r[2]+'</span></span><span aria-hidden="true">›</span></a></div>';
   }).join("")+
   (ui.myGroups.length > 3 ? '<a class="add-slot" href="#/groups">ดูกลุ่มทั้งหมด ('+ui.myGroups.length+')</a>' : '');
+}
+
+/* ---- v3.0: ประเภทบิล ---- */
+function billIsEmpty(){ return !state.menus.length && !state.shared.length; }
+/** สลับประเภทบิลที่เปิดอยู่ — ทำได้เมื่อยังไม่มีรายการ (กันข้อมูลค่าส่วนกลาง/VAT ค้างแบบมองไม่เห็น) */
+async function setKind(kind){
+  if (kind !== "meal" && kind !== "trip") return;
+  if (kind === state.kind) return;
+  if (!billIsEmpty()){
+    toast("มีรายการอยู่แล้ว ล้างข้อมูลก่อนถึงจะเปลี่ยนเป็น"+ktOf(kind,"name")+"ได้","error");
+    return renderKindSlot();
+  }
+  state.kind = kind;
+  ui.step = "members";
+  state.menuForm = null;
+  document.getElementById("view").innerHTML = pageSplit();
+  render();
+  await commit("เปลี่ยนเป็น"+kt("name")+"แล้ว");
+  updateChrome();
+}
+/** หน้าแรก: เริ่มหารค่าอาหาร/ค่าทริป บนบิลส่วนตัว */
+function startKind(kind){
+  ui.pendingKind = kind;
+  if (location.hash === "#/split" && ui.ctx === null && !ui.loading) return applyPendingKind();
+  location.hash = "#/split";
+}
+function applyPendingKind(){
+  var kind = ui.pendingKind;
+  if (!kind || ui.loading || ui.ctx !== null || currentPath() !== "/split") return;
+  ui.pendingKind = null;
+  if (kind === state.kind) return;
+  if (billIsEmpty()) return setKind(kind);
+  toast("บิลส่วนตัวมี"+kt("name")+"ค้างอยู่ ล้างข้อมูลก่อนถึงจะเริ่ม"+ktOf(kind,"name")+"ใหม่ได้","error");
+}
+/** ฟอร์มสร้างกลุ่ม: เปลี่ยนประเภท และเปลี่ยนชื่อตั้งต้นตาม ถ้ายังไม่ได้แก้ชื่อเอง */
+function setNewGroupKind(kind){
+  var input = document.getElementById("groupName");
+  var wasDefault = input && input.value === defaultGroupName(null, ui.newGroupKind);
+  ui.newGroupKind = kind === "trip" ? "trip" : "meal";
+  Array.prototype.forEach.call(document.querySelectorAll("[data-group-kind]"), function(b){
+    b.setAttribute("aria-pressed", b.getAttribute("data-group-kind") === ui.newGroupKind ? "true" : "false");
+  });
+  if (wasDefault) input.value = defaultGroupName(null, ui.newGroupKind);
 }
 
 /* ---- v2.1: ธีม ---- */

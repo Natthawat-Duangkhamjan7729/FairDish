@@ -27,7 +27,7 @@ function receiptHTML(r, opts){
       var d = p.items.map(function(it){
         return '<div><span class="dname">'+esc(it.name)+' ÷ '+it.split+'</span><span>'+baht(it.amount)+'</span></div>';
       }).join("");
-      if (p.items.length===0) d = '<div><span class="dname">ไม่ได้สั่งเมนูส่วนตัว</span><span>0.00</span></div>';
+      if (p.items.length===0) d = '<div><span class="dname">'+kt("noItems")+'</span><span>0.00</span></div>';
       if (r.sharedTotal>0) d += '<div><span class="dname">ค่าส่วนกลาง ÷ '+r.n+'</span><span>'+baht(p.sharedShare)+'</span></div>';
       if (r.rate>0) d += '<div><span class="dname">ค่าบริการ + ภาษี '+(r.rate*100).toFixed(0)+'%</span><span>'+baht(p.charge)+'</span></div>';
       html += '<div class="r-detail">'+d+'</div>';
@@ -67,13 +67,14 @@ function demoReceiptHTML(){
 
 /* ---- v2.5: ใครจ่ายให้ร้าน + ใครโอนให้ใคร ---- */
 function payerSection(r){
+  if (state.kind === "trip") return tripTransferSection(r);
   var anyPayer = state.payers.some(function(p){ return !!nameOf(p.id); });
   if (!anyPayer && !ui.payerOpen){
     // v2.6: ยังไม่ใช้ = แถวเดียวพับไว้ หน้าสรุปจะได้ไม่ยาว
     return '<button class="payer-toggle" data-payer-open="1" aria-expanded="false">'+
       '<span><b>ใครจ่ายให้ร้านไปก่อน?</b><span>ดูว่าใครต้องโอนให้ใคร</span></span><span aria-hidden="true">›</span></button>';
   }
-  var s = settle(r, state.payers);
+  var s = settleBill(r);
   var me = myMemberId();
   var chosen = {};
   state.payers.forEach(function(p){ chosen[p.id] = p; });
@@ -117,4 +118,31 @@ function payerSection(r){
     (msg ? '<p class="field-msg '+msg[0]+'" aria-live="polite">'+esc(msg[1])+'</p>' : '')+
     transfers+
   '</section>';
+}
+
+/* ---- v3.0: ทริป — คนจ่ายอยู่ในแต่ละรายการแล้ว หน้าสรุปแสดงการโอนเลย ---- */
+function tripTransferSection(r){
+  var s = settleBill(r), me = myMemberId();
+  var body;
+  if (!s.ok && s.reason === "unpaid"){
+    body = '<div class="notice warn" style="margin:0"><p>ยังไม่ได้ใส่ว่าใครจ่าย '+s.count+' รายการ ใส่ให้ครบแล้วจะรู้ว่าใครต้องโอนให้ใคร</p>'+
+      '<a class="btn-quiet" href="'+splitHref()+'">ไปใส่คนจ่าย</a></div>';
+  } else if (!s.ok){
+    body = '<p class="hint" style="margin:0">ใส่ค่าใช้จ่ายและคนจ่ายก่อน แล้วจะสรุปการโอนให้</p>';
+  } else {
+    var paidRows = Object.keys(s.paid).map(function(id){
+      return '<span class="paid-chip">'+esc(nameOf(id))+' จ่ายไป <b>'+baht(s.paid[id])+'</b></span>';
+    }).join("");
+    body = '<div class="paid-list">'+paidRows+'</div>'+
+      '<div class="transfers" aria-live="polite"><h3>โอนเงินตามนี้</h3>'+
+      (s.transfers.length ? s.transfers.map(function(t){
+        var mine = me && (t.from === me || t.to === me);
+        return '<div class="tf-row'+(mine ? ' me' : '')+'">'+
+          '<span class="tf-who"><b>'+esc(t.fromName)+'</b> <span class="tf-arrow" aria-label="โอนให้">→</span> <b>'+esc(t.toName)+'</b></span>'+
+          '<span class="tf-amt">'+baht(t.amount)+'</span></div>';
+      }).join("") : '<p class="hint" style="margin:0">ไม่มีใครต้องโอน ทุกคนจ่ายพอดีกับส่วนของตัวเอง 👍</p>')+
+      '<p class="tf-note">'+(s.transfers.length > 1 ? "หักลบให้แล้ว โอนแค่ "+s.transfers.length+" ครั้งก็จบ" : "")+'</p></div>';
+  }
+  return '<section class="step-card payer-card" aria-labelledby="h-trip-pay">'+
+    '<div class="step-head"><h2 id="h-trip-pay">ใครโอนให้ใคร</h2></div>'+body+'</section>';
 }

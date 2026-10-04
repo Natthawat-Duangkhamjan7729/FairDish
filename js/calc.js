@@ -31,7 +31,8 @@ function compute(){
   var foodTotal = valid.reduce(function(a,m){ return a+m.price; },0);
   var sharedTotal = state.shared.reduce(function(a,s){ return a+s.price; },0);
   var sharedEach = n>0 ? sharedTotal/n : 0;
-  var rate = state.charges.reduce(function(a,c){ return a+(c.on?c.rate:0); },0)/100;
+  // v3.0: ทริปไม่มีค่าบริการ/VAT แม้ข้อมูลเดิมจะเปิดไว้
+  var rate = state.kind === "trip" ? 0 : state.charges.reduce(function(a,c){ return a+(c.on?c.rate:0); },0)/100;
 
   var list = state.members.map(function(p){
     var row = per[p.id];
@@ -106,4 +107,29 @@ function settle(r, payers){
   var paidBaht = {};
   Object.keys(paid).forEach(function(id){ paidBaht[id] = paid[id] / 100; });
   return { ok:true, reason:"", diff:0, transfers:transfers, paid:paidBaht };
+}
+
+/* =========================================================
+   4.6 โหมดทริป: คนจ่ายแยกรายการ (v3.0)
+   ========================================================= */
+/** รวมยอดที่แต่ละคนจ่ายจาก payer ของแต่ละรายการ → { payers:[{id, amount}], missing:จำนวนรายการที่ยังไม่ระบุคนจ่าย }
+ *  นับเฉพาะรายการที่ถูกคิดในบิล (มีคนมีส่วนอย่างน้อย 1 คน) ค่าส่วนกลางไม่มีคนจ่ายจึงนับเป็น missing */
+function itemPayers(){
+  var known = {};
+  state.members.forEach(function(p){ known[p.id] = true; });
+  var paid = {}, missing = 0;
+  state.menus.forEach(function(m){
+    if (!m.eaters.some(function(id){ return known[id]; })) return;
+    if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + Math.round(m.price * 100);
+    else missing++;
+  });
+  missing += state.shared.length;
+  return { payers: Object.keys(paid).map(function(id){ return { id:id, amount:paid[id] / 100 }; }), missing: missing };
+}
+/** ใครโอนให้ใครของบิลที่เปิดอยู่ — มื้ออาหารใช้คนจ่ายระดับบิล ทริปใช้คนจ่ายของแต่ละรายการ */
+function settleBill(r){
+  if (state.kind !== "trip") return settle(r, state.payers);
+  var ip = itemPayers();
+  if (ip.missing) return { ok:false, reason:"unpaid", diff:0, count:ip.missing, transfers:[], paid:{} };
+  return settle(r, ip.payers);
 }

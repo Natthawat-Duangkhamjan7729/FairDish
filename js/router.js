@@ -64,7 +64,7 @@ function route(){
   });
   document.body.classList.remove("has-total");
   updateChrome();
-  if (path==="/split") render();
+  if (path==="/split"){ render(); applyPendingKind(); }
   if (path==="/groups") checkLocalBill();
   if (path==="/") fillHomeResume();
   window.scrollTo(0,0);

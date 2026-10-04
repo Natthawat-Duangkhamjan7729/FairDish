@@ -52,7 +52,7 @@ async function receiptImageBlob(){
   var logo = await loadImage("img/icon-192.png");
 
   var W = 1080, PAD = 72, CARD_X = 60, CARD_W = W - 120, ROW = 76;
-  var st = settle(r, state.payers);
+  var st = settleBill(r);
   var tfs = st.ok ? st.transfers : [];
   var H = 420 + r.list.length * ROW + 300 + (tfs.length ? 110 + tfs.length * 64 : 0);
   var c = document.createElement("canvas");
@@ -69,7 +69,7 @@ async function receiptImageBlob(){
   ctx.fillStyle = pal.tag; roundRect(ctx, (W-tw)/2, 120, tw, 56, 28); ctx.fill();
   ctx.fillStyle = pal.tagInk; ctx.fillText(tag, W/2, 149);
   ctx.fillStyle = pal.ink; ctx.font = "600 52px "+pal.head;
-  ctx.fillText(fitText(ctx, (ui.ctx && Store.groupName) || "มื้อนี้", CARD_W - 2*PAD), W/2, 236);
+  ctx.fillText(fitText(ctx, (ui.ctx && Store.groupName) || kt("head"), CARD_W - 2*PAD), W/2, 236);
   ctx.fillStyle = pal.ink2; ctx.font = "400 30px "+pal.body;
   ctx.fillText(r.n+" คน · หารตามที่กินจริง", W/2, 300);
 
@@ -132,7 +132,7 @@ async function shareReceiptImage(){
     var name = "FairDish-" + ((ui.ctx && Store.groupName) || "bill").replace(/[\\/:*?"<>|\s]+/g,"-") + ".png";
     var file = typeof File === "function" ? new File([blob], name, { type:"image/png" }) : null;
     if (file && navigator.canShare && navigator.canShare({ files:[file] })){
-      try { await navigator.share({ files:[file], text:"ยอดของแต่ละคน มื้อนี้ 🍲" }); }
+      try { await navigator.share({ files:[file], text:"ยอดของแต่ละคน "+kt("head")+" "+kt("icon") }); }
       catch(e){ if (e && e.name !== "AbortError") throw e; }
     } else {
       var a = document.createElement("a");

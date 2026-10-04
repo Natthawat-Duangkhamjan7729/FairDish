@@ -32,7 +32,7 @@ async function loadContext(groupId){
     if (groupId && !saved) ui.groupError = "notfound";
     else {
       applyBill(saved);
-      if (groupId) rememberGroup(groupId, Store.groupName);
+      if (groupId) rememberGroup(groupId, Store.groupName, state.kind);
     }
     ui.loading = false;
     setSave("saved");
@@ -56,6 +56,7 @@ function refreshView(){
   if (path==="/split"){
     if (ui.ctx) document.getElementById("view").innerHTML = pageSplit();
     render();
+    applyPendingKind();
     maybeAskWhoAmI();
   }
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();

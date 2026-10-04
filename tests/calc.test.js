@@ -145,3 +145,60 @@ test("คนจ่ายที่ถูกลบออกจากโต๊ะ�
   const { s } = settleBill({ members: ["เอ", "บี"], menus: [["ข้าว", 100, [0, 1]]] }, [[5, null]]);
   assert.equal(s.reason, "none");
 });
+
+/* ---- v3.0: โหมดทริป คนจ่ายแยกรายการ ---- */
+function trip(spec){
+  const app = loadApp();
+  app.state.kind = "trip";
+  app.state.members = spec.members.map((name, i) => ({ id: "m" + i, name }));
+  app.state.menus = spec.items.map(([name, price, eaters, payer], i) =>
+    ({ id: "t" + i, name, price, eaters: eaters.map(n => "m" + n), payer: payer == null ? undefined : "m" + payer }));
+  if (spec.vat) { app.state.charges[0].on = true; app.state.charges[1].on = true; }
+  const r = app.compute();
+  return { app, r, s: app.settleBill(r) };
+}
+
+test("ทริป: แต่ละรายการคนจ่ายต่างกัน หักลบแล้วโอนน้อยครั้ง", () => {
+  // ที่พัก 3,000 (เอจ่าย, 3 คน), น้ำมัน 900 (บีจ่าย, 3 คน), ตั๋วเข้าชม 600 (ซีจ่าย, เอ+ซี), ของฝาก 150 (เอจ่าย, เอคนเดียว)
+  const { r, s } = trip({ members: ["เอ", "บี", "ซี"], items: [
+    ["ที่พัก", 3000, [0, 1, 2], 0], ["น้ำมัน", 900, [0, 1, 2], 1], ["ตั๋วเข้าชม", 600, [0, 2], 2], ["ของฝาก", 150, [0], 0]
+  ]});
+  assert.deepEqual({ ...byName(r) }, { "เอ": 1750, "บี": 1300, "ซี": 1600 });
+  assert.equal(r.grand, 4650);
+  assert.equal(s.ok, true);
+  assert.deepEqual({ ...s.paid }, { m0: 3150, m1: 900, m2: 600 });
+  assert.deepEqual(transfersText(s), ["บี>เอ:400", "ซี>เอ:1000"].sort());
+  assertBalanced(r, s);
+});
+
+test("ทริป: ไม่คิดค่าบริการ/VAT แม้ข้อมูลเดิมเปิดไว้", () => {
+  const { r } = trip({ members: ["เอ", "บี"], items: [["ที่พัก", 1000, [0, 1], 0]], vat: true });
+  assert.equal(r.rate, 0);
+  assert.equal(r.grand, 1000);
+  assert.equal(sumRounded(r), 1000);
+});
+
+test("ทริป: รายการที่ยังไม่ระบุคนจ่ายถูกแจ้ง และไม่สรุปการโอน", () => {
+  const { s } = trip({ members: ["เอ", "บี"], items: [["ที่พัก", 1000, [0, 1], 0], ["น้ำมัน", 500, [0, 1], null]] });
+  assert.equal(s.ok, false);
+  assert.equal(s.reason, "unpaid");
+  assert.equal(s.count, 1);
+});
+
+test("ทริป: เศษสตางค์ยังลงตัว และคนจ่ายที่ถูกลบออกนับเป็นยังไม่ระบุ", () => {
+  const a = trip({ members: ["1", "2", "3"], items: [["ก", 100, [0, 1, 2], 0], ["ข", 0.1, [0, 1, 2], 1]] });
+  assert.equal(sumRounded(a.r), a.r.grand);
+  assert.equal(a.s.ok, true);
+  assertBalanced(a.r, a.s);
+  const b = trip({ members: ["1", "2"], items: [["ก", 100, [0, 1], 7]] });
+  assert.equal(b.s.reason, "unpaid");
+});
+
+test("มื้ออาหาร: settleBill ใช้คนจ่ายระดับบิลแบบเดิม", () => {
+  const app = loadApp();
+  app.state.members = [{ id: "m0", name: "เอ" }, { id: "m1", name: "บี" }];
+  app.state.menus = [{ id: "f0", name: "ข้าว", price: 100, eaters: ["m0", "m1"], payer: "m1" }];
+  app.state.payers = [{ id: "m0", amount: null }];
+  const s = app.settleBill(app.compute());
+  assert.deepEqual(transfersText(s), ["บี>เอ:50"]);
+});

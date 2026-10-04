@@ -25,8 +25,8 @@ function groupIdFromInput(text){
 }
 
 /** ชื่อกลุ่มตั้งต้น เช่น "มื้อ 4 ต.ค." — ตอนบิลมาถึงโต๊ะไม่มีใครอยากคิดชื่อ */
-function defaultGroupName(date){
-  return "มื้อ " + (date || new Date()).toLocaleDateString("th-TH", { day:"numeric", month:"short" });
+function defaultGroupName(date, kind){
+  return ktOf(kind || "meal", "groupPrefix") + " " + (date || new Date()).toLocaleDateString("th-TH", { day:"numeric", month:"short" });
 }
 function groupLink(id){ return location.origin + location.pathname + "#/g/" + id; }
 function splitHref(){ return ui.ctx ? "#/g/"+ui.ctx : "#/split"; }
@@ -58,10 +58,11 @@ function myGroup(id){
 function saveMyGroups(){
   return Store.saveGroups(ui.myGroups).catch(function(){});
 }
-function rememberGroup(id, name){
+function rememberGroup(id, name, kind){
   var g = myGroup(id);
   if (!g){ g = { id:id, name:name, me:null, at:0 }; ui.myGroups.push(g); }
   g.name = name;
+  if (kind) g.kind = kind;
   g.at = Date.now();
   ui.myGroups.sort(function(a,b){ return (b.at||0)-(a.at||0); });
   if (ui.myGroups.length > MY_GROUPS_LIMIT) ui.myGroups = ui.myGroups.slice(0, MY_GROUPS_LIMIT);

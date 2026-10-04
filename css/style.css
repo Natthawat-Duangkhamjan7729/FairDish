@@ -728,6 +728,23 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 64px + env(safe-area-inset-b
 #shareTitle:focus{outline:none}
 .share-link{margin-top:var(--s4);font-family:var(--font-num);font-size:var(--fs-small);color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
 
+/* ---- v3.0: ประเภทบิล (มื้ออาหาร / ทริป) ---- */
+.start-card.mint{background:var(--mint-grad);box-shadow:0 6px 0 var(--mint-edge),0 18px 30px -14px var(--mint-glow)}
+.start-card.mint:active{box-shadow:0 2px 0 var(--mint-edge)}
+.start-emoji{font-size:28px;line-height:1}
+@media(min-width:720px){.start-grid{grid-template-columns:repeat(3,1fr)}}
+.kind-switch{display:inline-flex;gap:var(--s1);padding:var(--s1);margin-top:var(--s2);border:1px solid var(--line);border-radius:var(--r-pill);background:var(--surface)}
+.kind-switch button{min-height:var(--tap-sm);padding:0 var(--s4);border-radius:var(--r-pill);font-size:var(--fs-small);font-weight:600;color:var(--ink-2)}
+.kind-switch button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 2px 0 var(--line-2);border:1px solid var(--line-2)}
+.step-card .kind-switch{margin:0 0 var(--s4)}
+.split-head .kind-switch{display:flex;width:max-content}
+.payer-tag{font-weight:600;color:var(--primary-ink)}
+.unpaid{font-weight:600;color:var(--danger)}
+.payer-pick{margin-bottom:var(--s2)}
+.paid-list{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.paid-chip{font-size:var(--fs-small);color:var(--ink-2);padding:var(--s1) var(--s3);border-radius:var(--r-pill);background:var(--surface);border:1px solid var(--line)}
+.paid-chip b{font-family:var(--font-num);color:var(--ink)}
+
 /* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)
    =================================================================== */

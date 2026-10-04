@@ -43,7 +43,9 @@
 - ลิงก์ไปหน้าหารบิล/ใบสรุปยอดใช้ `splitHref()` / `billHref()` เพื่อให้อยู่ในกลุ่มเดิม
   (ลิงก์ใน `index.html` ใส่ `data-link="split|bill"` แล้ว `updateChrome()` ตั้ง href ให้)
 - แถวรายการและชิปชื่อไม่ใส่ไอคอนแก้/ลบ — แตะแถว/ชื่อเพื่อเปิดโหมดแก้ ปุ่มลบและปุ่มอื่นอยู่ในนั้น
-- หน้าหารบิลแบ่งเป็นแท็บ (`STEPS` ใน `pages.js`, `ui.step`) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
+- บิลมีประเภท `state.kind` = `"meal"` | `"trip"` — คำที่ต่างตามประเภทใช้ `kt("key")` / `ktOf(kind, key)` จาก `KIND_TEXT` ใน `state.js`
+  ทริประบุคนจ่ายในแต่ละรายการ (`menus[i].payer`) และใช้ `settleBill()` ใน `calc.js` (เลือกวิธีตามประเภทให้เอง) อย่าเรียก `settle()` ตรง ๆ
+- หน้าหารบิลแบ่งเป็นแท็บ (`steps()` ใน `pages.js`, `ui.step` — ทริปไม่มีแท็บส่วนกลาง) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
   ฟังก์ชัน `render*()` จึงหา element ได้เสมอ
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย
 
@@ -56,6 +58,17 @@ npx serve .                 # เปิดเว็บที่ http://localhost
 
 แนะนำให้ติดตั้ง skill `scrutinize` และ `debug-mantra` จาก `npx skills add thananon/9arm-skills`
 แล้วใช้ `scrutinize` รีวิวงานตัวเองก่อน push และใช้ `debug-mantra` เวลาไล่บั๊ก
+
+## ระดับของเว็บ
+
+| ระดับ | branch |
+|---|---|
+| ตัวเต็ม (ทุกคนใช้) | `claude/upload-website-wtcq0p` → fairdish.vercel.app |
+| Beta | `claude/playground` |
+| Developer Beta | `claude/dev-beta` |
+
+ปล่อยไล่ลำดับ Developer Beta → Beta → ตัวเต็ม เมื่อเจ้าของโปรเจกต์สั่งเท่านั้น
+commit ที่ใส่แถบบอกระดับ (แถบ Beta / Developer Beta) ห้ามติดไปกับการปล่อยขึ้นระดับถัดไป
 
 ## Vercel
 
