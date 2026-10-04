@@ -23,6 +23,7 @@ var state = {
   kind: "meal",         // v3.0: "meal" มื้ออาหาร | "trip" ทริป (ทริประบุคนจ่ายในแต่ละรายการ: menus[i].payer)
   name: "",             // v3.2: ชื่อบิลส่วนตัว (บิลกลุ่มใช้ชื่อกลุ่ม)
   paid: {},             // v3.2: การโอนที่ติ๊กแล้ว { transferKey(): true }
+  confirms: {},         // v4.1: เพื่อนยืนยันเมนู { memberId: { at, sig } } (ดู confirm.js)
   menuMemory: [],
   menuForm:null, sharedForm:null, chargeForm:null, open:{}
 };
@@ -58,6 +59,7 @@ var ui = {
   history:[],           // v3.2: บิลส่วนตัวที่เก็บเข้าประวัติแล้ว (ใหม่สุดก่อน)
   sheet:null,           // v3.2: แผ่นล่างจอที่เปิดอยู่นอกหน้าหารบิล "kind" | "rename"
   showDone:false,       // v3.2: โอนครบทุกคนแล้ว → หน้าใบสรุปแสดงหน้าจอ "จบมื้อแล้ว"
+  guestFor:null, guestSel:null, guestDone:false, guestSaving:false,   // v4.1: หน้าที่เพื่อนเห็น #/g/<id>/me
   shareAfterLoad:false  // v3.2: เพิ่งสร้างกลุ่มจากบิลส่วนตัว → เปิดหน้าต่างชวนเพื่อนเมื่อโหลดกลุ่มเสร็จ
 };
 

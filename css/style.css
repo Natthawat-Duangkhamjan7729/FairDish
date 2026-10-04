@@ -817,6 +817,66 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .pp-form .label{font-size:var(--fs-small);font-weight:600;color:var(--ink-2)}
 .pp-sheet .form-actions{margin-top:var(--s4)}
 
+
+/* v4.1: หน้าชวนเพื่อนเข้ากลุ่ม (#/g/<id>/share) */
+.share-intro{margin:var(--s2) var(--s1) var(--s4);color:var(--ink-2);font-size:15px}
+.share-card{display:flex;align-items:center;gap:var(--s4);padding:18px var(--s4);background:var(--card);border-radius:var(--r-md);box-shadow:var(--shadow)}
+.share-qr{flex:0 0 auto;width:150px;margin:0;padding:var(--s2);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:none}
+.share-qr .qr-code{max-width:none}
+.share-info{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.share-name{font-size:13px;font-weight:600;color:var(--ink-2);overflow-wrap:anywhere}
+.share-url{font-size:13px;font-weight:600;color:var(--link);word-break:break-all;line-height:1.45}
+.share-info .btn-xs{margin-top:var(--s2)}
+.btn-pair .btn-line svg{width:18px;height:18px}
+.share-card + .btn-pair{margin-top:var(--s4)}
+.share-progress{margin:0 var(--s1) 14px}
+.status-row{display:flex;align-items:center;gap:10px;min-height:52px;padding:var(--s2) var(--s3);margin-bottom:var(--s2);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm)}
+.status-row b{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status-row .mono{font-size:var(--fs-small);font-weight:600}
+.status-row.me{border-color:var(--chip-line);background:var(--primary-soft)}
+.badge.ok{background:var(--primary-soft);color:var(--primary-ink)}
+.badge.changed{background:var(--danger-soft);color:var(--danger)}
+
+/* v4.1: หน้าที่เพื่อนเห็น (#/g/<id>/me) */
+.page-guest{padding-top:var(--s2)}
+.guest-top{display:flex;align-items:center;gap:var(--s2);min-height:48px}
+.guest-top .logo-mark{width:32px;height:32px;border-radius:10px}
+.guest-top .home-brand{font-size:18px}
+.guest-close{background:var(--card);border:1px solid var(--line-2)}
+.guest-invite{margin:14px 0 var(--s1)}
+.guest-title{font-size:28px;line-height:1.3;font-weight:600;overflow-wrap:anywhere}
+.guest-meta{margin:var(--s1) 0 18px;font-size:var(--fs-small);color:var(--ink-2)}
+.guest-card{background:var(--card);border-radius:var(--r-md);padding:22px var(--s4);box-shadow:var(--shadow)}
+.guest-card h2{font-size:var(--fs-title);font-weight:600}
+.guest-card > p{margin:var(--s1) 0 14px;font-size:var(--fs-small);color:var(--ink-2)}
+.guest-who{display:flex;flex-wrap:wrap;gap:10px}
+.guest-who button{min-height:48px;padding:0 22px;border-radius:var(--r-pill);background:var(--primary-soft);border:1.5px solid var(--chip-line);
+  box-shadow:0 3px 0 var(--chip-line);font-size:15px;font-weight:600;color:var(--primary-ink)}
+.guest-who button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--chip-line)}
+.guest-tick{font-size:13px}
+.guest-add{margin-top:var(--s5);padding-top:var(--s4);border-top:1px dashed var(--line-2)}
+.guest-add .label{display:block;font-size:var(--fs-small);font-weight:600;color:var(--ink-2);margin-bottom:var(--s2)}
+.guest-hello{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);margin:0 var(--s1) var(--s1)}
+.guest-hello h2{font-size:var(--fs-title);font-weight:600;overflow-wrap:anywhere}
+.guest-hello .link-btn{color:var(--link)}
+.guest-item{display:flex;align-items:center;gap:var(--s3);width:100%;min-height:56px;padding:10px 14px 10px var(--s3);margin-bottom:var(--s2);text-align:left;
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-sm);color:var(--ink)}
+.guest-item.on{background:var(--link-soft);border-color:var(--link-line)}
+.guest-item.on .tf-box{background:var(--purple-grad);border-color:transparent}
+.guest-body{flex:1;min-width:0;line-height:1.4}
+.guest-body b{display:block;font-weight:600}
+.guest-body span{font-size:13px;color:var(--ink-2)}
+.guest-each{font-size:var(--fs-small);font-weight:600;white-space:nowrap}
+.t-note{font-size:11px;color:var(--ink-3)}
+.guest-done{margin-top:var(--s2);padding:32px 20px var(--s5);text-align:center;background:var(--card);border-radius:var(--r-md);box-shadow:var(--shadow)}
+.guest-done-ico{display:grid;place-items:center;width:64px;height:64px;margin:0 auto;border-radius:20px;background:var(--mint-grad);color:var(--on-fill);box-shadow:0 6px 0 var(--mint-edge)}
+.guest-done-ico svg{width:32px;height:32px}
+.guest-done h2{margin-top:18px;font-size:var(--fs-title);font-weight:600}
+.guest-done-amt{margin-top:var(--s1);font-family:var(--font-num);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums}
+.guest-done p{margin-top:6px;font-size:var(--fs-small);color:var(--ink-2)}
+.guest-done .btn-stack{margin-top:var(--s5)}
+
 /* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)
    =================================================================== */

@@ -31,6 +31,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "memberInput"){ e.preventDefault(); addMember(); }
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
+  if (e.target.id === "guestName"){ e.preventDefault(); addGuest(); }
   if (e.target.id === "billNameInput"){ e.preventDefault(); saveBillName(); }
   if (e.target.id === "ppInput"){ e.preventDefault(); var ps = document.getElementById("ppSave"); if (ps) savePromptPay(ps.getAttribute("data-pp-key")); }
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
@@ -91,7 +92,8 @@ document.addEventListener("click", async function(e){
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
-            "#shareNative,#shareCopy,#shareSaveQr,[data-share-close],"+
+            "#shareNative,#shareCopy,#shareSaveQr,"+
+            "[data-guest-who],[data-guest-add],[data-guest-item],[data-guest-save],[data-guest-change],[data-guest-again],"+
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -121,6 +123,13 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-rename")) return openRenameSheet();
   if (t.id==="billNameSave") return saveBillName();
   if ((v = t.getAttribute("data-paid"))) return togglePaid(v);
+  /* v4.1: หน้าที่เพื่อนเห็น — เลือกชื่อ ติ๊กเมนู ยืนยัน */
+  if ((v = t.getAttribute("data-guest-who"))) return pickGuest(v);
+  if (t.getAttribute("data-guest-add")) return addGuest();
+  if ((v = t.getAttribute("data-guest-item"))) return toggleGuestItem(v);
+  if (t.getAttribute("data-guest-save")) return submitGuest();
+  if (t.getAttribute("data-guest-change")){ ui.guestFor = null; ui.guestSel = null; ui.guestDone = false; var gg = myGroup(ui.ctx); if (gg){ gg.me = null; saveMyGroups(); } return rerenderGuest(); }
+  if (t.getAttribute("data-guest-again")){ ui.guestDone = false; return rerenderGuest(); }
   if ((v = t.getAttribute("data-pp"))) return openPromptPay(v);
   if ((v = t.getAttribute("data-pp-edit"))) return openPromptPay(v, true);
   if (t.id==="ppSave") return savePromptPay(t.getAttribute("data-pp-key"));
@@ -174,11 +183,10 @@ document.addEventListener("click", async function(e){
   /* v2.0: กลุ่ม */
   if (t.id==="groupJoin") return joinGroup();
   if (t.id==="groupCopy") return copyText(groupLink(ui.ctx), "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
-  if (t.id==="groupShare") return openShareDialog();
-  if (t.id==="shareNative"){ closeShareDialog(); return shareGroupLink(); }
+  if (t.id==="groupShare"){ location.hash = shareHref(); return; }
+  if (t.id==="shareNative") return shareGroupLink();
   if (t.id==="shareCopy") return copyText(inviteText(), "คัดลอกลิงก์พร้อมคำชวนแล้ว วางในแชตได้เลย");
   if (t.id==="shareSaveQr") return saveQrImage();
-  if (t.getAttribute("data-share-close")) return closeShareDialog();
   if (t.id==="groupRefresh") return refreshGroup(true);
   if (t.id==="groupRetry") return loadContext(ui.ctx);
   if (t.id==="groupLinkInput") return t.select();
@@ -324,6 +332,4 @@ document.addEventListener("change", function(e){
   if (id) setPayerAmount(id, e.target.value);
   if (e.target && e.target.id === "mealName") renameMeal(e.target.value);
 });
-document.getElementById("shareDialog").addEventListener("click", function(e){
-  if (e.target === this) closeShareDialog();
-});
+

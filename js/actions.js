@@ -566,38 +566,6 @@ async function setMe(memberId){
 
 /* ---- v2.7: หน้าต่างชวนเพื่อน (QR + ช่องทางแชร์) ---- */
 var ICON_SAVE_IMG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12l4 4 4-4"/></svg>';
-/** ข้อความชวนที่ส่งเข้าแชตพร้อมลิงก์ */
-function inviteText(){
-  return 'มาช่วยกันกรอกบิล "'+Store.groupName+'" ใน FairDish กัน 🍲\n'+
-    'กดลิงก์แล้วแก้บิลเดียวกันได้เลย ไม่ต้องสมัคร\n'+groupLink(ui.ctx);
-}
-function openShareDialog(){
-  var box = document.getElementById("shareDialog");
-  if (!box || !ui.ctx) return;
-  var link = groupLink(ui.ctx);
-  var q = QR.encode(link);
-  var qr = q
-    ? '<div class="qr-code">'+QR.svg(link, "QR code ลิงก์กลุ่ม "+esc(Store.groupName))+
-        (q.version >= 4 ? '<span class="qr-logo"><img src="img/icon-192.png" alt=""></span>' : '')+'</div>'
-    : '';
-  box.innerHTML =
-    '<div class="install-head"><div><h2 id="shareTitle" tabindex="-1" autofocus>ชวนเพื่อนมาหารด้วยกัน</h2>'+
-      '<p>สแกนหรือกดลิงก์ แล้วช่วยกันกรอกบิลนี้ได้เลย ไม่ต้องสมัคร</p></div>'+
-      '<button class="icon-btn" data-share-close="1" aria-label="ปิด">'+ICON_X+'</button></div>'+
-    (qr ? '<div class="qr-card">'+qr+
-      '<b class="qr-name">'+esc(Store.groupName)+'</b>'+
-      '<span class="qr-hint">เปิดกล้องมือถือแล้วสแกนได้เลย</span></div>' : '')+
-    '<div class="share-grid">'+
-      (navigator.share ? '<button class="share-opt" id="shareNative">'+ICON_SHARE+'<span>แชร์ทางอื่น</span></button>' : '')+
-      '<button class="share-opt" id="shareCopy">'+ICON_COPY+'<span>คัดลอกลิงก์</span></button>'+
-      (qr ? '<button class="share-opt" id="shareSaveQr">'+ICON_SAVE_IMG+'<span>บันทึกรูป QR</span></button>' : '')+
-    '</div>'+
-    '<p class="share-link" title="'+esc(link)+'">'+esc(link)+'</p>';
-  if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
-  fitQr(box, q);
-  var title = document.getElementById("shareTitle");
-  if (title) title.focus({ preventScroll:true });     // ไม่ให้วงโฟกัสไปอยู่ที่ปุ่ม × ตอนเปิด
-}
 /** ขยาย QR ให้แต่ละโมดูลกว้างเป็นพิกเซลจอเต็มจำนวน — ไม่งั้นบางช่องหนาบางช่องบาง ดูเบี้ยวและสแกนยาก */
 function fitQr(box, q){
   var code = box.querySelector(".qr-code"), card = box.querySelector(".qr-card");
@@ -608,14 +576,9 @@ function fitQr(box, q){
   var perModule = Math.max(1, Math.floor(room * dpr / n));     // พิกเซลจอจริงต่อโมดูล
   code.style.width = (n * perModule / dpr) + "px";
 }
-function closeShareDialog(){
-  var box = document.getElementById("shareDialog");
-  if (!box) return;
-  if (typeof box.close === "function") box.close(); else box.removeAttribute("open");
-}
 /** QR + โลโก้เป็นรูป PNG (สีจากตัวแปร --qr-ink / --paper) */
 async function qrImageBlob(){
-  var link = groupLink(ui.ctx), q = QR.encode(link);
+  var link = confirmLink(ui.ctx), q = QR.encode(link);
   if (!q) throw new Error("link too long");
   var cs = getComputedStyle(document.documentElement);
   var ink = cs.getPropertyValue("--qr-ink").trim(), paper = cs.getPropertyValue("--qr-paper").trim();
@@ -649,14 +612,6 @@ async function saveQrImage(){
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
     toast("บันทึกรูป QR แล้ว","ok");
   } catch(err){ toast("บันทึกรูปไม่สำเร็จ ลองคัดลอกลิงก์แทน","error"); }
-}
-
-function shareGroupLink(){
-  if (!ui.ctx) return;
-  var link = groupLink(ui.ctx);
-  if (!navigator.share) return copyText(link, "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
-  navigator.share({ title:Store.groupName+" · FairDish", text:'มาช่วยกันกรอกบิล "'+Store.groupName+'" ใน FairDish กัน 🍲', url:link })
-    .catch(function(){});   // ผู้ใช้กดยกเลิก = ไม่ใช่ข้อผิดพลาด
 }
 
 /* ---- v3.2: หน้าหลัก "บิลของฉัน" ---- */
@@ -898,7 +853,7 @@ async function inviteFromBill(){
     // บิลอยู่บนกลุ่มแล้ว บิลส่วนตัวในเครื่องเริ่มใหม่ว่าง ๆ (ไม่ให้มีสองที่ที่ต้องแก้)
     try { await Store.saveLocalBill(emptyBill(data.kind)); } catch(e){}
     ui.shareAfterLoad = true;
-    location.hash = "#/g/" + g.id + "/bill";
+    location.hash = "#/g/" + g.id + "/share";
   } catch(err){
     toast("สร้างกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง","error");
     var again = document.getElementById("inviteBtn");

@@ -59,10 +59,12 @@ function refreshView(){
     maybeAskWhoAmI();
   }
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();
-  // v3.2: เพิ่งย้ายบิลส่วนตัวขึ้นกลุ่ม → เปิดหน้าต่างชวนเพื่อนให้เลย
+  if (path==="/me") rerenderGuest(true);
+  if (path==="/share"){ document.getElementById("view").innerHTML = pageShare(); fitShareQr(); }
+  // v3.2: เพิ่งย้ายบิลส่วนตัวขึ้นกลุ่ม (เปิดหน้าชวนเพื่อนอยู่แล้ว)
   if (ui.shareAfterLoad && ui.ctx && !ui.loading){
     ui.shareAfterLoad = false;
-    if (!ui.groupError){ openShareDialog(); toast("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย","ok"); }
+    if (!ui.groupError) toast("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย","ok");
   }
 }
 
@@ -72,6 +74,7 @@ async function refreshGroup(manual){
   if (!id || ui.loading || ui.groupError || ui.syncing || ui.save==="saving") return;
   var busy = ui.tripStash || state.menuForm || state.sharedForm || state.chargeForm || ui.editingMember ||
              ui.savingMember || ui.savingMenu || ui.confirmMember || ui.confirmReset;
+  if (currentPath() === "/me" && ui.guestFor && !ui.guestDone) busy = true;   // กำลังติ๊กเมนูอยู่ อย่าล้างที่ติ๊กไว้
   if (!manual && busy) return;   // กำลังกรอกอะไรอยู่ อย่าวาดทับ
   ui.syncing = true;
   try {

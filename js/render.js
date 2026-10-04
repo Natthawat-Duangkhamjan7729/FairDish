@@ -150,7 +150,7 @@ function renderGroupBar(){
     '<section class="group-bar" aria-labelledby="h-group">'+
       '<div class="group-top">'+
         '<div class="group-title"><span class="eyebrow">กลุ่ม</span><h2 id="h-group">'+esc(Store.groupName)+'</h2>'+sub+'</div>'+
-        '<button class="btn-sm btn-xs" id="groupShare" aria-haspopup="dialog">'+ICON_SHARE+' ชวนเพื่อน</button>'+
+        '<button class="btn-sm btn-xs" id="groupShare">'+ICON_SHARE+' ชวนเพื่อน</button>'+
         '<button class="icon-btn" data-group-panel="1" aria-expanded="'+ui.groupPanel+'" aria-controls="groupPanel" aria-label="ตัวเลือกกลุ่ม">'+ICON_MORE+'</button>'+
       '</div>'+
       myTotalHTML()+

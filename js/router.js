@@ -11,6 +11,8 @@ var routes = {
   "/history":{ title:"ประวัติบิล · FairDish", view:pageHistory },
   "/groups": { title:"ประวัติบิล · FairDish", view:pageHistory },   // ลิงก์เก่าของหน้ากลุ่ม (v2.0–v3.1)
   "/h":      { title:"บิลในประวัติ · FairDish", view:pagePast },
+  "/me":     { title:"ยืนยันเมนู · FairDish", view:pageGuest },        // v4.1: #/g/<id>/me เท่านั้น
+  "/share":  { title:"ชวนเพื่อนเข้ากลุ่ม · FairDish", view:pageShare }, // v4.1: #/g/<id>/share เท่านั้น
   "/how":    { title:"วิธีใช้ · FairDish", view:pageHow },
   "/about":  { title:"เกี่ยวกับ · FairDish", view:pageAbout },
   "/more":   { title:"อื่น ๆ · FairDish", view:pageMore }
@@ -34,14 +36,17 @@ function updateChrome(){
     ctx.classList.toggle("group", !!(show && ui.ctx));
   }
 }
+var GROUP_ONLY = ["/h", "/me", "/share"];   // เปิดตรง ๆ ไม่ได้ ต้องมีรหัสบิล/กลุ่มนำหน้า
+/** หน้าที่ต้องโหลดบิล (ส่วนตัวหรือกลุ่ม) ก่อนแสดง */
+function needsBill(path){ return path==="/split" || path==="/bill" || path==="/me" || path==="/share"; }
 function hashPath(){ return location.hash.replace(/^#/,""); }
 /** หน้ากลุ่ม #/g/<id> ใช้หน้าหารบิล และ #/g/<id>/bill ใช้หน้าใบสรุปยอด */
 function currentPath(){
   var h = hashPath();
   var g = parseGroupPath(h);
-  if (g) return g.bill ? "/bill" : "/split";
+  if (g) return g.bill ? "/bill" : g.me ? "/me" : g.share ? "/share" : "/split";
   if (/^\/h\/[0-9a-z]+$/.test(h)) return "/h";
-  return routes[h] && h !== "/h" ? h : "/";
+  return routes[h] && GROUP_ONLY.indexOf(h) < 0 ? h : "/";
 }
 function currentGroupId(){
   var g = parseGroupPath(hashPath());
@@ -52,13 +57,15 @@ function route(){
   var path = currentPath();
   var groupId = currentGroupId();
   var r = routes[path];
-  if ((path==="/split" || path==="/bill") && groupId !== ui.ctx) loadContext(groupId);
+  if (needsBill(path) && groupId !== ui.ctx) loadContext(groupId);
+  else if ((path==="/share" || path==="/bill") && groupId) refreshGroup(false);   // สถานะยืนยัน/ติ๊กโอนของเพื่อนต้องเป็นล่าสุด
+  if (path !== "/me"){ ui.guestFor = null; ui.guestSel = null; ui.guestDone = false; }
   document.title = groupId && Store.groupName ? Store.groupName + " · FairDish" : r.title;
-  closeMeDialog(); closeInstall(); closeShareDialog();     // เปลี่ยนหน้าแล้วหน้าต่างที่ค้างอยู่ต้องปิดตาม
+  closeMeDialog(); closeInstall();     // เปลี่ยนหน้าแล้วหน้าต่างที่ค้างอยู่ต้องปิดตาม
   closeGlobalSheet();
   if (path !== "/bill") ui.showDone = false;
   // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน
-  document.body.classList.toggle("no-tabbar", path==="/split" || path==="/bill");
+  document.body.classList.toggle("no-tabbar", needsBill(path));
   document.body.classList.toggle("show-foot", path==="/more" || path==="/about");
   document.getElementById("view").innerHTML = r.view();
   var tab = tabOf(path);
@@ -71,6 +78,8 @@ function route(){
   updateChrome();
   if (path==="/split"){ render(); maybeAskWhoAmI(); }   // เข้ากลุ่มทางหน้าใบสรุปก่อน ก็ยังถาม "คุณคือใคร" ตอนมาหน้าหารบิล
   if (path==="/") fillHome();
+  if (path==="/me") document.body.classList.toggle("has-total", !!document.querySelector(".guest-bar"));
+  if (path==="/share") fitShareQr();
   syncSheetLock();
   window.scrollTo(0,0);
 }

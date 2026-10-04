@@ -237,7 +237,7 @@ function pageBill(){
       '<div class="btn-stack">'+
         '<button class="btn-main btn-block" id="copyBtn">'+ICON_COPY+' คัดลอกสรุปยอด</button>'+
         '<button class="btn-line btn-block" id="shareImgBtn">'+ICON_SHARE+' แชร์รูปใบเสร็จ</button>'+
-        (ui.ctx ? '<button class="btn-line btn-block" id="groupShare" aria-haspopup="dialog">'+ICON_USERS+' ชวนเพื่อนเข้ากลุ่ม</button>'
+        (ui.ctx ? '<a class="btn-line btn-block" href="'+shareHref()+'">'+ICON_USERS+' ชวนเพื่อนเข้ากลุ่ม · ยืนยันเมนู</a>'
           : (Cloud.ready() ? '<button class="btn-line btn-block" id="inviteBtn">'+ICON_USERS+' ชวนเพื่อนเข้ากลุ่ม</button>' : ''))+
         '<a class="link-btn center" href="'+splitHref()+'">แก้ไขรายการ</a>'+
       '</div>'+

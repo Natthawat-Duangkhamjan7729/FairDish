@@ -12,8 +12,8 @@ function isGroupId(id){ return /^[0-9a-f]{12}$/.test(String(id||"")); }
 
 /** "/g/<id>" หรือ "/g/<id>/bill" → { id, bill } ไม่ใช่หน้ากลุ่ม → null (id อาจผิดรูปแบบ ให้ผู้เรียกเช็กเอง) */
 function parseGroupPath(path){
-  var m = /^\/g\/([^\/]+)(\/bill)?$/.exec(String(path||""));
-  return m ? { id:m[1], bill:!!m[2] } : null;
+  var m = /^\/g\/([^\/]+)(\/bill|\/me|\/share)?$/.exec(String(path||""));
+  return m ? { id:m[1], bill:m[2] === "/bill", me:m[2] === "/me", share:m[2] === "/share" } : null;
 }
 
 /** รับทั้งลิงก์เต็มหรือรหัสกลุ่มที่ผู้ใช้วางมา → รหัสกลุ่ม หรือ "" */

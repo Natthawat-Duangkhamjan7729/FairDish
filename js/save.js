@@ -9,10 +9,10 @@ function serialize(){
   if (t){
     // v3.1: กำลังแก้มื้ออาหารข้างในทริป — state ตอนนี้คือข้อมูลของมื้อ ประกอบกลับเป็นทริปก่อนบันทึก
     return { members:state.members, menus:t.menus.map(function(m){ return m.id === t.mealId ? mealWithScope(m) : m; }),
-             shared:t.shared, charges:t.charges, payers:t.payers, kind:"trip", name:state.name, paid:state.paid, savedAt:new Date().toISOString() };
+             shared:t.shared, charges:t.charges, payers:t.payers, kind:"trip", name:state.name, paid:state.paid, confirms:state.confirms, savedAt:new Date().toISOString() };
   }
   return { members:state.members, menus:state.menus, shared:state.shared,
-           charges:state.charges, payers:state.payers, kind:state.kind, name:state.name, paid:state.paid, savedAt:new Date().toISOString() };
+           charges:state.charges, payers:state.payers, kind:state.kind, name:state.name, paid:state.paid, confirms:state.confirms, savedAt:new Date().toISOString() };
 }
 /** รายการมื้อในทริป + ข้อมูลมื้อที่กำลังแก้อยู่ (state.menus/shared/charges) */
 function mealWithScope(m){
@@ -52,6 +52,7 @@ function normalizeBill(saved){
     : (saved.savedAt && !isNaN(new Date(saved.savedAt)) ? defaultBillName(b.kind, new Date(saved.savedAt)) : "");
   b.paid = {};
   if (saved.paid && typeof saved.paid === "object") Object.keys(saved.paid).forEach(function(k){ if (saved.paid[k]) b.paid[k] = true; });
+  b.confirms = cleanConfirms(saved.confirms);         // v4.1: เพื่อนยืนยันเมนู (ฟังก์ชันอยู่ใน confirm.js)
   b.savedAt = saved.savedAt || "";
   return b;
 }
@@ -67,6 +68,7 @@ function applyBill(saved){
   state.payers = b.payers;
   state.name = b.name;
   state.paid = b.paid;
+  state.confirms = b.confirms;
   state.open = {};
   var maxId = 0, all = state.members.concat(state.menus, state.shared, state.charges);
   state.menus.forEach(function(m){ if (m.meal) all = all.concat(m.meal.menus, m.meal.shared, m.meal.charges); });
