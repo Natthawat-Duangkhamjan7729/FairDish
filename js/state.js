@@ -7,14 +7,18 @@
 var uid = 0;
 function nid(){ uid += 1; return "i" + uid; }
 
+function defaultCharges(){
+  return [
+    { id:"svc", label:"ค่าบริการ", rate:10, on:false, fixed:true },
+    { id:"vat", label:"VAT", rate:7, on:false, fixed:true }
+  ];
+}
+
 var state = {
   members: [],
   menus: [],
   shared: [],
-  charges: [
-    { id:"svc", label:"ค่าบริการ", rate:10, on:false, fixed:true },
-    { id:"vat", label:"VAT", rate:7, on:false, fixed:true }
-  ],
+  charges: defaultCharges(),
   menuMemory: [],
   menuForm:null, sharedForm:null, chargeForm:null, open:{}
 };
@@ -34,12 +38,17 @@ var ui = {
   saveFailedIn:null,
   undo:null,
   undoTimer:null,
-  confirmReset:false
+  confirmReset:false,
+  ctx:undefined,        // บิลที่โหลดอยู่: undefined = ยังไม่โหลด, null = บิลส่วนตัว, "<id>" = กลุ่ม
+  groupError:"",        // "notfound" | "load" | "disabled"
+  myGroups:[],
+  creatingGroup:false,
+  syncing:false
 };
 
 var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "1.9";
+var APP_VERSION = "2.0";
 var MENU_MEMORY_LIMIT = 60;

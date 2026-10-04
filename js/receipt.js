@@ -14,12 +14,14 @@ function barcode(seed){
 }
 function receiptHTML(r, opts){
   opts = opts || {};
+  var me = myMemberId();
   var lines = r.list.map(function(p){
     var opened = !!state.open[p.id];
+    var cls = "r-line" + (p.id===me ? " me" : "");
     var html = (opts.interactive
-      ? '<button class="r-line" data-toggle="'+p.id+'" aria-expanded="'+opened+'"><span class="caret">&#9654;</span>'
-      : '<div class="r-line"><span class="caret" style="visibility:hidden">&#9654;</span>')
-      + '<span class="who">'+esc(p.name)+'</span><span class="val">'+baht(p.rounded)+'</span>'
+      ? '<button class="'+cls+'" data-toggle="'+p.id+'" aria-expanded="'+opened+'"><span class="caret">&#9654;</span>'
+      : '<div class="'+cls+'"><span class="caret" style="visibility:hidden">&#9654;</span>')
+      + '<span class="who">'+esc(p.name)+(p.id===me ? ' <span class="me-tag">ฉัน</span>' : '')+'</span><span class="val">'+baht(p.rounded)+'</span>'
       + (opts.interactive ? '</button>' : '</div>');
     if (opts.interactive && opened){
       var d = p.items.map(function(it){

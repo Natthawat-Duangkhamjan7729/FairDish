@@ -12,8 +12,10 @@
 
 | ไฟล์ | หน้าที่ |
 |---|---|
-| `store.js` | ชั้นเก็บข้อมูล (localStorage) |
+| `config.js` | `SUPABASE_URL`, `SUPABASE_ANON_KEY` (เว้นว่าง = ปิดระบบกลุ่ม) |
+| `store.js` | ชั้นเก็บข้อมูล (localStorage หรือบิลกลุ่มผ่าน `Cloud` เมื่อ `Store.groupId` ถูกตั้ง) |
 | `state.js` | `state`, `ui`, ค่าคงที่, `APP_VERSION` |
+| `cloud.js` | `Cloud` เรียก RPC ของ Supabase ด้วย `fetch`, รหัส/ลิงก์กลุ่ม, "กลุ่มของฉัน" |
 | `menu-library.js` | คลังเมนูแนะนำ |
 | `shared-library.js` | รายการแนะนำค่าส่วนกลาง (แยกจากคลังเมนู) |
 | `utils.js` | `baht`, `esc`, ไอคอน |
@@ -21,9 +23,9 @@
 | `calc.js` | `compute()` คำนวณเงิน — **ห้ามแตะ DOM** |
 | `receipt.js`, `pages.js`, `render.js` | สร้าง HTML ของแต่ละหน้า |
 | `actions.js` | การกระทำของผู้ใช้ |
-| `router.js` | hash router (`#/split`, `#/bill`, …) |
+| `router.js` | hash router (`#/split`, `#/bill`, `#/groups`, `#/g/<id>`, `#/g/<id>/bill`) |
 | `events.js` | event delegation ของทั้งหน้า |
-| `main.js` | `boot()` |
+| `main.js` | `boot()`, `loadContext()` สลับบิลส่วนตัว/บิลกลุ่ม, `refreshGroup()` |
 
 ## กฎ
 
@@ -32,6 +34,9 @@
   ยอดรายคน (`rounded`) รวมกันต้องเท่ายอดบิล (`grand`) เสมอ
 - เปลี่ยนเวอร์ชัน: แก้ `APP_VERSION` ใน `js/state.js`, footer ใน `index.html` และ README ให้ตรงกัน
 - ห้ามเพิ่ม dependency, bundler หรือ framework โดยไม่ได้ตกลงกันก่อน
+  (Supabase ตกลงแล้วสำหรับระบบกลุ่ม — เรียกผ่าน `fetch` ไม่ใช้ไลบรารี)
+- ลิงก์ไปหน้าหารบิล/ใบสรุปยอดใช้ `splitHref()` / `billHref()` เพื่อให้อยู่ในกลุ่มเดิม
+- แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย
 
 ## ทดสอบ
 

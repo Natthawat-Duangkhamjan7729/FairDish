@@ -1,4 +1,5 @@
-/* FairDish — ชั้นเก็บข้อมูล: localStorage → window.storage → หน่วยความจำ */
+/* FairDish — ชั้นเก็บข้อมูล: localStorage → window.storage → หน่วยความจำ
+   อยู่ในกลุ่ม (groupId) = บิลเก็บบนเซิร์ฟเวอร์ผ่าน Cloud (js/cloud.js) แทน */
 "use strict";
 
 /* =========================================================
@@ -7,6 +8,10 @@
 var Store = {
   key: "fairdish:bill:v1",
   menuKey: "fairdish:menu-memory:v1",   // คีย์ใหม่ ไม่ทับข้อมูลบิลที่เคยบันทึกไว้
+  groupsKey: "fairdish:groups:v1",      // กลุ่มที่เครื่องนี้เคยเปิด + "ฉันคือใคร"
+  groupId: null,                        // null = บิลส่วนตัวในเครื่อง
+  groupName: "",
+  version: 0,                           // version ของบิลกลุ่มที่โหลดมาล่าสุด ใช้กันเขียนทับกัน
   mode: "memory",
   mem: null,
   memStore: {},
@@ -40,11 +45,31 @@ var Store = {
     if (this.mode === "local"){ window.localStorage.setItem(key, text); return; }
     this.memStore[key] = text;
   },
+  /** บิลกลุ่มที่ไม่มีอยู่จริง → null, บิลกลุ่มว่าง → {} */
   async load(){
+    if (this.groupId){
+      var id = this.groupId;
+      var g = await Cloud.get(id);
+      if (this.groupId !== id) throw new Error("group changed");
+      if (!g) return null;
+      this.version = g.version;
+      this.groupName = g.name;
+      return g.data || {};
+    }
     var raw = await this.readRaw(this.key);
     return raw ? JSON.parse(raw) : null;
   },
   async save(data){
+    if (this.groupId){
+      var id = this.groupId;
+      var res = await Cloud.save(id, data, this.version);
+      if (this.groupId !== id) return;
+      if (res && res.ok){ this.version = res.version; return; }
+      var err = new Error(res && res.missing ? "group missing" : "group conflict");
+      err.conflict = !(res && res.missing);
+      err.latest = res;
+      throw err;
+    }
     var text = JSON.stringify(data);
     await this.writeRaw(this.key, text);
     this.mem = JSON.parse(text);
@@ -56,5 +81,13 @@ var Store = {
   },
   async saveMenus(list){
     await this.writeRaw(this.menuKey, JSON.stringify(list));
+  },
+  async loadGroups(){
+    var raw = await this.readRaw(this.groupsKey);
+    var list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter(function(g){ return g && isGroupId(g.id); }) : [];
+  },
+  async saveGroups(list){
+    await this.writeRaw(this.groupsKey, JSON.stringify(list));
   }
 };

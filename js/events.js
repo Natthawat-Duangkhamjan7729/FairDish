@@ -22,6 +22,8 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "memberInput"){ e.preventDefault(); addMember(); }
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
+  if (e.target.id === "groupName"){ e.preventDefault(); createGroup(); }
+  if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
 });
 document.addEventListener("input", function(e){
   if (e.target && (e.target.id === "mName" || e.target.id === "mPrice")){
@@ -65,7 +67,8 @@ document.addEventListener("click", async function(e){
             "[data-edit-menu],[data-dup-menu],[data-del-menu],[data-eat],[data-eat-all],[data-suggest],"+
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
-            "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave";
+            "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
+            "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
   var v;
@@ -79,6 +82,17 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
   if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
+
+  /* v2.0: กลุ่ม */
+  if (t.id==="groupCreate") return createGroup();
+  if (t.id==="groupJoin") return joinGroup();
+  if (t.id==="groupCopy") return copyText(groupLink(ui.ctx), "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
+  if (t.id==="groupShare") return shareGroupLink();
+  if (t.id==="groupRefresh") return refreshGroup(true);
+  if (t.id==="groupRetry") return loadContext(ui.ctx);
+  if (t.id==="groupLinkInput") return t.select();
+  if ((v = t.getAttribute("data-me"))) return setMe(v);
+  if ((v = t.getAttribute("data-forget-group"))) return forgetGroup(v);
 
   /* ส่วนอื่นของแอป */
   if (t.id==="demoBtn") return loadDemo();
@@ -186,4 +200,9 @@ document.addEventListener("click", async function(e){
   }
 
   if (t.id==="copyBtn") return copySummary();
+});
+
+/* v2.0: กลับมาที่แท็บ = ดึงบิลกลุ่มล่าสุด เผื่อเพื่อนแก้ไปแล้ว */
+document.addEventListener("visibilitychange", function(){
+  if (document.visibilityState === "visible") refreshGroup(false);
 });

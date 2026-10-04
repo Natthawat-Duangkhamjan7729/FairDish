@@ -5,7 +5,43 @@
    7. แสดงผลหน้าแอป
    ========================================================= */
 function render(){
-  renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
+  renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
+}
+
+/* ---- v2.0: แถบกลุ่ม (ลิงก์แชร์ + ฉันคือใคร) ---- */
+function renderGroupBar(){
+  var box = document.getElementById("groupBar");
+  if (!box) return;
+  if (ui.loading){ box.innerHTML = ""; return; }
+  if (!ui.ctx){
+    box.innerHTML = Cloud.ready()
+      ? '<div class="notice info"><p>อยากให้เพื่อนช่วยกันแก้บิลนี้? สร้างกลุ่มแล้วส่งลิงก์ให้เพื่อนได้เลย</p>'+
+        '<a class="btn-quiet" href="#/groups">สร้างกลุ่ม</a></div>'
+      : "";
+    return;
+  }
+  var me = myMemberId();
+  var picks = state.members.length
+    ? '<div class="pick" role="group" aria-label="ฉันคือใคร">'+state.members.map(function(p){
+        return '<button data-me="'+p.id+'" aria-pressed="'+(p.id===me)+'">'+esc(p.name)+'</button>';
+      }).join("")+'</div>'
+    : '<p class="hint" style="margin:0">เพิ่มชื่อในขั้นที่ 1 ก่อน แล้วเลือกว่าคุณคือใคร</p>';
+  box.innerHTML =
+    '<section class="group-bar" aria-labelledby="h-group">'+
+      '<div class="group-top">'+
+        '<div class="group-title"><span class="eyebrow">กลุ่ม</span><h2 id="h-group">'+esc(Store.groupName)+'</h2></div>'+
+        '<button class="btn-quiet btn-xs" id="groupRefresh">โหลดล่าสุด</button>'+
+      '</div>'+
+      '<div class="group-link">'+
+        '<label class="sr-only" for="groupLinkInput">ลิงก์กลุ่ม</label>'+
+        '<input type="text" id="groupLinkInput" readonly value="'+esc(groupLink(ui.ctx))+'">'+
+        '<button class="btn-sm" id="groupCopy">คัดลอกลิงก์</button>'+
+        (navigator.share ? '<button class="btn-quiet" id="groupShare">แชร์</button>' : '')+
+      '</div>'+
+      '<p class="sub-head">ฉันคือใคร <span class="muted">(จำไว้ในเครื่องนี้ ยอดของคุณจะถูกไฮไลต์)</span></p>'+
+      picks+
+      '<a class="group-leave" href="#/split">← กลับไปบิลส่วนตัว</a>'+
+    '</section>';
 }
 
 /* ---- ฟีเจอร์ที่ 1: จัดการสมาชิก ---- */
@@ -227,5 +263,5 @@ function renderSummary(){
     (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' เมนูที่ยังไม่ได้เลือกคนกิน จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
     receiptHTML(r,{interactive:true})+
     '<button class="btn-sm btn-block" id="copyBtn" style="margin-top:var(--s4)">คัดลอกสรุปยอด</button>'+
-    '<a href="#/bill" class="add-slot" style="display:flex;align-items:center;justify-content:center;margin-top:var(--s2)">เปิดใบสรุปยอดเต็มหน้า</a>';
+    '<a href="'+billHref()+'" class="add-slot" style="display:flex;align-items:center;justify-content:center;margin-top:var(--s2)">เปิดใบสรุปยอดเต็มหน้า</a>';
 }
