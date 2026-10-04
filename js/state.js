@@ -50,12 +50,13 @@ var ui = {
   theme:"system",       // v2.1: "system" | "light" | "dark"
   focusGroupName:false, // v2.2: กด "สร้างกลุ่มก่อน" ที่หน้าแรก → โฟกัสช่องชื่อกลุ่มเมื่อเปิดหน้ากลุ่ม
   installNudgeOff:false, // v2.4: ผู้ใช้กดปิดการ์ดชวนติดตั้งแล้ว
-  noReveal:false        // v2.5: วาดหน้าใบสรุปซ้ำโดยไม่เล่นแอนิเมชันใบเสร็จ
+  noReveal:false,       // v2.5: วาดหน้าใบสรุปซ้ำโดยไม่เล่นแอนิเมชันใบเสร็จ
+  payerOpen:false       // v2.6: กางส่วน "ใครจ่าย" แล้ว (ตอนยังไม่เลือกใครจะพับไว้)
 };
 
 var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "2.5";
+var APP_VERSION = "2.6";
 var MENU_MEMORY_LIMIT = 60;

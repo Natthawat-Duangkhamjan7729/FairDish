@@ -113,7 +113,7 @@ function pageSplit(){
       '<div class="step-tabs" role="tablist" aria-label="ขั้นตอนการหารบิล">'+STEPS.map(stepTab).join("")+'</div>'+
 
       stepPanel("members",
-        '<div class="step-head"><h2 id="h-members">ใครกินบ้าง</h2><span class="aside" id="memberCount"></span></div>'+
+        '<div class="step-head"><h2 id="h-members">ใครกินบ้าง</h2></div>'+
         '<div class="field-row">'+
           '<div>'+
             '<label class="sr-only" for="memberInput">ชื่อคนที่ร่วมมื้อนี้</label>'+
@@ -146,6 +146,7 @@ function pageSplit(){
         '<div class="btn-row"><button class="btn-quiet" id="cancelReset">ยกเลิก</button>'+
         '<button class="btn-danger" id="confirmReset"'+(inGroup ? ' disabled' : '')+'>'+ICON_DEL+' ล้างข้อมูล</button></div></div>' : '')+
       '<div class="app-foot">'+
+        (!inGroup && Cloud.ready() ? '<a href="#/groups">👥 ชวนเพื่อนมาแก้บิลนี้ด้วยกัน</a>' : '')+
         (inGroup ? '' : '<button id="demoBtn">ใส่ข้อมูลตัวอย่าง</button>')+
         '<button id="resetBtn">'+ICON_DEL+' ล้างข้อมูลทั้งหมด</button>'+
       '</div>'+
@@ -189,11 +190,11 @@ function pageBill(){
         (myTransferText() ? '<span class="my-sub">'+esc(myTransferText())+'</span>' : '')+'</span>'+
         '<span class="my-amt">'+baht(mine.rounded)+' <small>บาท</small></span></div>' : '')+
       receiptHTML(r,{ interactive:true, reveal:done && !ui.noReveal })+
-      payerSection(r)+
       '<div class="finish-actions">'+
         '<button class="btn-sm btn-block" id="shareImgBtn">'+ICON_SHARE+' แชร์รูปใบเสร็จ</button>'+
         '<button class="btn-quiet btn-block" id="copyBtn">'+ICON_COPY+' คัดลอกเป็นข้อความ</button>'+
       '</div>'+
+      payerSection(r)+
       (done ? installNudgeHTML() : '')+
       '<div class="app-foot"><a href="'+splitHref()+'">แก้ไขรายการ</a></div>'+
     '</div></div></div>';
@@ -228,11 +229,9 @@ function pageGroups(){
       }).join("")
     : '<p class="empty">ยังไม่มีกลุ่ม — สร้างกลุ่มใหม่ หรือกดลิงก์ที่เพื่อนส่งมา</p>';
 
-  return '<div class="page"><div class="wrap app-col">'+
-    '<div class="page-head" style="max-width:none"><h1>กลุ่ม</h1>'+
-      '<p>สร้างกลุ่มแล้วส่งลิงก์เข้าแชต เพื่อนกดลิงก์ก็ดูและแก้บิลเดียวกันได้ทันที ไม่ต้องสมัครสมาชิก</p></div>'+
-    (on ? ''+
-      '<section class="step-card" aria-labelledby="h-new-group">'+
+  var create = !on
+    ? '<div class="notice warn"><p>ระบบกลุ่มยังไม่เปิดใช้ในเว็บนี้ (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์) ยังหารบิลในเครื่องได้ตามปกติ</p></div>'
+    : '<section class="step-card" aria-labelledby="h-new-group">'+
         '<div class="step-head"><h2 id="h-new-group">สร้างกลุ่มใหม่</h2></div>'+
         '<div class="field-row">'+
           '<div><label class="sr-only" for="groupName">ชื่อกลุ่ม</label>'+
@@ -240,23 +239,27 @@ function pageGroups(){
           '<button class="btn-sm" id="groupCreate">สร้างกลุ่ม</button>'+
         '</div>'+
         '<div id="groupFromSlot"></div>'+
-        '<p class="field-msg muted" id="groupMsg" aria-live="polite">ตั้งชื่อให้แล้ว กดสร้างได้เลย หรือแก้ชื่อก่อนก็ได้ · ส่งลิงก์เฉพาะคนในโต๊ะ</p>'+
-      '</section>'+
-      '<section class="step-card" aria-labelledby="h-join-group">'+
-        '<div class="step-head"><h2 id="h-join-group">มีลิงก์จากเพื่อน</h2></div>'+
-        '<div class="field-row">'+
-          '<div><label class="sr-only" for="groupJoinInput">ลิงก์หรือรหัสกลุ่ม</label>'+
-          '<input type="text" id="groupJoinInput" placeholder="วางลิงก์หรือรหัสกลุ่ม" autocomplete="off" aria-describedby="groupJoinMsg"></div>'+
-          '<button class="btn-sm" id="groupJoin">เข้ากลุ่ม</button>'+
-        '</div>'+
-        '<p class="field-msg muted" id="groupJoinMsg" aria-live="polite">กดลิงก์ที่เพื่อนส่งมาตรง ๆ ก็เข้ากลุ่มได้เหมือนกัน</p>'+
-      '</section>'
-    : '<div class="notice warn"><p>ระบบกลุ่มยังไม่เปิดใช้ในเว็บนี้ (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์) ยังหารบิลในเครื่องได้ตามปกติ</p></div>')+
-    '<section class="step-card" aria-labelledby="h-my-groups">'+
-      '<div class="step-head"><h2 id="h-my-groups">กลุ่มของฉัน</h2><span class="aside">จำไว้ในเครื่องนี้</span></div>'+
+        '<p class="field-msg muted" id="groupMsg" aria-live="polite">ตั้งชื่อให้แล้ว กดสร้างได้เลย · ส่งลิงก์เฉพาะคนในโต๊ะ</p>'+
+        // v2.6: ส่วนใหญ่กดลิงก์จากแชตอยู่แล้ว ช่องวางลิงก์จึงพับไว้
+        '<details class="join-fold"><summary>มีลิงก์จากเพื่อน? วางตรงนี้</summary>'+
+          '<div class="field-row">'+
+            '<div><label class="sr-only" for="groupJoinInput">ลิงก์หรือรหัสกลุ่ม</label>'+
+            '<input type="text" id="groupJoinInput" placeholder="วางลิงก์หรือรหัสกลุ่ม" autocomplete="off" aria-describedby="groupJoinMsg"></div>'+
+            '<button class="btn-quiet" id="groupJoin">เข้ากลุ่ม</button>'+
+          '</div>'+
+          '<p class="field-msg muted" id="groupJoinMsg" aria-live="polite"></p>'+
+        '</details>'+
+      '</section>';
+  var mine = '<section class="step-card" aria-labelledby="h-my-groups">'+
+      '<div class="step-head"><h2 id="h-my-groups">กลุ่มของฉัน</h2></div>'+
       list+
-      '<a class="add-slot" href="#/split" style="margin-top:var(--s2)">เปิดบิลส่วนตัว (ไม่แชร์)</a>'+
-    '</section>'+
+      '<a class="add-slot" href="#/split" style="margin-top:var(--s3)">เปิดบิลส่วนตัว (ไม่แชร์)</a>'+
+    '</section>';
+
+  return '<div class="page"><div class="wrap app-col">'+
+    '<div class="page-head" style="max-width:none"><h1>กลุ่ม</h1>'+
+      '<p>ส่งลิงก์กลุ่มเข้าแชต เพื่อนกดแล้วแก้บิลเดียวกันได้ ไม่ต้องสมัคร</p></div>'+
+    (ui.myGroups.length ? mine + create : create + mine)+
   '</div></div>';
 }
 

@@ -77,7 +77,7 @@ document.addEventListener("click", async function(e){
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
-            "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],"+
+            "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -89,12 +89,18 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-edit-member"))) return startEdit(v);
   if ((v = t.getAttribute("data-save-member"))) return saveEdit(v);
   if (t.getAttribute("data-cancel-edit")){ ui.editingMember=null; ui.editError=""; return renderMembers(); }
-  if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
+  if ((v = t.getAttribute("data-del-member"))){ ui.editingMember=null; ui.editError=""; return askDelete(v); }
   if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
 
   /* v2.5: ใครจ่ายให้ร้าน */
   if ((v = t.getAttribute("data-payer"))) return togglePayer(v);
+  if (t.getAttribute("data-payer-open")){
+    ui.payerOpen = true; rerenderBill();
+    var first = document.querySelector("[data-payer]");
+    if (first) first.focus({ preventScroll:true });
+    return;
+  }
 
   /* v2.4: ตอนจบมื้อ */
   if (t.id==="shareImgBtn") return shareReceiptImage();
@@ -179,7 +185,7 @@ document.addEventListener("click", async function(e){
     closeSuggestions();
     return renderMenus();
   }
-  if ((v = t.getAttribute("data-dup-menu"))) return duplicateMenu(v);
+  if ((v = t.getAttribute("data-dup-menu"))){ state.menuForm=null; ui.menuErr={}; closeSuggestions(); return duplicateMenu(v); }
   if ((v = t.getAttribute("data-del-menu"))) return removeMenu(v);
   if ((v = t.getAttribute("data-eat"))){
     syncMenuForm();
