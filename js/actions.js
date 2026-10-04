@@ -603,7 +603,7 @@ function openShareDialog(){
         (q.version >= 4 ? '<span class="qr-logo"><img src="img/icon-192.png" alt=""></span>' : '')+'</div>'
     : '';
   box.innerHTML =
-    '<div class="install-head"><div><h2 id="shareTitle">ชวนเพื่อนมาหารด้วยกัน</h2>'+
+    '<div class="install-head"><div><h2 id="shareTitle" tabindex="-1" autofocus>ชวนเพื่อนมาหารด้วยกัน</h2>'+
       '<p>สแกนหรือกดลิงก์ แล้วช่วยกันกรอกบิลนี้ได้เลย ไม่ต้องสมัคร</p></div>'+
       '<button class="icon-btn" data-share-close="1" aria-label="ปิด">'+ICON_X+'</button></div>'+
     (qr ? '<div class="qr-card">'+qr+
@@ -616,6 +616,19 @@ function openShareDialog(){
     '</div>'+
     '<p class="share-link" title="'+esc(link)+'">'+esc(link)+'</p>';
   if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
+  fitQr(box, q);
+  var title = document.getElementById("shareTitle");
+  if (title) title.focus({ preventScroll:true });     // ไม่ให้วงโฟกัสไปอยู่ที่ปุ่ม × ตอนเปิด
+}
+/** ขยาย QR ให้แต่ละโมดูลกว้างเป็นพิกเซลจอเต็มจำนวน — ไม่งั้นบางช่องหนาบางช่องบาง ดูเบี้ยวและสแกนยาก */
+function fitQr(box, q){
+  var code = box.querySelector(".qr-code"), card = box.querySelector(".qr-card");
+  if (!code || !card || !q) return;
+  var n = q.size + 8, dpr = window.devicePixelRatio || 1;
+  var cs = getComputedStyle(card);
+  var room = Math.min(card.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), 300);
+  var perModule = Math.max(1, Math.floor(room * dpr / n));     // พิกเซลจอจริงต่อโมดูล
+  code.style.width = (n * perModule / dpr) + "px";
 }
 function closeShareDialog(){
   var box = document.getElementById("shareDialog");
