@@ -59,6 +59,7 @@ var ui = {
   history:[],           // v3.2: บิลส่วนตัวที่เก็บเข้าประวัติแล้ว (ใหม่สุดก่อน)
   sheet:null,           // v3.2: แผ่นล่างจอที่เปิดอยู่นอกหน้าหารบิล "kind" | "rename"
   showDone:false,       // v3.2: โอนครบทุกคนแล้ว → หน้าใบสรุปแสดงหน้าจอ "จบมื้อแล้ว"
+  showOnb:false, onbStep:0,   // v4.1: หน้าแนะนำ 3 หน้า (ครั้งแรกที่เปิดหน้าหลัก)
   guestFor:null, guestSel:null, guestDone:false, guestSaving:false,   // v4.1: หน้าที่เพื่อนเห็น #/g/<id>/me
   shareAfterLoad:false  // v3.2: เพิ่งสร้างกลุ่มจากบิลส่วนตัว → เปิดหน้าต่างชวนเพื่อนเมื่อโหลดกลุ่มเสร็จ
 };

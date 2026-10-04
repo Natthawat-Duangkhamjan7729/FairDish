@@ -93,6 +93,7 @@ document.addEventListener("click", async function(e){
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "#shareNative,#shareCopy,#shareSaveQr,"+
+            "[data-onb-next],[data-onb-skip],[data-onb-again],"+
             "[data-guest-who],[data-guest-add],[data-guest-item],[data-guest-save],[data-guest-change],[data-guest-again],"+
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
@@ -123,6 +124,9 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-rename")) return openRenameSheet();
   if (t.id==="billNameSave") return saveBillName();
   if ((v = t.getAttribute("data-paid"))) return togglePaid(v);
+  if (t.getAttribute("data-onb-next")) return onboardNext();
+  if (t.getAttribute("data-onb-skip")) return finishOnboard();
+  if (t.getAttribute("data-onb-again")) return onboardAgain();
   /* v4.1: หน้าที่เพื่อนเห็น — เลือกชื่อ ติ๊กเมนู ยืนยัน */
   if ((v = t.getAttribute("data-guest-who"))) return pickGuest(v);
   if (t.getAttribute("data-guest-add")) return addGuest();

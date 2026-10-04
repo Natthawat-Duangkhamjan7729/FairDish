@@ -102,6 +102,7 @@ async function boot(){
   try { state.menuMemory = await Store.loadMenus(); } catch(e){ state.menuMemory = []; }
   try { ui.myGroups = await Store.loadGroups(); } catch(e){ ui.myGroups = []; }
   try { ui.history = await Store.loadHistory(); } catch(e){ ui.history = []; }
+  try { ui.showOnb = (await Store.readRaw(ONBOARD_KEY)) !== "done"; } catch(e){ ui.showOnb = false; }
   try { ui.installNudgeOff = (await Store.readRaw(INSTALL_NUDGE_KEY)) === "off"; } catch(e){}
   updateInstallButton();
   route();

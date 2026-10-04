@@ -634,6 +634,22 @@ async function fillHome(){
   updateInstallButton();
 }
 
+/* ---- v4.1: หน้าแนะนำ ---- */
+async function finishOnboard(){
+  ui.showOnb = false; ui.onbStep = 0;
+  try { await Store.writeRaw(ONBOARD_KEY, "done"); } catch(e){}
+  if (currentPath() === "/") route(); else location.hash = "#/";
+}
+function onboardNext(){
+  if ((ui.onbStep || 0) >= 2) return finishOnboard();
+  ui.onbStep = (ui.onbStep || 0) + 1;
+  document.getElementById("view").innerHTML = pageOnboard();
+}
+function onboardAgain(){
+  ui.showOnb = true; ui.onbStep = 0;
+  if (currentPath() === "/") route(); else location.hash = "#/";
+}
+
 /* ---- v3.2: เริ่มบิลใหม่ (เลือกประเภทครั้งเดียว) + ประวัติบิล ---- */
 function emptyBill(kind){
   return { members:[], menus:[], shared:[], charges:defaultCharges(), payers:[], kind:kind, name:defaultBillName(kind), paid:{},

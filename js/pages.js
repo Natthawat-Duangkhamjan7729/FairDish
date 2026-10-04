@@ -49,6 +49,7 @@ function settingsLink(){
 
 /* ---------------- หน้าหลัก: บิลของฉัน ---------------- */
 function pageHome(){
+  if (ui.showOnb) return pageOnboard();
   return '<div class="page page-home">'+
     '<div class="home-top">'+
       '<img class="logo-mark" src="img/logo.png" alt="" width="40" height="40">'+
@@ -363,6 +364,7 @@ function pageMore(){
     '<h2 class="list-head">เกี่ยวกับ FairDish</h2>'+
     link("#/how","วิธีใช้","ทีละขั้น + คำถามที่ถูกถามบ่อย")+
     link("#/about","เกี่ยวกับ","ทีมผู้จัดทำและขอบเขตของเวอร์ชันนี้")+
+    '<button class="list-row list-btn" type="button" data-onb-again="1"><span class="list-body"><b>ดูหน้าแนะนำอีกครั้ง</b><span>3 หน้าแรกตอนเปิดแอปครั้งแรก</span></span><span class="list-go">'+ICON_CHEVRON+'</span></button>'+
     '<p class="hint" style="text-align:center;margin-top:var(--s5)">FairDish v'+APP_VERSION+'</p>'+
   '</div>';
 }
@@ -429,5 +431,57 @@ function pageAbout(){
         item("—","ยังไม่มีลิงก์ให้เพื่อนกดยืนยันเมนูของตัวเอง","ตอนนี้เพื่อนในกลุ่มแก้บิลเดียวกันได้ทั้งหมด การยืนยันรายคนและ QR พร้อมเพย์เป็นสิ่งที่จะต่อยอดในเวอร์ชันถัดไป")+
       '</ul>'+
     '</section>'+
+  '</div>';
+}
+
+/* ---------------- v4.1: หน้าแนะนำ 3 หน้า (เปิดครั้งแรกที่หน้าหลัก) ---------------- */
+var ONBOARD_KEY = "fairdish:onboarded:v1";
+var ONBOARD = [
+  ["หารบิลให้สนุกขึ้นอีกนิด", "จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์",
+   "FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปออกมาเป็นบิลรายคนที่ส่งเข้ากลุ่มได้ทันที"],
+  ["เลือกคนที่กินแต่ละเมนู", "หารเฉพาะคนที่กินจานนั้น",
+   "แตะชื่อคนที่กินจานนั้น ระบบหารเฉพาะคนที่แตะไว้ ไม่ใช่ทั้งโต๊ะ ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน"],
+  ["ใหม่ในแอป", "ส่งลิงก์ให้เพื่อนกดยืนยันเมนูเอง",
+   "เพื่อนเปิดลิงก์ เลือกชื่อตัวเอง แล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตให้ทันที"]
+];
+function onboardArt(i){
+  if (i === 0){
+    var rows = [["มาร์ค","151.67"],["ไอซ์","250.00"],["โฟรค์","61.66"]];
+    return '<div class="onb-art onb-art-0">'+
+      '<span class="onb-circle sun" aria-hidden="true"></span>'+
+      '<span class="blob purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v6a3 3 0 0 0 6 0V3M10 12v9M17 3v18M17 3c-2 1-3 4-3 7h3"/></svg></span>'+
+      '<span class="blob coral" aria-hidden="true">&#247;</span>'+
+      '<span class="blob mint" aria-hidden="true">'+ICON_CHECK+'</span>'+
+      '<div class="receipt-wrap"><div class="receipt">'+
+        '<div class="r-title">ใบสรุปยอด</div><div class="r-meta">8 คน · ร้านส้มตำหน้ามอ</div>'+
+        rows.map(function(r){ return '<div class="r-line"><span class="who">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>'; }).join("")+
+        '<div class="r-total"><span>รวมทั้งหมด</span><span>1,110.00 ฿</span></div>'+
+      '</div><div class="receipt-edge"></div></div></div>';
+  }
+  if (i === 1){
+    var chips = [["มาร์ค",1],["พูม",1],["ยูกะ",0],["ไอซ์",1],["โม",1]];
+    return '<div class="onb-art"><span class="onb-circle mint" aria-hidden="true"></span>'+
+      '<div class="onb-card"><div class="onb-dish"><b>ลาบหมู</b><span class="mono">80.00</span></div>'+
+      '<div class="pick" aria-hidden="true"><button class="all" tabindex="-1">ทุกคน</button>'+chips.map(function(c){
+        return '<button tabindex="-1" aria-pressed="'+(c[1] ? "true" : "false")+'">'+c[0]+'</button>';
+      }).join("")+'</div>'+
+      '<p class="form-preview">หาร 4 คน · คนละ 20.00 บาท</p></div></div>';
+  }
+  var st = [["ยูกะ","ok","ยืนยันแล้ว"],["โฟรค์","ok","ยืนยันแล้ว"],["ชาเน่","warn","รอยืนยัน"]];
+  return '<div class="onb-art"><span class="onb-circle lilac" aria-hidden="true"></span>'+
+    '<div class="onb-stack"><div class="onb-card onb-link mono">fairdish.vercel.app/#/g/…/me</div>'+
+    st.map(function(x){ return '<div class="status-row"><b>'+x[0]+'</b><span class="badge '+x[1]+'">'+x[2]+'</span></div>'; }).join("")+
+    '</div></div>';
+}
+function pageOnboard(){
+  var i = Math.max(0, Math.min(2, ui.onbStep || 0)), o = ONBOARD[i];
+  return '<div class="page page-onb">'+
+    '<div class="onb-top"><span class="onb-brand"><img class="logo-mark" src="img/logo.png" alt="" width="32" height="32"><b>FairDish</b></span>'+
+      '<button class="link-btn" type="button" data-onb-skip="1">ข้าม</button></div>'+
+    onboardArt(i)+
+    '<p class="eyebrow">'+o[0]+'</p><h1 class="onb-title">'+o[1]+'</h1><p class="onb-body">'+o[2]+'</p>'+
+    '<div class="onb-dots" aria-label="หน้า '+(i+1)+' จาก 3">'+[0,1,2].map(function(k){ return '<i'+(k === i ? ' class="on"' : '')+'></i>'; }).join("")+'</div>'+
+    '<button class="btn-main btn-block" type="button" data-onb-next="1">'+(i < 2 ? "ถัดไป" : "เริ่มใช้งาน")+'</button>'+
+    '<p class="intro-note">ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ</p>'+
   '</div>';
 }

@@ -65,7 +65,7 @@ function route(){
   closeGlobalSheet();
   if (path !== "/bill") ui.showDone = false;
   // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน
-  document.body.classList.toggle("no-tabbar", needsBill(path));
+  document.body.classList.toggle("no-tabbar", needsBill(path) || (path==="/" && ui.showOnb));
   document.body.classList.toggle("show-foot", path==="/more" || path==="/about");
   document.getElementById("view").innerHTML = r.view();
   var tab = tabOf(path);
