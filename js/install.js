@@ -47,8 +47,6 @@ function installSteps(list){
   }).join("")+'</ol>';
 }
 
-var INSTALL_SYSTEMS = { ios:"iPhone / iPad (iOS)", android:"Android" };
-
 function installBody(platform){
   if (platform === "ios") return installSteps([
       [ICON_IOS_SHARE, 'แตะปุ่ม <b>"แชร์"</b> บนแถบเครื่องมือของ Safari (ถ้าไม่เห็น ให้แตะ <b>•••</b> ก่อน)'],
@@ -85,7 +83,6 @@ function renderInstall(){
           ? '<a class="btn-quiet" href="'+esc(external)+'">เปิดในเบราว์เซอร์</a>'
           : '<button class="btn-quiet" id="installCopyLink">คัดลอกลิงก์</button>')+
       '</div>' : '')+
-    '<p class="install-system">ตรวจพบ: <b>'+INSTALL_SYSTEMS[platform]+'</b></p>'+
     '<div class="install-body">'+installBody(platform)+'</div>';
 }
 
