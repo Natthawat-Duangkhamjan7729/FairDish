@@ -15,6 +15,7 @@ var routes = {
 };
 /** แท็บล่างที่ต้องสว่างของแต่ละหน้า */
 function tabOf(path){
+  if (path==="/") return "home";
   if (path==="/split" || path==="/bill" || path==="/groups") return path.slice(1);
   return "more";
 }
@@ -64,6 +65,12 @@ function route(){
   updateChrome();
   if (path==="/split") render();
   if (path==="/groups") checkLocalBill();
+  if (path==="/") fillHomeResume();
   window.scrollTo(0,0);
+  if (path==="/groups" && ui.focusGroupName){
+    ui.focusGroupName = false;
+    var input = document.getElementById("groupName");
+    if (input){ input.focus(); input.scrollIntoView({ block:"center" }); }
+  }
 }
 window.addEventListener("hashchange", route);
