@@ -648,6 +648,25 @@ body.has-total .toast{bottom:calc(var(--tabbar-h) + 72px + env(safe-area-inset-b
 .install-nudge b{color:var(--ink)}
 .nudge-actions{display:flex;flex-direction:column;align-items:center;gap:var(--s1);flex:0 0 auto}
 
+/* ---- v2.5: ใครจ่ายให้ร้าน + ใครโอนให้ใคร ---- */
+.payer-card{max-width:390px;margin:var(--s5) auto 0}
+.payer-card .step-head{margin-bottom:var(--s2)}
+.payer-amts{display:grid;gap:var(--s2);margin-top:var(--s4)}
+.payer-row{display:flex;align-items:center;gap:var(--s2)}
+.payer-name{flex:1;min-width:0;font-size:var(--fs-small);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.payer-row input{width:9em;flex:0 0 auto;text-align:right}
+.payer-unit{font-size:var(--fs-small);color:var(--ink-2)}
+.transfers{margin-top:var(--s4);padding-top:var(--s4);border-top:1px dashed var(--line-2)}
+.transfers h3{font-size:var(--fs-body);font-weight:600;margin-bottom:var(--s2)}
+.tf-row{display:flex;align-items:center;gap:var(--s3);min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--line);margin-bottom:var(--s2)}
+.tf-row.me{background:var(--primary-soft);border-color:var(--chip-line);color:var(--primary-ink)}
+.tf-who{flex:1;min-width:0;font-size:var(--fs-small)}
+.tf-arrow{color:var(--ink-3);margin:0 var(--s1)}
+.tf-amt{font-family:var(--font-num);font-weight:600;white-space:nowrap}
+.tf-note{font-size:var(--fs-small);color:var(--ink-2);margin:0}
+.tf-note:empty{display:none}
+.my-sub{display:block;font-weight:400;margin-top:2px}
+
 /* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)
    =================================================================== */

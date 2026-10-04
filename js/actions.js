@@ -377,6 +377,12 @@ function summaryText(){
   r.list.forEach(function(p){ lines.push("• "+p.name+"  "+baht(p.rounded)+" บาท"); });
   lines.push("");
   lines.push("รวมทั้งหมด "+baht(r.grand)+" บาท");
+  var s = settle(r, state.payers);
+  if (s.ok && s.transfers.length){
+    lines.push("");
+    lines.push("โอนเงินตามนี้นะ 🙏");
+    s.transfers.forEach(function(t){ lines.push("• "+t.fromName+" → "+t.toName+"  "+baht(t.amount)+" บาท"); });
+  }
   if (ui.ctx) lines.push("กดดูได้ว่ายอดมาจากเมนูไหน: "+groupLink(ui.ctx)+"/bill");
   lines.push("— หารตามที่กินจริงด้วย FairDish");
   return lines.join("\n");
@@ -395,6 +401,48 @@ function copyText(text, okMessage){
   } else fallback();
 }
 function copySummary(){ copyText(summaryText(), "คัดลอกสรุปยอดแล้ว"); }
+
+/* ---- v2.5: ใครจ่ายให้ร้าน → ใครโอนให้ใคร ---- */
+/** วาดหน้าใบสรุปใหม่โดยไม่เล่นแอนิเมชันซ้ำและไม่เลื่อนจอ */
+function rerenderBill(){
+  if (currentPath() !== "/bill") return;
+  var y = window.scrollY;
+  ui.noReveal = true;
+  document.getElementById("view").innerHTML = pageBill();
+  ui.noReveal = false;
+  window.scrollTo(0, y);
+}
+async function togglePayer(id){
+  if (!nameOf(id)) return;
+  var i = -1;
+  state.payers.forEach(function(p, k){ if (p.id === id) i = k; });
+  if (i >= 0) state.payers.splice(i, 1);
+  else state.payers.push({ id:id, amount:null });
+  rerenderBill();
+  await commit();
+  rerenderBill();
+}
+async function setPayerAmount(id, raw){
+  var text = String(raw || "").trim();
+  var n = parseFloat(text);
+  if (text !== "" && (isNaN(n) || n < 0 || n > MAX_PRICE * 10)){ toast("ใส่ยอดเป็นตัวเลข เช่น 500 หรือ 500.50","error"); return rerenderBill(); }
+  state.payers.forEach(function(p){ if (p.id === id) p.amount = text === "" ? null : Math.round(n * 100) / 100; });
+  rerenderBill();
+  await commit();
+  rerenderBill();
+}
+/** ข้อความสั้น ๆ ว่า "ฉัน" ต้องโอนให้ใคร / รอรับจากใคร (ใช้ใต้ยอดของคุณ) */
+function myTransferText(){
+  var me = myMemberId();
+  if (!me || !hasData()) return "";
+  var s = settle(compute(), state.payers);
+  if (!s.ok) return "";
+  var out = s.transfers.filter(function(t){ return t.from === me; });
+  var inn = s.transfers.filter(function(t){ return t.to === me; });
+  if (out.length) return out.map(function(t){ return "โอนให้ "+t.toName+" "+baht(t.amount); }).join(" · ");
+  if (inn.length) return "รอรับคืน "+baht(inn.reduce(function(a,t){ return a+t.amount; },0))+" บาท";
+  return "ไม่ต้องโอนให้ใคร";
+}
 
 /* ---- v2.4: ล้างข้อมูลแบบปลอดภัย ---- */
 /** ในกลุ่มต้องพิมพ์ชื่อกลุ่มให้ตรงก่อนถึงจะล้างได้ */
@@ -614,6 +662,7 @@ async function loadDemo(){
     { id:nid(), name:"น้ำเปล่าขวดใหญ่ 2 ขวด", price:30 }
   ];
   state.charges.forEach(function(c){ c.on=false; });   // ร้านอีสานทั่วไปไม่คิดค่าบริการ / VAT
+  state.payers = [];
   state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
   ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
   render();

@@ -6,7 +6,7 @@
    ========================================================= */
 function serialize(){
   return { members:state.members, menus:state.menus, shared:state.shared,
-           charges:state.charges, savedAt:new Date().toISOString() };
+           charges:state.charges, payers:state.payers, savedAt:new Date().toISOString() };
 }
 /** ใส่ข้อมูลบิลที่โหลดมา (จากเครื่องหรือจากกลุ่ม) ลงใน state — ไม่มีข้อมูล = บิลว่าง */
 function applyBill(saved){
@@ -17,6 +17,10 @@ function applyBill(saved){
   });
   state.shared = Array.isArray(saved.shared) ? saved.shared : [];
   state.charges = (saved.charges && saved.charges.length) ? saved.charges : defaultCharges();
+  state.payers = (Array.isArray(saved.payers) ? saved.payers : []).filter(function(p){ return p && p.id; }).map(function(p){
+    var n = Number(p.amount);
+    return { id:String(p.id), amount:(p.amount == null || !isFinite(n) || n < 0) ? null : n };
+  });
   state.open = {};
   var maxId = 0;
   state.members.concat(state.menus, state.shared, state.charges).forEach(function(x){
@@ -51,6 +55,7 @@ async function commit(successMessage, source){
       ui.saveFailedIn = null;
       toast("มีเพื่อนแก้บิลนี้ไปก่อน โหลดข้อมูลล่าสุดแล้ว ลองทำรายการเมื่อกี้อีกครั้ง","error");
       render();
+      rerenderBill();
       return false;
     }
     setSave("error");
