@@ -13,6 +13,7 @@ async function loadContext(groupId){
   ui.loading = true;
   ui.groupError = "";
   ui.confirmReset = false;
+  ui.groupPanel = false;
   state.menuForm = null; state.sharedForm = null; state.chargeForm = null;
   ui.confirmMember = null; ui.editingMember = null; ui.memberError = ""; ui.undo = null;
   Store.groupId = groupId;
@@ -51,6 +52,7 @@ async function loadContext(groupId){
 function refreshView(){
   var path = currentPath();
   if (ui.ctx && Store.groupName) document.title = Store.groupName + " · FairDish";
+  updateChrome();
   if (path==="/split"){
     if (ui.ctx) document.getElementById("view").innerHTML = pageSplit();
     render();
@@ -87,6 +89,7 @@ async function refreshGroup(manual){
 async function boot(){
   MENU_LIBRARY = buildMenuLibrary();
   await Store.init();
+  try { applyTheme(await Store.readRaw(Store.themeKey)); } catch(e){}
   try { state.menuMemory = await Store.loadMenus(); } catch(e){ state.menuMemory = []; }
   try { ui.myGroups = await Store.loadGroups(); } catch(e){ ui.myGroups = []; }
   route();

@@ -6,6 +6,8 @@
 
 - `index.html` — โครงหน้าเท่านั้น (header, `<main id="view">`, footer) และลำดับการโหลดสคริปต์
 - `css/style.css` — สไตล์ทั้งหมด ใช้ตัวแปรสีและขนาดใน `:root` ห้าม hard-code สีใหม่
+  **สีใหม่ต้องใส่ค่าโหมดมืดด้วย** ในสองบล็อกท้ายไฟล์ (`prefers-color-scheme: dark` และ `[data-theme="dark"]`) ให้ตรงกัน
+  ใบเสร็จ (`.receipt-wrap`) ใช้ชุดสีสว่างเสมอ
 - `js/` — สคริปต์ธรรมดา (ไม่ใช่ ES module) แชร์ตัวแปร global ร่วมกัน
   **ลำดับใน `index.html` สำคัญ:** ไฟล์หลังใช้ของจากไฟล์ก่อนหน้าได้ แต่ห้ามเรียกใช้ของจากไฟล์ที่โหลดทีหลังตอนโหลดไฟล์
   (ในฟังก์ชันที่ถูกเรียกภายหลังใช้ได้) ไฟล์ใหม่ต้องเพิ่ม `<script src>` ใน `index.html` ให้ถูกตำแหน่ง
@@ -23,7 +25,7 @@
 | `calc.js` | `compute()` คำนวณเงิน — **ห้ามแตะ DOM** |
 | `receipt.js`, `pages.js`, `render.js` | สร้าง HTML ของแต่ละหน้า |
 | `actions.js` | การกระทำของผู้ใช้ |
-| `router.js` | hash router (`#/split`, `#/bill`, `#/groups`, `#/g/<id>`, `#/g/<id>/bill`) |
+| `router.js` | hash router (`#/split`, `#/bill`, `#/groups`, `#/g/<id>`, `#/g/<id>/bill`, `#/more`) + แท็บล่าง |
 | `events.js` | event delegation ของทั้งหน้า |
 | `main.js` | `boot()`, `loadContext()` สลับบิลส่วนตัว/บิลกลุ่ม, `refreshGroup()` |
 
@@ -36,6 +38,9 @@
 - ห้ามเพิ่ม dependency, bundler หรือ framework โดยไม่ได้ตกลงกันก่อน
   (Supabase ตกลงแล้วสำหรับระบบกลุ่ม — เรียกผ่าน `fetch` ไม่ใช้ไลบรารี)
 - ลิงก์ไปหน้าหารบิล/ใบสรุปยอดใช้ `splitHref()` / `billHref()` เพื่อให้อยู่ในกลุ่มเดิม
+  (ลิงก์ใน `index.html` ใส่ `data-link="split|bill"` แล้ว `updateChrome()` ตั้ง href ให้)
+- หน้าหารบิลแบ่งเป็นแท็บ (`STEPS` ใน `pages.js`, `ui.step`) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
+  ฟังก์ชัน `render*()` จึงหา element ได้เสมอ
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย
 
 ## ทดสอบ

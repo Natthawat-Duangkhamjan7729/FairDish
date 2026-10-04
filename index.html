@@ -11,7 +11,11 @@
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#FFF6DF">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFF6DF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1426" media="(prefers-color-scheme: dark)">
+<!-- ใช้ธีมที่ผู้ใช้เลือกไว้ก่อนวาดหน้า กันจอกะพริบ (ค่าเดียวกับ Store.themeKey) -->
+<script>try{var t=localStorage.getItem("fairdish:theme:v1");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FairDish">
@@ -27,25 +31,15 @@
       <img class="logo-mark" src="img/logo.png" alt="" width="48" height="48">
       <b>FairDish</b>
     </a>
-    <nav class="nav-links">
+    <span class="nav-ctx" id="navCtx"></span>
+    <nav class="nav-links" aria-label="เมนูหลัก">
       <a href="#/" data-nav="/">หน้าแรก</a>
       <a href="#/how" data-nav="/how">วิธีใช้</a>
-      <a href="#/bill" data-nav="/bill">ใบสรุปยอด</a>
+      <a href="#/bill" data-nav="/bill" data-link="bill">ใบสรุปยอด</a>
       <a href="#/groups" data-nav="/groups">กลุ่ม</a>
       <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
     </nav>
-    <a class="nav-cta" href="#/split">หารบิล</a>
-    <button class="burger" id="burger" aria-label="เปิดเมนู" aria-expanded="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-    </button>
-  </div>
-  <div class="sheet" id="sheet">
-    <a href="#/" data-nav="/">หน้าแรก</a>
-    <a href="#/split" data-nav="/split">หารบิล</a>
-    <a href="#/how" data-nav="/how">วิธีใช้</a>
-    <a href="#/bill" data-nav="/bill">ใบสรุปยอด</a>
-    <a href="#/groups" data-nav="/groups">กลุ่ม</a>
-    <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
+    <a class="nav-cta" href="#/split" data-link="split">หารบิล</a>
   </div>
 </header>
 
@@ -53,7 +47,7 @@
 
 <footer class="foot">
   <div class="wrap foot-in">
-    <span>FairDish v2.0 · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
+    <span>FairDish v2.1 · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
     <nav>
       <a href="#/">หน้าแรก</a>
       <a href="#/how">วิธีใช้</a>
@@ -62,6 +56,22 @@
     </nav>
   </div>
 </footer>
+
+<!-- v2.1: แถบแท็บล่าง (มือถือเท่านั้น) — href ของหารบิล/สรุปถูกตั้งใหม่ใน route() ให้อยู่ในกลุ่มเดิม -->
+<nav class="tabbar" id="tabbar" aria-label="เมนูหลัก">
+  <a href="#/split" data-tab="split" data-link="split">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg>
+    <span>หารบิล</span></a>
+  <a href="#/bill" data-tab="bill" data-link="bill">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+    <span>สรุป</span></a>
+  <a href="#/groups" data-tab="groups">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.4.2 4 1.9 4.5 4.6"/></svg>
+    <span>กลุ่ม</span></a>
+  <a href="#/more" data-tab="more">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    <span>อื่น ๆ</span></a>
+</nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

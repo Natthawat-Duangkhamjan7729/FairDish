@@ -4,14 +4,16 @@
 /* =========================================================
    10. เหตุการณ์
    ========================================================= */
-document.getElementById("burger").addEventListener("click", function(){
-  var s = document.getElementById("sheet");
-  var open = s.classList.toggle("open");
-  this.setAttribute("aria-expanded", open ? "true" : "false");
-});
-
 document.addEventListener("keydown", function(e){
   if (!e.target) return;
+  var stepId = e.target.getAttribute && e.target.getAttribute("data-step");
+  if (stepId && e.target.getAttribute("role")==="tab" && /^(ArrowLeft|ArrowRight|Home|End)$/.test(e.key)){
+    e.preventDefault();
+    var ids = STEPS.map(function(st){ return st.id; });
+    var i = ids.indexOf(stepId);
+    var next = e.key==="Home" ? 0 : e.key==="End" ? ids.length-1 : (i + (e.key==="ArrowRight" ? 1 : -1) + ids.length) % ids.length;
+    return setStep(ids[next], true);
+  }
   if (e.target.id === "mName" && ui.suggest.open){
     if (e.key === "ArrowDown"){ e.preventDefault(); return moveSuggestion(1); }
     if (e.key === "ArrowUp"){ e.preventDefault(); return moveSuggestion(-1); }
@@ -68,6 +70,7 @@ document.addEventListener("click", async function(e){
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
+            "[data-step],[data-group-panel],[data-theme-pick],"+
             "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -82,6 +85,11 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
   if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
+
+  /* v2.1: แท็บขั้นตอน, แผงกลุ่ม, ธีม */
+  if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");
+  if (t.getAttribute("data-group-panel")){ ui.groupPanel = !ui.groupPanel; return renderGroupBar(); }
+  if ((v = t.getAttribute("data-theme-pick"))) return setTheme(v);
 
   /* v2.0: กลุ่ม */
   if (t.id==="groupCreate") return createGroup();
