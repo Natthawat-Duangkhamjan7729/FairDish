@@ -8,16 +8,18 @@ var routes = {
   "/":       { title:"FairDish — จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์", view:pageHome },
   "/split":  { title:"หารบิล · FairDish", view:pageSplit },
   "/bill":   { title:"ใบสรุปยอด · FairDish", view:pageBill },
-  "/groups": { title:"กลุ่ม · FairDish", view:pageGroups },
+  "/history":{ title:"ประวัติบิล · FairDish", view:pageHistory },
+  "/groups": { title:"ประวัติบิล · FairDish", view:pageHistory },   // ลิงก์เก่าของหน้ากลุ่ม (v2.0–v3.1)
+  "/h":      { title:"บิลในประวัติ · FairDish", view:pagePast },
   "/how":    { title:"วิธีใช้ · FairDish", view:pageHow },
   "/about":  { title:"เกี่ยวกับ · FairDish", view:pageAbout },
   "/more":   { title:"อื่น ๆ · FairDish", view:pageMore }
 };
-/** แท็บล่างที่ต้องสว่างของแต่ละหน้า */
+/** แท็บล่างที่ต้องสว่างของแต่ละหน้า (v3.2: หน้าหลัก / ประวัติ) */
 function tabOf(path){
   if (path==="/") return "home";
-  if (path==="/split" || path==="/bill" || path==="/groups") return path.slice(1);
-  return "more";
+  if (path==="/history" || path==="/groups" || path==="/h") return "history";
+  return "";
 }
 /** ชี้ลิงก์หารบิล/สรุปไปบิลที่เปิดอยู่ (กลุ่มหรือส่วนตัว) + ป้ายบอกบริบทบน header มือถือ */
 function updateChrome(){
@@ -38,7 +40,8 @@ function currentPath(){
   var h = hashPath();
   var g = parseGroupPath(h);
   if (g) return g.bill ? "/bill" : "/split";
-  return routes[h] ? h : "/";
+  if (/^\/h\/[0-9a-z]+$/.test(h)) return "/h";
+  return routes[h] && h !== "/h" ? h : "/";
 }
 function currentGroupId(){
   var g = parseGroupPath(hashPath());
@@ -52,11 +55,12 @@ function route(){
   if ((path==="/split" || path==="/bill") && groupId !== ui.ctx) loadContext(groupId);
   document.title = groupId && Store.groupName ? Store.groupName + " · FairDish" : r.title;
   closeMeDialog(); closeInstall(); closeShareDialog();     // เปลี่ยนหน้าแล้วหน้าต่างที่ค้างอยู่ต้องปิดตาม
+  closeGlobalSheet();
+  if (path !== "/bill") ui.showDone = false;
+  // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน
+  document.body.classList.toggle("no-tabbar", path==="/split" || path==="/bill");
+  document.body.classList.toggle("show-foot", path==="/more" || path==="/about");
   document.getElementById("view").innerHTML = r.view();
-  var nav = groupId ? "/groups" : path;
-  Array.prototype.forEach.call(document.querySelectorAll("[data-nav]"), function(a){
-    a.classList.toggle("on", a.getAttribute("data-nav")===nav);
-  });
   var tab = tabOf(path);
   Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function(a){
     var on = a.getAttribute("data-tab")===tab;
@@ -65,14 +69,9 @@ function route(){
   });
   document.body.classList.remove("has-total");
   updateChrome();
-  if (path==="/split"){ render(); applyPendingKind(); }
-  if (path==="/groups") checkLocalBill();
-  if (path==="/") fillHomeResume();
+  if (path==="/split"){ render(); maybeAskWhoAmI(); }   // เข้ากลุ่มทางหน้าใบสรุปก่อน ก็ยังถาม "คุณคือใคร" ตอนมาหน้าหารบิล
+  if (path==="/") fillHome();
+  syncSheetLock();
   window.scrollTo(0,0);
-  if (path==="/groups" && ui.focusGroupName){
-    ui.focusGroupName = false;
-    var input = document.getElementById("groupName");
-    if (input){ input.focus(); input.select(); input.scrollIntoView({ block:"center" }); }
-  }
 }
 window.addEventListener("hashchange", route);

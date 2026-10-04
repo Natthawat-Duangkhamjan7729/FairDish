@@ -6,6 +6,13 @@
    ========================================================= */
 document.addEventListener("keydown", function(e){
   if (!e.target) return;
+  // v3.2: Esc ปิดแผ่นล่างจอ (ถ้ากล่องเมนูแนะนำเปิดอยู่ ปิดกล่องนั้นก่อน)
+  if (e.key === "Escape" && !(e.target.id === "mName" && ui.suggest.open) && !(e.target.id === "sName" && ui.sharedSuggest && ui.sharedSuggest.open)){
+    if (ui.sheet){ e.preventDefault(); return closeGlobalSheet(); }
+    if (state.menuForm){ e.preventDefault(); state.menuForm=null; ui.menuErr={}; closeSuggestions(); return renderMenus(); }
+    if (state.sharedForm){ e.preventDefault(); state.sharedForm=null; return renderShared(); }
+    if (state.chargeForm){ e.preventDefault(); state.chargeForm=null; return renderCharges(); }
+  }
   var stepId = e.target.getAttribute && e.target.getAttribute("data-step");
   if (stepId && e.target.getAttribute("role")==="tab" && /^(ArrowLeft|ArrowRight|Home|End)$/.test(e.key)){
     e.preventDefault();
@@ -24,7 +31,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "memberInput"){ e.preventDefault(); addMember(); }
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
-  if (e.target.id === "groupName"){ e.preventDefault(); createGroup(); }
+  if (e.target.id === "billNameInput"){ e.preventDefault(); saveBillName(); }
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "mealName"){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
@@ -76,12 +83,14 @@ document.addEventListener("click", async function(e){
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
-            "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],[data-kind],[data-start-kind],[data-group-kind],[data-pay],"+
+            "[data-step],[data-group-panel],[data-theme-pick],[data-pay],"+
+            "[data-open-kind],[data-new-kind],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
+            "[data-paid],[data-show-done],[data-show-receipt],[data-goto-summary],[data-restore-history],[data-del-history],#inviteBtn,"+
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "#shareNative,#shareCopy,#shareSaveQr,[data-share-close],"+
-            "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
+            "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
   var v;
@@ -96,14 +105,29 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
 
-  /* v2.5: ใครจ่ายให้ร้าน */
-  if ((v = t.getAttribute("data-payer"))) return togglePayer(v);
-  if (t.getAttribute("data-payer-open")){
-    ui.payerOpen = true; rerenderBill();
-    var first = document.querySelector("[data-payer]");
-    if (first) first.focus({ preventScroll:true });
+  /* v3.2: เริ่มบิลใหม่ / แผ่นล่างจอ / ประวัติ / ติ๊กโอนแล้ว */
+  if (t.getAttribute("data-open-kind")) return openKindSheet();
+  if ((v = t.getAttribute("data-new-kind"))) return startNewBill(v);
+  if (t.getAttribute("data-start-demo")) return startNewBill("meal", true);
+  if (t.getAttribute("data-close-global")) return closeGlobalSheet();
+  if ((v = t.getAttribute("data-close-sheet"))){
+    if (v === "menu"){ state.menuForm=null; ui.menuErr={}; closeSuggestions(); return renderMenus(); }
+    if (v === "shared"){ state.sharedForm=null; return renderShared(); }
+    if (v === "charge"){ state.chargeForm=null; return renderCharges(); }
     return;
   }
+  if (t.getAttribute("data-rename")) return openRenameSheet();
+  if (t.id==="billNameSave") return saveBillName();
+  if ((v = t.getAttribute("data-paid"))) return togglePaid(v);
+  if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return window.scrollTo(0,0); }
+  if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return window.scrollTo(0,0); }
+  if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; location.hash = splitHref(); return; }
+  if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
+  if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
+  if (t.id==="inviteBtn") return inviteFromBill();
+
+  /* v2.5: ใครจ่ายให้ร้าน */
+  if ((v = t.getAttribute("data-payer"))) return togglePayer(v);
 
   /* v2.4: ตอนจบมื้อ */
   if (t.id==="shareImgBtn") return shareReceiptImage();
@@ -122,10 +146,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-meal-pay"))) return setMealPayer(v);
   if (t.getAttribute("data-del-meal")) return deleteMeal();
 
-  /* v3.0: ประเภทบิล + คนจ่ายของรายการทริป */
-  if ((v = t.getAttribute("data-kind"))) return setKind(v);
-  if ((v = t.getAttribute("data-start-kind"))) return startKind(v);
-  if ((v = t.getAttribute("data-group-kind"))) return setNewGroupKind(v);
+  /* v3.0: คนจ่ายของรายการทริป */
   if ((v = t.getAttribute("data-pay"))){
     syncMenuForm();
     state.menuForm.payer = v;
@@ -139,16 +160,12 @@ document.addEventListener("click", async function(e){
   if (t.id==="installNow") return installNow();
   if (t.id==="installCopyLink") return copyText(location.href, "คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย");
 
-  /* v2.2: หน้าแรก → สร้างกลุ่ม */
-  if (t.getAttribute("data-start-group")){ ui.focusGroupName = true; location.hash = "#/groups"; return; }
-
   /* v2.1: แท็บขั้นตอน, แผงกลุ่ม, ธีม */
   if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");
   if (t.getAttribute("data-group-panel")){ ui.groupPanel = !ui.groupPanel; return renderGroupBar(); }
   if ((v = t.getAttribute("data-theme-pick"))) return setTheme(v);
 
   /* v2.0: กลุ่ม */
-  if (t.id==="groupCreate") return createGroup();
   if (t.id==="groupJoin") return joinGroup();
   if (t.id==="groupCopy") return copyText(groupLink(ui.ctx), "คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย");
   if (t.id==="groupShare") return openShareDialog();

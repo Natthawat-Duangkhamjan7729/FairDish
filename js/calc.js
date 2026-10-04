@@ -138,14 +138,15 @@ function settle(r, payers){
    ========================================================= */
 /** รวมยอดที่แต่ละคนจ่ายจาก payer ของแต่ละรายการ → { payers:[{id, amount}], missing:จำนวนรายการที่ยังไม่ระบุคนจ่าย }
  *  นับเฉพาะรายการที่ถูกคิดในบิล (มีคนมีส่วนอย่างน้อย 1 คน) ค่าส่วนกลางไม่มีคนจ่ายจึงนับเป็น missing */
-function itemPayers(){
+function itemPayers(b){
+  b = b || state;
   var known = {};
-  state.members.forEach(function(p){ known[p.id] = true; });
+  b.members.forEach(function(p){ known[p.id] = true; });
   var paid = {}, missing = 0;
-  state.menus.forEach(function(m){
+  b.menus.forEach(function(m){
     if (m.type === "meal"){
       var md = mealOf(m);
-      var cents = Math.round(computeBill({ members:state.members, menus:md.menus, shared:md.shared, charges:md.charges, kind:"meal" }).grand * 100);
+      var cents = Math.round(computeBill({ members:b.members, menus:md.menus, shared:md.shared, charges:md.charges, kind:"meal" }).grand * 100);
       if (!cents) return;                                   // มื้อว่าง ไม่ต้องมีคนจ่าย
       if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + cents;
       else missing++;
@@ -155,13 +156,26 @@ function itemPayers(){
     if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + Math.round(m.price * 100);
     else missing++;
   });
-  missing += state.shared.length;
+  missing += b.shared.length;
   return { payers: Object.keys(paid).map(function(id){ return { id:id, amount:paid[id] / 100 }; }), missing: missing };
 }
-/** ใครโอนให้ใครของบิลที่เปิดอยู่ — มื้ออาหารใช้คนจ่ายระดับบิล ทริปใช้คนจ่ายของแต่ละรายการ */
-function settleBill(r){
-  if (state.kind !== "trip") return settle(r, state.payers);
-  var ip = itemPayers();
+/** ใครโอนให้ใคร — มื้ออาหารใช้คนจ่ายระดับบิล ทริปใช้คนจ่ายของแต่ละรายการ
+ *  b = บิลที่จะคิด (ไม่ใส่ = บิลที่เปิดอยู่) */
+function settleBill(r, b){
+  b = b || state;
+  if (b.kind !== "trip") return settle(r, b.payers);
+  var ip = itemPayers(b);
   if (ip.missing) return { ok:false, reason:"unpaid", diff:0, count:ip.missing, transfers:[], paid:{} };
   return settle(r, ip.payers);
+}
+
+/* =========================================================
+   4.7 ติ๊กว่าโอนแล้ว (v3.2)
+   ========================================================= */
+/** คีย์ของการโอนหนึ่งรายการ — รวมยอดเป็นสตางค์ไว้ด้วย ยอดเปลี่ยนแล้วติ๊กเดิมจะไม่นับให้เอง */
+function transferKey(t){ return t.from + ">" + t.to + ":" + Math.round(t.amount * 100); }
+/** { done:จำนวนที่ติ๊กแล้ว, total, all:ติ๊กครบทุกรายการ } */
+function paidProgress(transfers, paid){
+  var done = transfers.filter(function(t){ return !!(paid && paid[transferKey(t)]); }).length;
+  return { done:done, total:transfers.length, all:transfers.length > 0 && done === transfers.length };
 }

@@ -4,7 +4,8 @@
 
 ## โครงสร้าง
 
-- `index.html` — โครงหน้าเท่านั้น (header, `<main id="view">`, footer) และลำดับการโหลดสคริปต์
+- `index.html` — โครงหน้าเท่านั้น (`.app-shell` ที่มี `<main id="view">` + footer, แท็บล่าง, `#globalSheet`, หน้าต่าง dialog) และลำดับการโหลดสคริปต์
+  v3.2: หน้าตาแบบแอปมือถือ กว้างไม่เกิน 480px (จอคอมจัดไว้กลางจอ) ไม่มีเมนูด้านบน — ทุกหน้าสร้างแถบหัวเองด้วย `appBar()` ใน `pages.js`
 - `css/style.css` — สไตล์ทั้งหมด ใช้ตัวแปรสีและขนาดใน `:root` ห้าม hard-code สีใหม่
   **สีใหม่ต้องใส่ค่าโหมดมืดด้วย** ในสองบล็อกท้ายไฟล์ (`prefers-color-scheme: dark` และ `[data-theme="dark"]`) ให้ตรงกัน
   ใบเสร็จ (`.receipt-wrap`) ใช้ชุดสีสว่างเสมอ
@@ -28,7 +29,7 @@
 | `actions.js` | การกระทำของผู้ใช้ |
 | `share-image.js` | วาดใบเสร็จเป็นรูป PNG ด้วย canvas (`receiptImageBlob()`, `shareReceiptImage()`) สีอ่านจากตัวแปร CSS ของ `.receipt-wrap` |
 | `install.js` | ปุ่ม/หน้าต่าง "ติดตั้งแอป" (มือถือเท่านั้น แสดงวิธีของระบบที่ตรวจพบระบบเดียว) — `detectPlatform()`, `detectInApp()`, `beforeinstallprompt` |
-| `router.js` | hash router (`#/split`, `#/bill`, `#/groups`, `#/g/<id>`, `#/g/<id>/bill`, `#/more`) + แท็บล่าง (`tabOf()`: home / split / bill / groups / more) |
+| `router.js` | hash router (`#/split`, `#/bill`, `#/history`, `#/h/<id>` บิลในประวัติ, `#/g/<id>`, `#/g/<id>/bill`, `#/more`; `#/groups` เดิม = หน้าประวัติ) + แท็บล่าง (`tabOf()`: home / history — หน้าหารบิลและใบสรุปไม่มีแท็บล่าง) |
 | `events.js` | event delegation ของทั้งหน้า |
 | `main.js` | `boot()`, `loadContext()` สลับบิลส่วนตัว/บิลกลุ่ม, `refreshGroup()` |
 
@@ -48,8 +49,14 @@
 - มื้ออาหารในทริป = รายการ `{ type:"meal", name, payer, meal:{ menus, shared, charges } }`
   ตอนแก้มื้อ `enterMeal()` สลับ `state.menus/shared/charges` เป็นของมื้อชั่วคราว (`ui.tripStash` เก็บของทริป) และ `serialize()` ประกอบกลับเป็นทริป
   `route()` / `applyBill()` ออกจากมื้อให้เอง — โค้ดที่วนรายการทริปต้องข้ามหรือจัดการ `type === "meal"` (ไม่มี `eaters`/`price` จริง)
-- หน้าหารบิลแบ่งเป็นแท็บ (`steps()` ใน `pages.js`, `ui.step` — ทริปไม่มีแท็บส่วนกลาง, ในมื้อของทริปไม่มีแท็บคน) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
-  ฟังก์ชัน `render*()` จึงหา element ได้เสมอ
+- หน้าหารบิลแบ่งเป็นแท็บ (`steps()` ใน `pages.js`, `ui.step` — คน / เมนู / ส่วนกลาง / สรุป; ทริปไม่มีแท็บส่วนกลาง, ในมื้อของทริปมีแค่เมนู / ส่วนกลาง) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
+  ฟังก์ชัน `render*()` จึงหา element ได้เสมอ — "ใครจ่ายให้ร้าน / ใครโอนให้ใคร" อยู่ในแท็บสรุป (`settleHTML()` ใน `receipt.js`)
+- ฟอร์มเพิ่ม/แก้ (เมนู ค่าส่วนกลาง ค่าบริการ) เป็นแผ่นล่างจอ: ห่อด้วย `sheetHTML()` ใน `render.js` แล้วปิดด้วย `data-close-sheet` / Esc
+  แผ่นนอกหน้าหารบิล (เลือกประเภทบิล, ตั้งชื่อบิล) ใช้ `renderGlobalSheet()` / `closeGlobalSheet()` ใน `actions.js`
+- เลือกประเภทบิลครั้งเดียวตอนเริ่ม (`openKindSheet()` → `startNewBill(kind)`) ไม่มีปุ่มสลับในหน้าหารบิล
+  เริ่มบิลใหม่ = บิลส่วนตัวเดิมที่มีข้อมูลถูกเก็บเข้า **ประวัติ** (`ui.history`, `Store.historyKey`) ก่อนเสมอ ห้ามเขียนทับบิลเดิมตรง ๆ
+- บิลมี `name` (บิลกลุ่มใช้ชื่อกลุ่มผ่าน `billName()`) และ `paid` = การโอนที่ติ๊กแล้ว คีย์จาก `transferKey()` ใน `calc.js` (รวมยอดเป็นสตางค์ ยอดเปลี่ยน = ติ๊กเดิมไม่นับ)
+  ข้อมูลที่บันทึกไว้ทุกแหล่งผ่าน `normalizeBill()` ใน `save.js` ก่อนใช้
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย
 
 ## ทดสอบ

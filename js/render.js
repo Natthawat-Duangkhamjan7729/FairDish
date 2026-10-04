@@ -5,15 +5,39 @@
    7. แสดงผลหน้าแอป
    ========================================================= */
 function render(){
-  renderKindSlot(); renderMealHead(); renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
-  renderStepTabs(); renderTotalBar();
+  renderMealHead(); renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
+  renderStepTabs(); renderTotalBar(); renderAppBarSub();
 }
 
-/* ---- v3.0: สลับประเภทบิล (สลับได้เมื่อยังไม่มีรายการ) ---- */
-function renderKindSlot(){
-  var box = document.getElementById("kindSlot");
-  if (!box) return;
-  box.innerHTML = ui.loading ? "" : kindSwitch("data-kind", state.kind);
+/* ---- v3.2: แผ่นล่างจอ (เพิ่ม/แก้เมนู, ค่าส่วนกลาง, ค่าบริการ, เลือกประเภทบิล) ---- */
+/** ห่อฟอร์มเป็นแผ่นล่างจอ — slot ที่มีแผ่นเปิดอยู่แล้วจะไม่เล่นแอนิเมชันเปิดซ้ำ และคงตำแหน่งเลื่อนเดิม */
+function sheetHTML(slot, label, body, closeAttr){
+  var old = slot && slot.querySelector(".sheet");
+  ui.sheetScroll = old ? old.scrollTop : 0;
+  return '<div class="sheet-wrap'+(old ? ' still' : '')+'"><div class="sheet-backdrop" '+closeAttr+'></div>'+
+    '<div class="sheet" role="dialog" aria-modal="true" aria-label="'+label+'"><i class="sheet-grip" aria-hidden="true"></i>'+body+'</div></div>';
+}
+function restoreSheetScroll(slot){
+  var sh = slot && slot.querySelector(".sheet");
+  if (sh && ui.sheetScroll) sh.scrollTop = ui.sheetScroll;
+  syncSheetLock();
+}
+/** ล็อกการเลื่อนหน้าหลังแผ่นล่างจอ */
+function syncSheetLock(){
+  document.body.classList.toggle("sheet-open", !!document.querySelector(".sheet-wrap"));
+}
+/** ชื่อบิลใต้หัวหน้าหารบิล (เปลี่ยนชื่อ/โหลดเสร็จแล้วอัปเดตโดยไม่วาดทั้งหน้า) */
+function renderAppBarSub(){
+  var sub = document.querySelector(".appbar-sub");
+  if (!sub || currentPath() !== "/split" || ui.tripStash) return;
+  var html = kt("icon")+' '+esc(billName());
+  if (!ui.ctx && !ui.loading){
+    if (sub.tagName !== "BUTTON"){ sub.outerHTML = '<button class="appbar-sub" type="button" data-rename="1">'+html+' <span class="appbar-edit" aria-hidden="true">✎</span></button>'; return; }
+    sub.innerHTML = html+' <span class="appbar-edit" aria-hidden="true">✎</span>';
+    sub.setAttribute("aria-label", "เปลี่ยนชื่อบิล "+billName());
+  } else sub.innerHTML = html;
+  var title = document.querySelector(".appbar-title h1");
+  if (title) title.textContent = kt("title");
 }
 
 /* ---- v3.1: หัวของมื้ออาหารในทริป (ชื่อมื้อ, ใครจ่าย, ยอดมื้อ) ---- */
@@ -40,11 +64,12 @@ function renderMealHead(){
 
 /* ---- v2.1: แท็บขั้นตอน + แถบยอดรวมล่างจอ ---- */
 function renderStepTabs(){
-  if (!document.getElementById("tab-members")) return;
+  if (!document.querySelector(".step-tabs")) return;
   var counts = {
     members: state.members.length,
     menus: state.menus.length,
-    shared: state.shared.length + state.charges.filter(function(c){ return c.on; }).length
+    shared: state.shared.length + state.charges.filter(function(c){ return c.on; }).length,
+    summary: 0
   };
   steps().forEach(function(st){
     var tab = document.getElementById("tab-"+st.id);
@@ -71,8 +96,7 @@ function setStep(step, focusTab){
   renderStepTabs();
   var tab = document.getElementById("tab-"+step);
   if (focusTab && tab) tab.focus();
-  var tabs = document.querySelector(".step-tabs");
-  if (tabs && tabs.getBoundingClientRect().top < 0) tabs.scrollIntoView({ block:"start" });
+  window.scrollTo(0, 0);
 }
 function renderTotalBar(){
   var bar = document.getElementById("totalBar");
@@ -87,10 +111,11 @@ function renderTotalBar(){
   var mine = me ? r.list.filter(function(p){ return p.id===me; })[0] : null;
   bar.hidden = false;
   document.body.classList.add("has-total");
-  bar.innerHTML = '<a href="'+billHref()+'" aria-label="ดูใบสรุปยอด รวม '+baht(r.grand)+' บาท">'+
-    '<span class="t-meta">'+r.n+' คน'+(mine ? ' · ฉัน '+baht(mine.rounded) : '')+'</span>'+
-    '<span class="t-sum">'+baht(r.grand)+' ฿</span>'+
-    '<span class="t-go">ดูสรุป ›</span></a>';
+  var inMeal = !!ui.tripStash;
+  bar.innerHTML = '<div class="t-sum"><span class="t-label">'+(inMeal ? "ยอดมื้อนี้" : "รวมทั้งหมด")+(mine ? ' · ฉัน '+baht(mine.rounded) : '')+'</span>'+
+      '<span class="t-amt">'+baht(r.grand)+' ฿</span></div>'+
+    (inMeal ? '<button class="btn-main" type="button" data-back-trip="1">กลับไปที่ทริป</button>'
+            : '<a class="btn-main" href="'+billHref()+'">ดูใบสรุปยอด</a>');
 }
 
 /* ---- v2.0: แถบกลุ่ม (ลิงก์แชร์ + ฉันคือใคร) ---- */
@@ -156,6 +181,8 @@ function renderMembers(){
     addBtn.innerHTML = ui.savingMember ? '<span class="spinner" aria-hidden="true"></span>กำลังบันทึก' : "เพิ่ม";
   }
   if (input) input.setAttribute("aria-invalid", ui.memberError ? "true" : "false");
+  var count = document.getElementById("memberCount");
+  if (count) count.textContent = (!ui.loading && state.members.length) ? state.members.length+" คน" : "";
   if (msg){
     msg.className = "field-msg " + (ui.memberError ? "error" : "muted");
     msg.textContent = ui.memberError
@@ -170,7 +197,7 @@ function renderMembers(){
   }
 
   if (state.members.length === 0){
-    box.innerHTML = '<p class="empty" style="margin-top:var(--s3)">ยังไม่มีใครในโต๊ะ — ใส่ชื่อคนแรกได้เลย</p>';
+    box.innerHTML = '<p class="empty" style="margin-top:var(--s3)">'+kt("noPeople")+'</p>';
   } else {
     box.innerHTML = '<div class="chips">' + state.members.map(function(p){
       if (ui.editingMember === p.id){
@@ -268,6 +295,7 @@ function renderMenus(){
       ? '<div class="add-row"><button class="add-slot" id="menuOpen">'+kt("addShort")+'</button>'+
         '<button class="add-slot" data-add-meal="1">+ มื้ออาหาร 🍲</button></div>'
       : '<button class="add-slot" id="menuOpen">'+kt("add")+'</button>')+notice;
+    syncSheetLock();
     return;
   }
 
@@ -291,7 +319,7 @@ function renderMenus(){
       (e.payer ? '<p class="field-msg error" aria-live="polite">'+esc(e.payer)+'</p>' : '')
     : '';
 
-  slot.innerHTML =
+  slot.innerHTML = sheetHTML(slot, (f.id?kt("editItem"):kt("newItem")),
     '<div class="form-box" role="group" aria-label="'+(f.id?kt("editItem"):kt("newItem"))+'">'+
       '<div class="form-title">'+(f.id?kt("editItem"):kt("newItem"))+'</div>'+
       '<div><label class="sr-only" for="mName">'+kt("nameLabel")+'</label>'+
@@ -315,7 +343,8 @@ function renderMenus(){
       (f.id ? '<div class="form-more">'+
         '<button class="link-btn" data-dup-menu="'+f.id+'">'+ICON_COPY+' '+kt("another")+'</button>'+
         '<button class="link-btn danger" data-del-menu="'+f.id+'">'+ICON_DEL+' '+kt("del")+'</button></div>' : '')+
-    '</div>'+notice;
+    '</div>', 'data-close-sheet="menu"')+notice;
+  restoreSheetScroll(slot);
 
   if (ui.suggest.open) renderSuggestions();
 
@@ -335,14 +364,18 @@ function renderCharges(){
   }).join("") + '<button class="all" id="chargeOpen">+ กำหนดเอง</button>';
 
   var slot = document.getElementById("chargeFormSlot");
-  if (!state.chargeForm){ slot.innerHTML = ""; return; }
-  slot.innerHTML =
-    '<div class="form-box" style="margin-top:var(--s2)">'+
+  if (!state.chargeForm){ slot.innerHTML = ""; syncSheetLock(); return; }
+  slot.innerHTML = sheetHTML(slot, "เพิ่มค่าใช้จ่ายแบบเปอร์เซ็นต์",
+    '<div class="form-box">'+
+      '<div class="form-title">ค่าใช้จ่ายแบบเปอร์เซ็นต์</div>'+
+      '<label class="sr-only" for="cLabel">ชื่อค่าใช้จ่าย</label>'+
       '<input type="text" id="cLabel" placeholder="ชื่อค่าใช้จ่าย เช่น ค่าเปิดขวด" autocomplete="off">'+
+      '<label class="sr-only" for="cRate">เปอร์เซ็นต์</label>'+
       '<input type="number" id="cRate" inputmode="decimal" step="0.1" min="0" placeholder="เปอร์เซ็นต์ (%)">'+
       '<div class="form-actions"><button class="btn-quiet" id="cCancel">ยกเลิก</button>'+
       '<button class="btn-sm" id="cSave">เพิ่ม</button></div>'+
-    '</div>';
+    '</div>', 'data-close-sheet="charge"');
+  syncSheetLock();
   document.getElementById("cLabel").focus();
 }
 
@@ -358,22 +391,28 @@ function renderShared(){
   if (!state.sharedForm){
     slot.innerHTML = '<button class="add-slot" id="sharedOpen">+ เพิ่มรายการ เช่น น้ำแข็ง น้ำเปล่า</button>';
     ui.sharedSuggest = { open:false, items:[], active:-1 };
+    syncSheetLock();
     return;
   }
-  slot.innerHTML =
+  slot.innerHTML = sheetHTML(slot, "เพิ่มรายการหารเท่ากัน",
     '<div class="form-box">'+
+      '<div class="form-title">เพิ่มรายการหารเท่ากัน</div>'+
+      '<label class="sr-only" for="sName">ชื่อรายการ</label>'+
       '<input type="text" id="sName" placeholder="ชื่อรายการ เช่น น้ำแข็ง" autocomplete="off" '+
         'role="combobox" aria-autocomplete="list" aria-controls="sSuggest" aria-expanded="false">'+
       '<div id="sSuggest"></div>'+
+      '<label class="sr-only" for="sPrice">ราคา</label>'+
       '<input type="number" id="sPrice" inputmode="decimal" step="0.01" min="0" placeholder="ราคา (บาท)">'+
       '<div class="form-actions"><button class="btn-quiet" id="sCancel">ยกเลิก</button>'+
       '<button class="btn-sm" id="sSave">เพิ่ม</button></div>'+
-    '</div>';
+    '</div>', 'data-close-sheet="shared"');
+  syncSheetLock();
   document.getElementById("sName").focus();
   ui.sharedSuggest = { open:true, items:[], active:-1 };
   renderSharedSuggestions();
 }
 
+/* ---- v3.2: แท็บสรุป — ยอดรายคน + ใครจ่าย + ใครโอนให้ใคร ---- */
 function renderSummary(){
   var box = document.getElementById("summary");
   var aside = document.getElementById("summaryAside");
@@ -381,14 +420,19 @@ function renderSummary(){
   if (ui.loading){ box.innerHTML = '<p class="empty">กำลังโหลดข้อมูล…</p>'; return; }
   if (!hasData()){
     if (aside) aside.textContent = "";
-    box.innerHTML = '<p class="empty">ใส่ชื่อคนกินและรายการอาหารก่อน แล้วบิลจะขึ้นตรงนี้</p>';
+    box.innerHTML = '<p class="empty">'+kt("emptySummary")+'</p>';
     return;
   }
   var r = compute();
-  if (aside) aside.textContent = "แตะชื่อเพื่อดูรายละเอียด";
+  var me = myMemberId();
+  if (aside) aside.textContent = r.n+" คน";
   box.innerHTML =
-    (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' '+kt("orphan")+' จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
-    receiptHTML(r,{interactive:true})+
-    '<button class="btn-sm btn-block" id="copyBtn" style="margin-top:var(--s4)">คัดลอกสรุปยอด</button>'+
-    '<a href="'+billHref()+'" class="add-slot" style="display:flex;align-items:center;justify-content:center;margin-top:var(--s2)">เปิดใบสรุปยอดเต็มหน้า</a>';
+    (r.orphan>0 ? '<div class="notice warn" style="margin:0 0 var(--s3)"><p>มี '+r.orphan+' '+kt("orphan")+' จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
+    '<div class="sum-list">'+r.list.map(function(p){
+      return '<div class="sum-row'+(p.id===me ? ' me' : '')+'"><span>'+esc(p.name)+(p.id===me ? ' <span class="me-tag">ฉัน</span>' : '')+'</span>'+
+        '<span class="mono">'+baht(p.rounded)+'</span></div>';
+    }).join("")+'</div>'+
+    '<div class="sum-total"><span>รวมทั้งหมด</span><span class="mono">'+baht(r.grand)+' ฿</span></div>'+
+    settleHTML(r)+
+    '<a class="btn-main btn-block" style="margin-top:var(--s5)" href="'+billHref()+'">ดูใบสรุปยอด</a>';
 }

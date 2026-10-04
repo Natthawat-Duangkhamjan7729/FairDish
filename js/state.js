@@ -19,8 +19,10 @@ var state = {
   menus: [],
   shared: [],
   charges: defaultCharges(),
-  payers: [],
-  kind: "meal",         // v3.0: "meal" มื้ออาหาร | "trip" ทริป (ทริประบุคนจ่ายในแต่ละรายการ: menus[i].payer)           // v2.5: [{ id:สมาชิก, amount:บาท | null }] null = จ่ายส่วนที่เหลือ
+  payers: [],           // v2.5: [{ id:สมาชิก, amount:บาท | null }] null = จ่ายส่วนที่เหลือ
+  kind: "meal",         // v3.0: "meal" มื้ออาหาร | "trip" ทริป (ทริประบุคนจ่ายในแต่ละรายการ: menus[i].payer)
+  name: "",             // v3.2: ชื่อบิลส่วนตัว (บิลกลุ่มใช้ชื่อกลุ่ม)
+  paid: {},             // v3.2: การโอนที่ติ๊กแล้ว { transferKey(): true }
   menuMemory: [],
   menuForm:null, sharedForm:null, chargeForm:null, open:{}
 };
@@ -49,21 +51,21 @@ var ui = {
   step:"members",       // v2.1: แท็บขั้นตอนที่เปิดอยู่ในหน้าหารบิล
   groupPanel:false,     // v2.1: แผงตัวเลือกกลุ่ม (⋯) เปิดอยู่ไหม
   theme:"system",       // v2.1: "system" | "light" | "dark"
-  focusGroupName:false, // v2.2: กด "สร้างกลุ่มก่อน" ที่หน้าแรก → โฟกัสช่องชื่อกลุ่มเมื่อเปิดหน้ากลุ่ม
   installNudgeOff:false, // v2.4: ผู้ใช้กดปิดการ์ดชวนติดตั้งแล้ว
   noReveal:false,       // v2.5: วาดหน้าใบสรุปซ้ำโดยไม่เล่นแอนิเมชันใบเสร็จ
-  payerOpen:false,      // v2.6: กางส่วน "ใครจ่าย" แล้ว (ตอนยังไม่เลือกใครจะพับไว้)
-  newGroupKind:"meal",  // v3.0: ประเภทที่เลือกไว้ในฟอร์มสร้างกลุ่ม
-  pendingKind:null,     // v3.0: กดเริ่มจากหน้าแรก → ตั้งประเภทบิลส่วนตัวเมื่อโหลดเสร็จ
   lastPayer:null,       // v3.0: คนจ่ายล่าสุดในโหมดทริป ใช้เป็นค่าตั้งต้นของรายการถัดไป
-  tripStash:null        // v3.1: กำลังแก้มื้ออาหารข้างในทริป { mealId, menus, shared, charges, payers } ของทริปที่พักไว้
+  tripStash:null,       // v3.1: กำลังแก้มื้ออาหารข้างในทริป { mealId, menus, shared, charges, payers } ของทริปที่พักไว้
+  history:[],           // v3.2: บิลส่วนตัวที่เก็บเข้าประวัติแล้ว (ใหม่สุดก่อน)
+  sheet:null,           // v3.2: แผ่นล่างจอที่เปิดอยู่นอกหน้าหารบิล "kind" | "rename"
+  showDone:false,       // v3.2: โอนครบทุกคนแล้ว → หน้าใบสรุปแสดงหน้าจอ "จบมื้อแล้ว"
+  shareAfterLoad:false  // v3.2: เพิ่งสร้างกลุ่มจากบิลส่วนตัว → เปิดหน้าต่างชวนเพื่อนเมื่อโหลดกลุ่มเสร็จ
 };
 
 var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "3.1";
+var APP_VERSION = "3.2";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */
@@ -77,7 +79,9 @@ var KIND_TEXT = {
     empty:"ยังไม่มีเมนู — เพิ่มจานแรกแล้วเลือกว่าใครกิน", noName:"ยังไม่ได้ใส่ชื่อเมนู", noEater:"เลือกคนที่กินเมนูนี้อย่างน้อย 1 คน",
     orphan:"เมนูที่ยังไม่ได้เลือกคนกิน", noItems:"ไม่ได้สั่งเมนูส่วนตัว", suggest:"เมนูแนะนำ", suggestOften:"เมนูที่คุณสั่งบ่อย",
     done:"จบมื้อแล้ว!", head:"มื้อนี้", fromWhat:"เมนูไหน", sumLabel:"ค่าอาหาร",
-    addShort:"+ เพิ่มเมนู", thanks:"มื้อนี้อร่อยมาก ขอบคุณทุกคนที่มากินด้วยกันนะ", groupPrefix:"มื้อ"
+    addShort:"+ เพิ่มเมนู", thanks:"มื้อนี้อร่อยมาก ขอบคุณทุกคนที่มากินด้วยกันนะ", groupPrefix:"มื้อ",
+    title:"หารบิล", summary:"สรุปยอด", kindSub:"หารตามเมนูที่แต่ละคนกินจริง มีค่าบริการและ VAT",
+    noPeople:"ยังไม่มีใครในโต๊ะ — ใส่ชื่อคนแรกได้เลย", emptySummary:"ใส่ชื่อคนกินและรายการอาหารก่อน แล้วบิลจะขึ้นตรงนี้"
   },
   trip: {
     icon:"✈️", name:"ทริป", start:"หารค่าทริป", startSub:"ที่พัก ค่าน้ำมัน ตั๋ว ใครจ่ายอะไรก็ใส่ไว้ แล้วดูว่าใครโอนให้ใคร",
@@ -88,8 +92,15 @@ var KIND_TEXT = {
     empty:"ยังไม่มีค่าใช้จ่าย — เพิ่มรายการแรก แล้วเลือกว่าใครจ่าย ใครมีส่วน", noName:"ยังไม่ได้ใส่ชื่อรายการ", noEater:"เลือกคนที่มีส่วนในรายการนี้อย่างน้อย 1 คน",
     orphan:"รายการที่ยังไม่ได้เลือกคนมีส่วน", noItems:"ไม่มีส่วนในรายการไหน", suggest:"รายการแนะนำ", suggestOften:"ค่าใช้จ่ายที่พบบ่อยในทริป",
     done:"จบทริปแล้ว!", head:"ทริปนี้", fromWhat:"รายการไหน", sumLabel:"ค่าใช้จ่าย",
-    addShort:"+ ค่าใช้จ่าย", thanks:"ทริปนี้สนุกมาก ขอบคุณทุกคนที่ไปด้วยกันนะ", groupPrefix:"ทริป"
+    addShort:"+ ค่าใช้จ่าย", thanks:"ทริปนี้สนุกมาก ขอบคุณทุกคนที่ไปด้วยกันนะ", groupPrefix:"ทริป",
+    title:"หารทริป", summary:"สรุปทริป", kindSub:"แต่ละรายการมีคนจ่ายของตัวเอง ใส่มื้ออาหารข้างในได้ สรุปโอนครั้งเดียว",
+    noPeople:"ยังไม่มีใครในทริป — ใส่ชื่อคนแรกได้เลย", emptySummary:"ใส่ชื่อคนและค่าใช้จ่ายก่อน แล้วสรุปจะขึ้นตรงนี้"
   }
 };
 function kt(key){ return (KIND_TEXT[state.kind] || KIND_TEXT.meal)[key]; }
 function ktOf(kind, key){ return (KIND_TEXT[kind] || KIND_TEXT.meal)[key]; }
+var HISTORY_LIMIT = 50;
+/** ชื่อบิลตั้งต้น เช่น "มื้อ 4 ต.ค." — ตอนบิลมาถึงโต๊ะไม่มีใครอยากคิดชื่อ */
+function defaultBillName(kind, date){
+  return ktOf(kind || "meal", "groupPrefix") + " " + (date || new Date()).toLocaleDateString("th-TH", { day:"numeric", month:"short" });
+}

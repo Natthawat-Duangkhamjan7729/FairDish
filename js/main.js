@@ -56,10 +56,14 @@ function refreshView(){
   if (path==="/split"){
     if (ui.ctx) document.getElementById("view").innerHTML = pageSplit();
     render();
-    applyPendingKind();
     maybeAskWhoAmI();
   }
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();
+  // v3.2: เพิ่งย้ายบิลส่วนตัวขึ้นกลุ่ม → เปิดหน้าต่างชวนเพื่อนให้เลย
+  if (ui.shareAfterLoad && ui.ctx && !ui.loading){
+    ui.shareAfterLoad = false;
+    if (!ui.groupError){ openShareDialog(); toast("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย","ok"); }
+  }
 }
 
 /** ดึงบิลกลุ่มล่าสุด — manual = ผู้ใช้กดปุ่มเอง (ไม่ใช่ตอนกลับมาที่แท็บ) */
@@ -94,6 +98,7 @@ async function boot(){
   try { applyTheme(await Store.readRaw(Store.themeKey)); } catch(e){}
   try { state.menuMemory = await Store.loadMenus(); } catch(e){ state.menuMemory = []; }
   try { ui.myGroups = await Store.loadGroups(); } catch(e){ ui.myGroups = []; }
+  try { ui.history = await Store.loadHistory(); } catch(e){ ui.history = []; }
   try { ui.installNudgeOff = (await Store.readRaw(INSTALL_NUDGE_KEY)) === "off"; } catch(e){}
   updateInstallButton();
   route();

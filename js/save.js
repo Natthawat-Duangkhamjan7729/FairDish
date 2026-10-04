@@ -9,10 +9,10 @@ function serialize(){
   if (t){
     // v3.1: กำลังแก้มื้ออาหารข้างในทริป — state ตอนนี้คือข้อมูลของมื้อ ประกอบกลับเป็นทริปก่อนบันทึก
     return { members:state.members, menus:t.menus.map(function(m){ return m.id === t.mealId ? mealWithScope(m) : m; }),
-             shared:t.shared, charges:t.charges, payers:t.payers, kind:"trip", savedAt:new Date().toISOString() };
+             shared:t.shared, charges:t.charges, payers:t.payers, kind:"trip", name:state.name, paid:state.paid, savedAt:new Date().toISOString() };
   }
   return { members:state.members, menus:state.menus, shared:state.shared,
-           charges:state.charges, payers:state.payers, kind:state.kind, savedAt:new Date().toISOString() };
+           charges:state.charges, payers:state.payers, kind:state.kind, name:state.name, paid:state.paid, savedAt:new Date().toISOString() };
 }
 /** รายการมื้อในทริป + ข้อมูลมื้อที่กำลังแก้อยู่ (state.menus/shared/charges) */
 function mealWithScope(m){
@@ -21,12 +21,12 @@ function mealWithScope(m){
   copy.meal = { menus:state.menus, shared:state.shared, charges:state.charges };
   return copy;
 }
-/** ใส่ข้อมูลบิลที่โหลดมา (จากเครื่องหรือจากกลุ่ม) ลงใน state — ไม่มีข้อมูล = บิลว่าง */
-function applyBill(saved){
+/** v3.2: ข้อมูลบิลที่บันทึกไว้ (จากเครื่อง กลุ่ม หรือประวัติ) → บิลที่ใช้คำนวณได้ทันที ไม่แตะ state */
+function normalizeBill(saved){
   saved = saved || {};
-  ui.tripStash = null;                 // ข้อมูลใหม่มา = ออกจากโหมดแก้มื้อในทริป
-  state.members = Array.isArray(saved.members) ? saved.members : [];
-  state.menus = (Array.isArray(saved.menus) ? saved.menus : []).map(function(m){
+  var b = {};
+  b.members = Array.isArray(saved.members) ? saved.members : [];
+  b.menus = (Array.isArray(saved.menus) ? saved.menus : []).map(function(m){
     var item = { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
     if (m.payer) item.payer = String(m.payer);
     if (m.type === "meal"){
@@ -40,13 +40,33 @@ function applyBill(saved){
     }
     return item;
   });
-  state.shared = Array.isArray(saved.shared) ? saved.shared : [];
-  state.charges = (saved.charges && saved.charges.length) ? saved.charges : defaultCharges();
-  state.kind = saved.kind === "trip" ? "trip" : "meal";
-  state.payers = (Array.isArray(saved.payers) ? saved.payers : []).filter(function(p){ return p && p.id; }).map(function(p){
+  b.shared = Array.isArray(saved.shared) ? saved.shared : [];
+  b.charges = (saved.charges && saved.charges.length) ? saved.charges : defaultCharges();
+  b.kind = saved.kind === "trip" ? "trip" : "meal";
+  b.payers = (Array.isArray(saved.payers) ? saved.payers : []).filter(function(p){ return p && p.id; }).map(function(p){
     var n = Number(p.amount);
     return { id:String(p.id), amount:(p.amount == null || !isFinite(n) || n < 0) ? null : n };
   });
+  // บิลก่อน v3.2 ไม่มีชื่อ — ตั้งจากวันที่บันทึก ชื่อจะได้ไม่เปลี่ยนไปตามวันที่เปิดดู
+  b.name = (typeof saved.name === "string" && saved.name) ? saved.name
+    : (saved.savedAt && !isNaN(new Date(saved.savedAt)) ? defaultBillName(b.kind, new Date(saved.savedAt)) : "");
+  b.paid = {};
+  if (saved.paid && typeof saved.paid === "object") Object.keys(saved.paid).forEach(function(k){ if (saved.paid[k]) b.paid[k] = true; });
+  b.savedAt = saved.savedAt || "";
+  return b;
+}
+/** ใส่ข้อมูลบิลที่โหลดมา (จากเครื่องหรือจากกลุ่ม) ลงใน state — ไม่มีข้อมูล = บิลว่าง */
+function applyBill(saved){
+  var b = normalizeBill(saved);
+  ui.tripStash = null;                 // ข้อมูลใหม่มา = ออกจากโหมดแก้มื้อในทริป
+  state.members = b.members;
+  state.menus = b.menus;
+  state.shared = b.shared;
+  state.charges = b.charges;
+  state.kind = b.kind;
+  state.payers = b.payers;
+  state.name = b.name;
+  state.paid = b.paid;
   state.open = {};
   var maxId = 0, all = state.members.concat(state.menus, state.shared, state.charges);
   state.menus.forEach(function(m){ if (m.meal) all = all.concat(m.meal.menus, m.meal.shared, m.meal.charges); });

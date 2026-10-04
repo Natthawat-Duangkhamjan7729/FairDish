@@ -255,3 +255,26 @@ test("ทริป + มื้ออาหาร: เมนูในมื้อ
   assert.equal(r.grand, 40);
   assert.equal(r.orphan, 1);
 });
+
+/* ---- v3.2: settleBill กับบิลที่ไม่ได้เปิดอยู่ + ติ๊กว่าโอนแล้ว ---- */
+test("settleBill(r, b): คิดบิลจากประวัติได้โดยไม่แตะ state", () => {
+  const app = loadApp();
+  const b = { kind: "trip", members: [{ id: "a", name: "เอ" }, { id: "b", name: "บี" }],
+    menus: [{ id: "x", name: "ที่พัก", price: 1000, eaters: ["a", "b"], payer: "a" }], shared: [], charges: app.defaultCharges(), payers: [] };
+  const r = app.computeBill(b);
+  const s = app.settleBill(r, b);
+  assert.deepEqual(transfersText(s), ["บี>เอ:500"]);
+  assert.equal(app.state.members.length, 0);
+});
+
+test("ติ๊กโอนแล้ว: นับครบเมื่อติ๊กทุกรายการ และยอดเปลี่ยน = ติ๊กเดิมไม่นับ", () => {
+  const app = loadApp();
+  const t1 = { from: "b", to: "a", amount: 500 }, t2 = { from: "c", to: "a", amount: 120.5 };
+  const paid = {};
+  assert.deepEqual({ ...app.paidProgress([t1, t2], paid) }, { done: 0, total: 2, all: false });
+  paid[app.transferKey(t1)] = true;
+  paid[app.transferKey(t2)] = true;
+  assert.equal(app.paidProgress([t1, t2], paid).all, true);
+  assert.equal(app.paidProgress([t1, { from: "c", to: "a", amount: 130 }], paid).done, 1);
+  assert.equal(app.paidProgress([], paid).all, false);
+});

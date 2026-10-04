@@ -26,59 +26,30 @@
 
 
 <div class="sandbox-bar dev-beta" role="note">🛠️ Developer Beta — ฟีเจอร์ใหม่ยังไม่นิ่ง ข้อมูลแยกจากตัวเต็ม <a href="https://fairdish.vercel.app">ไปตัวเต็ม</a></div>
-<header class="nav">
-  <div class="wrap nav-in">
-    <a class="logo" href="#/" aria-label="FairDish หน้าแรก">
-      <img class="logo-mark" src="img/logo.png" alt="" width="48" height="48">
-      <b>FairDish</b>
-    </a>
-    <span class="nav-ctx" id="navCtx"></span>
-    <nav class="nav-links" aria-label="เมนูหลัก">
-      <a href="#/" data-nav="/">หน้าแรก</a>
-      <a href="#/how" data-nav="/how">วิธีใช้</a>
-      <a href="#/bill" data-nav="/bill" data-link="bill">ใบสรุปยอด</a>
-      <a href="#/groups" data-nav="/groups">กลุ่ม</a>
-      <a href="#/about" data-nav="/about">เกี่ยวกับ</a>
-    </nav>
-    <a class="nav-cta" href="#/split" data-link="split">หารบิล</a>
-    <button class="install-btn" id="installBtn" type="button" aria-haspopup="dialog" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>
-      <span>ติดตั้ง<span class="install-long">แอป</span></span></button>
-  </div>
-</header>
-
+<!-- v3.2: หน้าตาแบบแอปมือถือ — ทุกหน้ามีแถบหัวของตัวเอง (สร้างใน js/pages.js) จอคอมจัดไว้กลางจอ -->
+<div class="app-shell">
 <main id="view"></main>
 
 <footer class="foot">
-  <div class="wrap foot-in">
-    <span>FairDish v3.1 Developer Beta · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
-    <nav>
-      <a href="#/">หน้าแรก</a>
-      <a href="#/how">วิธีใช้</a>
-      <a href="#/bill">ใบสรุปยอด</a>
-      <a href="#/about">เกี่ยวกับ</a>
-    </nav>
-  </div>
+  <span>FairDish v3.2 Developer Beta · ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span>
 </footer>
+</div>
 
-<!-- v2.1: แถบแท็บล่าง (มือถือเท่านั้น) — href ของหารบิล/สรุปถูกตั้งใหม่ใน route() ให้อยู่ในกลุ่มเดิม -->
+<!-- v3.2: แท็บล่าง หน้าหลัก / หารบิล (เลือกประเภทก่อน) / ประวัติ — ซ่อนในหน้าหารบิลและใบสรุปยอด -->
 <nav class="tabbar" id="tabbar" aria-label="เมนูหลัก">
   <a href="#/" data-tab="home">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5h4v5"/></svg>
-    <span>หน้าแรก</span></a>
-  <a href="#/split" data-tab="split" data-link="split">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg>
-    <span>หารบิล</span></a>
-  <a href="#/bill" data-tab="bill" data-link="bill">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-    <span>สรุป</span></a>
-  <a href="#/groups" data-tab="groups">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.4.2 4 1.9 4.5 4.6"/></svg>
-    <span>กลุ่ม</span></a>
-  <a href="#/more" data-tab="more">
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-    <span>อื่น ๆ</span></a>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+    <span>หน้าหลัก</span></a>
+  <button type="button" class="tab-new" data-open-kind="1" aria-haspopup="dialog">
+    <span class="tab-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    <span>หารบิล</span></button>
+  <a href="#/history" data-tab="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span>ประวัติ</span></a>
 </nav>
+
+<!-- v3.2: แผ่นล่างจอนอกหน้าหารบิล (เลือกประเภทบิล, ตั้งชื่อบิล) — เนื้อหาสร้างโดย js/actions.js -->
+<div id="globalSheet"></div>
 
 <!-- v2.3: หน้าต่างวิธีติดตั้งแอป (เนื้อหาสร้างโดย js/install.js) -->
 <dialog class="install-dialog" id="installDialog" aria-labelledby="installTitle"></dialog>

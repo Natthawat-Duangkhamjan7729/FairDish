@@ -9,7 +9,8 @@ var Store = {
   key: "fairdish:bill:v1",
   menuKey: "fairdish:menu-memory:v1",   // คีย์ใหม่ ไม่ทับข้อมูลบิลที่เคยบันทึกไว้
   groupsKey: "fairdish:groups:v1",      // กลุ่มที่เครื่องนี้เคยเปิด + "ฉันคือใคร"
-  themeKey: "fairdish:theme:v1",        // v2.1: "system" | "light" | "dark" (index.html อ่านค่านี้ก่อนวาดหน้า)
+  themeKey: "fairdish:theme:v1",
+  historyKey: "fairdish:history:v1",    // v3.2: บิลส่วนตัวที่เก็บเข้าประวัติ        // v2.1: "system" | "light" | "dark" (index.html อ่านค่านี้ก่อนวาดหน้า)
   groupId: null,                        // null = บิลส่วนตัวในเครื่อง
   groupName: "",
   version: 0,                           // version ของบิลกลุ่มที่โหลดมาล่าสุด ใช้กันเขียนทับกัน
@@ -90,5 +91,21 @@ var Store = {
   },
   async saveGroups(list){
     await this.writeRaw(this.groupsKey, JSON.stringify(list));
+  },
+  /** v3.2: บิลส่วนตัวในเครื่อง (ไม่สนว่าตอนนี้เปิดกลุ่มอยู่หรือเปล่า) */
+  async loadLocalBill(){
+    var raw = await this.readRaw(this.key);
+    return raw ? JSON.parse(raw) : null;
+  },
+  async saveLocalBill(data){
+    await this.writeRaw(this.key, JSON.stringify(data));
+  },
+  async loadHistory(){
+    var raw = await this.readRaw(this.historyKey);
+    var list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter(function(h){ return h && h.id && h.data; }) : [];
+  },
+  async saveHistory(list){
+    await this.writeRaw(this.historyKey, JSON.stringify(list));
   }
 };

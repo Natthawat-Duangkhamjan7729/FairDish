@@ -385,7 +385,7 @@ async function removeMenu(id){
 function summaryText(){
   var r = compute();
   var lines = [];
-  lines.push(kt("icon")+" "+(ui.ctx && Store.groupName ? Store.groupName : kt("head")));
+  lines.push(kt("icon")+" "+billName());
   lines.push(kt("thanks"));
   lines.push("ยอดของแต่ละคนตามนี้เลย 👇");
   lines.push("");
@@ -396,7 +396,9 @@ function summaryText(){
   if (s.ok && s.transfers.length){
     lines.push("");
     lines.push("โอนเงินตามนี้นะ 🙏");
-    s.transfers.forEach(function(t){ lines.push("• "+t.fromName+" → "+t.toName+"  "+baht(t.amount)+" บาท"); });
+    s.transfers.forEach(function(t){
+      lines.push("• "+t.fromName+" → "+t.toName+"  "+baht(t.amount)+" บาท"+(state.paid[transferKey(t)] ? " ✅ โอนแล้ว" : ""));
+    });
   }
   if (ui.ctx) lines.push("กดดูได้ว่ายอดมาจาก"+(state.kind === "trip" ? "รายการไหน: " : "เมนูไหน: ")+groupLink(ui.ctx)+"/bill");
   lines.push(state.kind === "trip" ? "— หารตามที่ใช้จริงด้วย FairDish" : "— หารตามที่กินจริงด้วย FairDish");
@@ -420,6 +422,7 @@ function copySummary(){ copyText(summaryText(), "คัดลอกสรุป�
 /* ---- v2.5: ใครจ่ายให้ร้าน → ใครโอนให้ใคร ---- */
 /** วาดหน้าใบสรุปใหม่โดยไม่เล่นแอนิเมชันซ้ำและไม่เลื่อนจอ */
 function rerenderBill(){
+  if (currentPath() === "/split"){ renderSummary(); renderTotalBar(); return; }   // v3.2: ใครจ่ายอยู่ในแท็บสรุป
   if (currentPath() !== "/bill") return;
   var y = window.scrollY;
   ui.noReveal = true;
@@ -480,48 +483,6 @@ function setFieldMsg(id, text, isError){
   el.textContent = text;
 }
 
-/** หน้า #/groups: ถ้าในเครื่องมีบิลค้างอยู่ ให้เลือกย้ายเข้ากลุ่มใหม่ได้ */
-async function checkLocalBill(){
-  var saved = null;
-  try { var raw = await Store.readRaw(Store.key); saved = raw ? JSON.parse(raw) : null; } catch(e){}
-  var slot = document.getElementById("groupFromSlot");
-  if (!slot || !saved || !saved.members || !saved.members.length) return;
-  slot.innerHTML = '<label class="check"><input type="checkbox" id="groupFromLocal" checked> '+
-    'ใช้บิลที่ทำค้างไว้ในเครื่อง ('+saved.members.length+' คน) เป็นบิลเริ่มต้นของกลุ่ม</label>';
-}
-
-async function createGroup(){
-  var input = document.getElementById("groupName");
-  var btn = document.getElementById("groupCreate");
-  if (!input || ui.creatingGroup) return;
-  var name = input.value.trim().replace(/\s+/g," ");
-  if (!name){ setFieldMsg("groupMsg","ตั้งชื่อกลุ่มก่อน เช่น ส้มตำหน้ามอ",true); return input.focus(); }
-  if (name.length > MAX_GROUP_NAME){ setFieldMsg("groupMsg","ชื่อกลุ่มยาวเกิน "+MAX_GROUP_NAME+" ตัวอักษร",true); return input.focus(); }
-
-  var data = { members:[], menus:[], shared:[], charges:defaultCharges(), kind:ui.newGroupKind };
-  var from = document.getElementById("groupFromLocal");
-  if (from && from.checked){
-    try { var raw = await Store.readRaw(Store.key); if (raw) data = JSON.parse(raw); } catch(e){}
-    // บิลในเครื่องยังไม่มีรายการ = ใช้ประเภทที่เลือกในฟอร์ม, มีรายการแล้ว = ใช้ประเภทของบิลนั้น
-    if (!((data.menus || []).length || (data.shared || []).length)) data.kind = ui.newGroupKind;
-    else data.kind = data.kind === "trip" ? "trip" : "meal";
-  }
-  ui.creatingGroup = true;
-  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>กำลังสร้าง'; }
-  try {
-    var g = await Cloud.create(name, data);
-    await rememberGroup(g.id, g.name, data.kind);
-    location.hash = "#/g/" + g.id;
-    toast("สร้างกลุ่มแล้ว คัดลอกลิงก์ส่งให้เพื่อนได้เลย","ok");
-  } catch(err){
-    setFieldMsg("groupMsg","สร้างกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง",true);
-  } finally {
-    ui.creatingGroup = false;
-    var again = document.getElementById("groupCreate");
-    if (again){ again.disabled = false; again.textContent = "สร้างกลุ่ม"; }
-  }
-}
-
 function joinGroup(){
   var input = document.getElementById("groupJoinInput");
   if (!input) return;
@@ -538,8 +499,7 @@ async function forgetGroup(id){
   if (!g) return;
   ui.myGroups = ui.myGroups.filter(function(x){ return x.id !== id; });
   await saveMyGroups();
-  document.getElementById("view").innerHTML = pageGroups();
-  checkLocalBill();
+  if (currentPath() === "/history") document.getElementById("view").innerHTML = pageHistory();
   toast("เอา "+g.name+" ออกจากรายการแล้ว (กลุ่มยังอยู่ เปิดจากลิงก์ได้)","ok");
 }
 
@@ -699,28 +659,191 @@ function shareGroupLink(){
     .catch(function(){});   // ผู้ใช้กดยกเลิก = ไม่ใช่ข้อผิดพลาด
 }
 
-/* ---- v2.2: หน้าแรก "ทำต่อ" ---- */
-async function fillHomeResume(){
+/* ---- v3.2: หน้าหลัก "บิลของฉัน" ---- */
+async function fillHome(){
   var saved = null;
-  try { var raw = await Store.readRaw(Store.key); saved = raw ? JSON.parse(raw) : null; } catch(e){}
-  var box = document.getElementById("homeResume");
-  if (!box) return;
-  var rows = [];
-  if (saved && saved.members && saved.members.length){
-    var nMenus = (saved.menus || []).length;
-    var sk = saved.kind === "trip" ? "trip" : "meal";
-    rows.push(['#/split', ktOf(sk,"icon")+' บิลส่วนตัว', saved.members.length+' คน · '+nMenus+' '+ktOf(sk,"items")+' · ในเครื่องนี้']);
+  try { saved = await Store.loadLocalBill(); } catch(e){}
+  if (currentPath() !== "/") return;
+  var active = document.getElementById("homeActive");
+  var recent = document.getElementById("homeRecent");
+  var intro = document.getElementById("homeIntro");
+  if (!active) return;
+  var has = billHasData(saved);
+  active.innerHTML = has ? activeBillHTML(saved) : "";
+  var items = recentItems();
+  recent.innerHTML = items.length
+    ? '<div class="list-title"><h2>บิลล่าสุด</h2><a class="link-btn" href="#/history">ดูทั้งหมด</a></div>'+
+      items.slice(0,3).map(function(x){ return x.html; }).join("")
+    : "";
+  intro.innerHTML = (!has && !items.length) ? homeIntroHTML() : "";
+  updateInstallButton();
+}
+
+/* ---- v3.2: เริ่มบิลใหม่ (เลือกประเภทครั้งเดียว) + ประวัติบิล ---- */
+function emptyBill(kind){
+  return { members:[], menus:[], shared:[], charges:defaultCharges(), payers:[], kind:kind, name:defaultBillName(kind), paid:{},
+           savedAt:new Date().toISOString() };
+}
+/** เก็บบิลส่วนตัวเข้าประวัติ (ใหม่สุดก่อน) */
+async function archiveBill(saved){
+  var b = normalizeBill(saved);
+  var entry = { id:"h"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), name:savedBillName(saved),
+                kind:b.kind, at:Date.now(), data:saved };
+  ui.history.unshift(entry);
+  if (ui.history.length > HISTORY_LIMIT) ui.history = ui.history.slice(0, HISTORY_LIMIT);
+  await Store.saveHistory(ui.history);
+  return entry;
+}
+/** ใส่บิลนี้เป็นบิลส่วนตัวในเครื่อง แล้วเปิดหน้าหารบิล — บิลเดิมที่มีข้อมูลถูกเก็บเข้าประวัติก่อน */
+async function replaceLocalBill(next, step){
+  var saved = null;
+  try { saved = await Store.loadLocalBill(); } catch(e){}
+  var archived = billHasData(saved) ? await archiveBill(saved) : null;
+  await Store.saveLocalBill(next);
+  if (ui.tripStash) exitMeal();
+  ui.step = step || "members";
+  ui.showDone = false;
+  state.menuForm = null; state.sharedForm = null; state.chargeForm = null;
+  if (ui.ctx === null && !ui.loading) applyBill(next);   // บิลส่วนตัวเปิดอยู่แล้ว ใส่ข้อมูลใหม่ได้เลย
+  else ui.ctx = undefined;                               // ให้ route() โหลดบิลส่วนตัวใหม่
+  if (location.hash === "#/split") route(); else location.hash = "#/split";
+  return archived;
+}
+async function startNewBill(kind, demo){
+  closeGlobalSheet();
+  kind = kind === "trip" ? "trip" : "meal";
+  try {
+    var archived = await replaceLocalBill(emptyBill(kind), "members");
+    if (demo) return loadDemo();
+    toast(archived ? "เก็บ "+archived.name+" เข้าประวัติแล้ว เริ่ม"+ktOf(kind,"name")+"ใหม่" : "เริ่ม"+ktOf(kind,"name")+"ใหม่แล้ว","ok");
+  } catch(err){
+    toast("เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ","error");
   }
-  ui.myGroups.slice(0,3).forEach(function(g){
-    var when = g.at ? new Date(g.at).toLocaleDateString("th-TH",{ day:"numeric", month:"short" }) : "";
-    rows.push(['#/g/'+esc(g.id), ktOf(g.kind,"icon")+' '+esc(g.name), 'กลุ่ม'+(when ? ' · เปิดล่าสุด '+when : '')]);
-  });
-  if (!rows.length){ box.innerHTML = ""; return; }
-  box.innerHTML = '<h2 class="resume-head">ทำต่อ</h2>'+rows.map(function(r){
-    return '<div class="row-item"><a class="row-tap" href="'+r[0]+'"><span class="body">'+
-      '<span class="name">'+r[1]+'</span><span class="sub">'+r[2]+'</span></span><span aria-hidden="true">›</span></a></div>';
-  }).join("")+
-  (ui.myGroups.length > 3 ? '<a class="add-slot" href="#/groups">ดูกลุ่มทั้งหมด ('+ui.myGroups.length+')</a>' : '');
+}
+async function restoreHistory(id){
+  var h = ui.history.filter(function(x){ return x.id === id; })[0];
+  if (!h) return;
+  try {
+    ui.history = ui.history.filter(function(x){ return x.id !== id; });
+    await Store.saveHistory(ui.history);
+    var archived = await replaceLocalBill(h.data, "summary");
+    toast("เปิด "+h.name+" แล้ว"+(archived ? " (บิลที่ทำค้างไว้ย้ายเข้าประวัติ)" : ""),"ok");
+  } catch(err){
+    toast("เปิดบิลไม่สำเร็จ ลองอีกครั้ง","error");
+  }
+}
+async function deleteHistory(id){
+  var index = -1;
+  ui.history.forEach(function(x,i){ if (x.id === id) index = i; });
+  if (index < 0) return;
+  var h = ui.history[index];
+  ui.history.splice(index, 1);
+  try { await Store.saveHistory(ui.history); } catch(e){}
+  location.hash = "#/history";
+  toast("ลบ "+h.name+" ออกจากประวัติแล้ว","ok",{ label:"เลิกทำ", action:async function(){
+    ui.history.splice(Math.min(index, ui.history.length), 0, h);
+    try { await Store.saveHistory(ui.history); } catch(e){}
+    if (currentPath() === "/history") document.getElementById("view").innerHTML = pageHistory();
+  }});
+}
+
+/* ---- v3.2: แผ่นล่างจอ เลือกประเภทบิล / ตั้งชื่อบิล ---- */
+async function openKindSheet(){
+  var saved = null;
+  try { saved = await Store.loadLocalBill(); } catch(e){}
+  var note = billHasData(saved)
+    ? 'บิลที่ทำค้างไว้ <b>'+esc(savedBillName(saved))+'</b> จะถูกเก็บในประวัติ ไม่หาย'
+    : 'บันทึกในเครื่องให้อัตโนมัติ ไม่ต้องสมัครสมาชิก';
+  function card(kind, cls){
+    return '<button class="kind-card '+cls+'" type="button" data-new-kind="'+kind+'">'+
+      '<span class="kind-ico" aria-hidden="true">'+ktOf(kind,"icon")+'</span>'+
+      '<span class="kind-text"><b>'+ktOf(kind,"name")+'</b><span>'+ktOf(kind,"kindSub")+'</span></span></button>';
+  }
+  ui.sheet = "kind";
+  renderGlobalSheet('<h2 class="sheet-title" id="kindTitle">วันนี้หารอะไร</h2>'+
+    '<p class="sheet-sub">เลือกครั้งเดียวตอนเริ่ม</p>'+
+    '<div class="kind-grid">'+card("meal","meal")+card("trip","trip")+'</div>'+
+    '<p class="sheet-note">'+note+'</p>', "kindTitle");
+  var first = document.querySelector("[data-new-kind]");
+  if (first) first.focus({ preventScroll:true });
+}
+function openRenameSheet(){
+  if (ui.ctx || ui.loading) return;
+  ui.sheet = "rename";
+  renderGlobalSheet('<h2 class="sheet-title" id="renameTitle">ชื่อบิล</h2>'+
+    '<div class="form-box">'+
+      '<label class="sr-only" for="billNameInput">ชื่อบิล</label>'+
+      '<input type="text" id="billNameInput" value="'+esc(billName())+'" maxlength="'+MAX_MENU_NAME+'" autocomplete="off" placeholder="เช่น ร้านส้มตำหน้ามอ">'+
+      '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">ยกเลิก</button>'+
+      '<button class="btn-sm" type="button" id="billNameSave">บันทึก</button></div>'+
+    '</div>', "renameTitle");
+  var input = document.getElementById("billNameInput");
+  if (input){ input.focus(); input.select(); }
+}
+function renderGlobalSheet(body, labelId){
+  var slot = document.getElementById("globalSheet");
+  slot.innerHTML = '<div class="sheet-wrap"><div class="sheet-backdrop" data-close-global="1"></div>'+
+    '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="'+labelId+'"><i class="sheet-grip" aria-hidden="true"></i>'+body+'</div></div>';
+  syncSheetLock();
+}
+function closeGlobalSheet(){
+  ui.sheet = null;
+  var slot = document.getElementById("globalSheet");
+  if (slot) slot.innerHTML = "";
+  syncSheetLock();
+}
+async function saveBillName(){
+  var input = document.getElementById("billNameInput");
+  if (!input) return;
+  var name = input.value.trim().replace(/\s+/g," ").slice(0, MAX_MENU_NAME);
+  closeGlobalSheet();
+  if (!name || name === billName()) return;
+  state.name = name;
+  renderAppBarSub();
+  await commit("เปลี่ยนชื่อบิลเป็น "+name+" แล้ว");
+}
+
+/* ---- v3.2: ติ๊กว่าโอนแล้ว ---- */
+async function togglePaid(key){
+  var r = compute(), s = settleBill(r);
+  if (!s.ok) return;
+  var keys = s.transfers.map(transferKey);
+  if (keys.indexOf(key) < 0) return;
+  var next = {};
+  keys.forEach(function(k){ if (state.paid[k] && k !== key) next[k] = true; });   // ล้างติ๊กของการโอนที่ไม่มีแล้ว
+  if (!state.paid[key]) next[key] = true;
+  state.paid = next;
+  var prog = paidProgress(s.transfers, state.paid);
+  if (prog.all && next[key]){
+    ui.showDone = true;
+    if (currentPath() !== "/bill") location.hash = billHref();
+    else { document.getElementById("view").innerHTML = pageBill(); window.scrollTo(0,0); }
+  } else rerenderBill();
+  await commit();
+}
+
+/* ---- v3.2: ชวนเพื่อนเข้ากลุ่มจากบิลส่วนตัว = ย้ายบิลนี้ขึ้นกลุ่ม ---- */
+async function inviteFromBill(){
+  if (ui.ctx || !Cloud.ready() || ui.creatingGroup) return;
+  var btn = document.getElementById("inviteBtn");
+  var data = serialize();
+  var name = billName().slice(0, MAX_GROUP_NAME);
+  ui.creatingGroup = true;
+  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>กำลังสร้างกลุ่ม'; }
+  try {
+    var g = await Cloud.create(name, data);
+    await rememberGroup(g.id, g.name, data.kind);
+    // บิลอยู่บนกลุ่มแล้ว บิลส่วนตัวในเครื่องเริ่มใหม่ว่าง ๆ (ไม่ให้มีสองที่ที่ต้องแก้)
+    try { await Store.saveLocalBill(emptyBill(data.kind)); } catch(e){}
+    ui.shareAfterLoad = true;
+    location.hash = "#/g/" + g.id + "/bill";
+  } catch(err){
+    toast("สร้างกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง","error");
+    var again = document.getElementById("inviteBtn");
+    if (again){ again.disabled = false; again.innerHTML = ICON_USERS+' ชวนเพื่อนเข้ากลุ่ม'; }
+  } finally {
+    ui.creatingGroup = false;
+  }
 }
 
 /* ---- v3.1: มื้ออาหารข้างในทริป ----
@@ -809,46 +932,6 @@ async function deleteMeal(){
 
 /* ---- v3.0: ประเภทบิล ---- */
 function billIsEmpty(){ return !state.menus.length && !state.shared.length; }
-/** สลับประเภทบิลที่เปิดอยู่ — ทำได้เมื่อยังไม่มีรายการ (กันข้อมูลค่าส่วนกลาง/VAT ค้างแบบมองไม่เห็น) */
-async function setKind(kind){
-  if (kind !== "meal" && kind !== "trip") return;
-  if (kind === state.kind) return;
-  if (!billIsEmpty()){
-    toast("มีรายการอยู่แล้ว ล้างข้อมูลก่อนถึงจะเปลี่ยนเป็น"+ktOf(kind,"name")+"ได้","error");
-    return renderKindSlot();
-  }
-  state.kind = kind;
-  ui.step = "members";
-  state.menuForm = null;
-  document.getElementById("view").innerHTML = pageSplit();
-  render();
-  await commit("เปลี่ยนเป็น"+kt("name")+"แล้ว");
-  updateChrome();
-}
-/** หน้าแรก: เริ่มหารค่าอาหาร/ค่าทริป บนบิลส่วนตัว */
-function startKind(kind){
-  ui.pendingKind = kind;
-  if (location.hash === "#/split" && ui.ctx === null && !ui.loading) return applyPendingKind();
-  location.hash = "#/split";
-}
-function applyPendingKind(){
-  var kind = ui.pendingKind;
-  if (!kind || ui.loading || ui.ctx !== null || currentPath() !== "/split") return;
-  ui.pendingKind = null;
-  if (kind === state.kind) return;
-  if (billIsEmpty()) return setKind(kind);
-  toast("บิลส่วนตัวมี"+kt("name")+"ค้างอยู่ ล้างข้อมูลก่อนถึงจะเริ่ม"+ktOf(kind,"name")+"ใหม่ได้","error");
-}
-/** ฟอร์มสร้างกลุ่ม: เปลี่ยนประเภท และเปลี่ยนชื่อตั้งต้นตาม ถ้ายังไม่ได้แก้ชื่อเอง */
-function setNewGroupKind(kind){
-  var input = document.getElementById("groupName");
-  var wasDefault = input && input.value === defaultGroupName(null, ui.newGroupKind);
-  ui.newGroupKind = kind === "trip" ? "trip" : "meal";
-  Array.prototype.forEach.call(document.querySelectorAll("[data-group-kind]"), function(b){
-    b.setAttribute("aria-pressed", b.getAttribute("data-group-kind") === ui.newGroupKind ? "true" : "false");
-  });
-  if (wasDefault) input.value = defaultGroupName(null, ui.newGroupKind);
-}
 
 /* ---- v2.1: ธีม ---- */
 function applyTheme(theme){
@@ -864,6 +947,7 @@ async function setTheme(theme){
 }
 
 async function loadDemo(){
+  if (state.kind === "trip") return loadTripDemo();
   state.members=[]; state.menus=[]; state.shared=[];
   ["มาร์ค","พูม","ไอซ์","ชาเน่","โม","ยูกะ","โฟรค์","เจ้าสัว"].forEach(function(n){
     state.members.push({ id:nid(), name:n });
@@ -896,6 +980,30 @@ async function loadDemo(){
   ];
   state.charges.forEach(function(c){ c.on=false; });   // ร้านอีสานทั่วไปไม่คิดค่าบริการ / VAT
   state.payers = [];
+  state.paid = {};
+  if (!ui.ctx) state.name = "ร้านส้มตำหน้ามอ";
+  state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
+  ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
+  render();
+  await commit("ใส่ข้อมูลตัวอย่างแล้ว");
+  render();
+}
+/** v3.2: ตัวอย่างทริปเชียงใหม่ 5 คน — แต่ละรายการมีคนจ่ายของตัวเอง */
+async function loadTripDemo(){
+  state.members = []; state.shared = []; state.payers = []; state.paid = {};
+  var names = ["มาร์ค","พูม","ไอซ์","โม","ยูกะ"];
+  names.forEach(function(n){ state.members.push({ id:nid(), name:n }); });
+  function id(n){ return state.members.filter(function(m){ return m.name === n; })[0].id; }
+  function ids(list){ return list.map(id); }
+  state.menus = [
+    { id:nid(), name:"ค่าที่พัก 2 คืน", price:4800, eaters:ids(names), payer:id("มาร์ค") },
+    { id:nid(), name:"ค่ารถตู้ไป-กลับ", price:2500, eaters:ids(names), payer:id("ไอซ์") },
+    { id:nid(), name:"ขันโตกมื้อเย็น", price:1750, eaters:ids(names), payer:id("ยูกะ") },
+    { id:nid(), name:"ตั๋วสวนพฤกษศาสตร์", price:300, eaters:ids(["พูม","โม","ยูกะ"]), payer:id("พูม") },
+    { id:nid(), name:"คาเฟ่ดอยสุเทพ", price:420, eaters:ids(["โม","ยูกะ","พูม"]), payer:id("โม") },
+    { id:nid(), name:"ค่าน้ำมันรถเช่า", price:900, eaters:ids(["มาร์ค","ไอซ์","โม"]), payer:id("มาร์ค") }
+  ];
+  if (!ui.ctx) state.name = "ทริปเชียงใหม่ 3 วัน 2 คืน";
   state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
   ui.confirmMember=null; ui.editingMember=null; ui.memberError=""; ui.undo=null;
   render();
