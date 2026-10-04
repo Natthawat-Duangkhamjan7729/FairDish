@@ -64,3 +64,51 @@ function demoReceiptHTML(){
     '<div class="r-total"><span>รวมทั้งหมด</span><span>1,110.00 ฿</span></div>'+
     barcode(1110)+'</div><div class="receipt-edge"></div></div>';
 }
+
+/* ---- v2.5: ใครจ่ายให้ร้าน + ใครโอนให้ใคร ---- */
+function payerSection(r){
+  var s = settle(r, state.payers);
+  var me = myMemberId();
+  var chosen = {};
+  state.payers.forEach(function(p){ chosen[p.id] = p; });
+  var active = state.payers.filter(function(p){ return !!nameOf(p.id); });
+
+  var picks = '<div class="pick" role="group" aria-label="คนที่จ่ายเงินให้ร้าน">'+r.list.map(function(p){
+    return '<button data-payer="'+p.id+'" aria-pressed="'+(!!chosen[p.id])+'">'+esc(p.name)+'</button>';
+  }).join("")+'</div>';
+
+  var amounts = active.length < 2 ? "" : '<div class="payer-amts">'+active.map(function(p){
+    return '<label class="payer-row"><span class="payer-name">'+esc(nameOf(p.id))+' จ่าย</span>'+
+      '<input type="number" inputmode="decimal" step="0.01" min="0" data-payer-amt="'+p.id+'" '+
+        'value="'+(p.amount == null ? "" : p.amount)+'" placeholder="ส่วนที่เหลือ" aria-label="ยอดที่ '+esc(nameOf(p.id))+' จ่าย">'+
+      '<span class="payer-unit">บาท</span></label>';
+  }).join("")+'</div>';
+
+  var msg = ({
+    none:    ["muted", "แตะชื่อคนที่จ่ายเงินให้ร้านไปก่อน จ่ายกันหลายคนก็เลือกได้"],
+    missing: ["muted", "ใส่ยอดที่แต่ละคนจ่าย เว้นว่างไว้ได้คนเดียว ระบบจะคิดเป็นส่วนที่เหลือให้"],
+    short:   ["error", "ยอดที่จ่ายรวมกันยังขาดอีก "+baht(s.diff)+" บาท"],
+    over:    ["error", "ยอดที่จ่ายรวมกันเกินยอดบิล "+baht(s.diff)+" บาท"]
+  })[s.reason];
+  var open = active.filter(function(p){ return p.amount == null; })[0];
+  if (s.ok && active.length > 1 && open) msg = ["muted", nameOf(open.id)+" จ่ายส่วนที่เหลือ "+baht(s.paid[open.id])+" บาท"];
+
+  var transfers = "";
+  if (s.ok){
+    transfers = '<div class="transfers" aria-live="polite"><h3>โอนเงินตามนี้</h3>'+
+      (s.transfers.length ? s.transfers.map(function(t){
+        var mine = me && (t.from === me || t.to === me);
+        return '<div class="tf-row'+(mine ? ' me' : '')+'">'+
+          '<span class="tf-who"><b>'+esc(t.fromName)+'</b> <span class="tf-arrow" aria-label="โอนให้">→</span> <b>'+esc(t.toName)+'</b></span>'+
+          '<span class="tf-amt">'+baht(t.amount)+'</span></div>';
+      }).join("") : '<p class="hint" style="margin:0">ไม่มีใครต้องโอน ทุกคนจ่ายพอดีกับที่กิน 👍</p>')+
+      '<p class="tf-note">'+(s.transfers.length > 1 ? "หักลบให้แล้ว โอนแค่ "+s.transfers.length+" ครั้งก็จบ" : "")+'</p></div>';
+  }
+
+  return '<section class="step-card payer-card" aria-labelledby="h-payers">'+
+    '<div class="step-head"><h2 id="h-payers">ใครจ่ายให้ร้านไปก่อน?</h2></div>'+
+    picks + amounts +
+    (msg ? '<p class="field-msg '+msg[0]+'" aria-live="polite">'+esc(msg[1])+'</p>' : '')+
+    transfers+
+  '</section>';
+}

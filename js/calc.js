@@ -61,3 +61,49 @@ function compute(){
            grand:Math.round(grand*100)/100, rate:rate, orphan:orphan, n:n };
 }
 function hasData(){ return state.members.length>0 && (state.menus.length + state.shared.length)>0; }
+
+/* =========================================================
+   4.5 ใครโอนให้ใคร (v2.5)
+   ========================================================= */
+/**
+ * r = ผลจาก compute(), payers = [{ id, amount }] — amount = null แปลว่า "จ่ายส่วนที่เหลือ" (มีได้คนเดียว)
+ * คืน { ok, reason, diff, transfers:[{ from, fromName, to, toName, amount }], paid:{ id: บาท } }
+ * reason: "none" ยังไม่ระบุคนจ่าย | "missing" เว้นยอดไว้เกินหนึ่งคน | "short" ยอดที่จ่ายยังไม่ครบ | "over" จ่ายเกินยอดบิล
+ * คิดเป็นสตางค์ (จำนวนเต็ม) ทั้งหมด ยอดที่โอนรวมกันจึงลงตัวพอดี และจับคู่คนติดมากสุดกับคนรอรับมากสุดเพื่อให้โอนน้อยครั้ง
+ */
+function settle(r, payers){
+  var names = {};
+  r.list.forEach(function(p){ names[p.id] = p.name; });
+  var ps = (payers || []).filter(function(p){ return names[p.id] !== undefined; });
+  var none = { ok:false, reason:"none", diff:0, transfers:[], paid:{} };
+  if (!ps.length) return none;
+
+  var target = Math.round(r.grand * 100);
+  var open = ps.filter(function(p){ return p.amount == null; });
+  if (open.length > 1) return { ok:false, reason:"missing", diff:0, transfers:[], paid:{} };
+  var fixed = ps.reduce(function(a,p){ return a + (p.amount == null ? 0 : Math.round(p.amount * 100)); }, 0);
+  var rest = target - fixed;
+  if (open.length === 0 && rest !== 0) return { ok:false, reason: rest > 0 ? "short" : "over", diff:Math.abs(rest)/100, transfers:[], paid:{} };
+  if (open.length === 1 && rest < 0) return { ok:false, reason:"over", diff:-rest/100, transfers:[], paid:{} };
+
+  var paid = {};
+  ps.forEach(function(p){
+    var c = p.amount == null ? rest : Math.round(p.amount * 100);
+    paid[p.id] = (paid[p.id] || 0) + c;
+  });
+  var bal = r.list.map(function(p){ return { id:p.id, name:p.name, c:(paid[p.id] || 0) - Math.round(p.rounded * 100) }; });
+  var debt = bal.filter(function(b){ return b.c < 0; }).sort(function(a,b){ return a.c - b.c; });
+  var cred = bal.filter(function(b){ return b.c > 0; }).sort(function(a,b){ return b.c - a.c; });
+  var transfers = [];
+  var i = 0, j = 0;
+  while (i < debt.length && j < cred.length){
+    var amt = Math.min(-debt[i].c, cred[j].c);
+    if (amt > 0) transfers.push({ from:debt[i].id, fromName:debt[i].name, to:cred[j].id, toName:cred[j].name, amount:amt/100 });
+    debt[i].c += amt; cred[j].c -= amt;
+    if (debt[i].c === 0) i++;
+    if (cred[j].c === 0) j++;
+  }
+  var paidBaht = {};
+  Object.keys(paid).forEach(function(id){ paidBaht[id] = paid[id] / 100; });
+  return { ok:true, reason:"", diff:0, transfers:transfers, paid:paidBaht };
+}

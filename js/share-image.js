@@ -52,7 +52,9 @@ async function receiptImageBlob(){
   var logo = await loadImage("img/icon-192.png");
 
   var W = 1080, PAD = 72, CARD_X = 60, CARD_W = W - 120, ROW = 76;
-  var H = 420 + r.list.length * ROW + 300;
+  var st = settle(r, state.payers);
+  var tfs = st.ok ? st.transfers : [];
+  var H = 420 + r.list.length * ROW + 300 + (tfs.length ? 110 + tfs.length * 64 : 0);
   var c = document.createElement("canvas");
   c.width = W; c.height = H;
   var ctx = c.getContext("2d");
@@ -92,6 +94,21 @@ async function receiptImageBlob(){
   ctx.fillStyle = pal.ink;
   ctx.textAlign = "left"; ctx.font = "600 42px "+pal.head; ctx.fillText("รวมทั้งหมด", CARD_X+PAD, y+90);
   ctx.textAlign = "right"; ctx.font = "600 46px "+pal.num; ctx.fillText(baht(r.grand)+" ฿", W-CARD_X-PAD, y+90);
+
+  // v2.5: ใครโอนให้ใคร
+  if (tfs.length){
+    var ty = y + 190;
+    ctx.textAlign = "left"; ctx.fillStyle = pal.ink; ctx.font = "600 34px "+pal.head;
+    ctx.fillText("โอนเงินตามนี้", CARD_X+PAD, ty);
+    ty += 66;
+    tfs.forEach(function(t){
+      ctx.textAlign = "left"; ctx.fillStyle = pal.ink; ctx.font = "400 32px "+pal.body;
+      ctx.fillText(fitText(ctx, t.fromName+"  →  "+t.toName, CARD_W - 2*PAD - 240), CARD_X+PAD, ty);
+      ctx.textAlign = "right"; ctx.font = "600 32px "+pal.num;
+      ctx.fillText(baht(t.amount), W-CARD_X-PAD, ty);
+      ty += 64;
+    });
+  }
 
   // ท้ายใบ
   var fy = H - 130;

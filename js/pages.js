@@ -185,9 +185,11 @@ function pageBill(){
   var mine = myShare();
   return head + '<div class="app-col">'+
       (r.orphan>0 ? '<div class="notice warn"><p>มี '+r.orphan+' เมนูที่ยังไม่ได้เลือกคนกิน จึงยังไม่ถูกรวมในบิลนี้</p></div>' : '')+
-      (mine ? '<div class="my-total my-total-bill"><span class="my-label">ยอดของคุณ ('+esc(nameOf(mine.id))+')</span>'+
+      (mine ? '<div class="my-total my-total-bill"><span class="my-label">ยอดของคุณ ('+esc(nameOf(mine.id))+')'+
+        (myTransferText() ? '<span class="my-sub">'+esc(myTransferText())+'</span>' : '')+'</span>'+
         '<span class="my-amt">'+baht(mine.rounded)+' <small>บาท</small></span></div>' : '')+
-      receiptHTML(r,{ interactive:true, reveal:done })+
+      receiptHTML(r,{ interactive:true, reveal:done && !ui.noReveal })+
+      payerSection(r)+
       '<div class="finish-actions">'+
         '<button class="btn-sm btn-block" id="shareImgBtn">'+ICON_SHARE+' แชร์รูปใบเสร็จ</button>'+
         '<button class="btn-quiet btn-block" id="copyBtn">'+ICON_COPY+' คัดลอกเป็นข้อความ</button>'+

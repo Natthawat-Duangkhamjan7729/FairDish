@@ -22,7 +22,7 @@
 | `shared-library.js` | รายการแนะนำค่าส่วนกลาง (แยกจากคลังเมนู) |
 | `utils.js` | `baht`, `esc`, ไอคอน |
 | `save.js` | `commit()` บันทึกข้อมูล |
-| `calc.js` | `compute()` คำนวณเงิน — **ห้ามแตะ DOM** |
+| `calc.js` | `compute()` คำนวณเงิน, `settle()` ใครโอนให้ใคร (คิดเป็นสตางค์) — **ห้ามแตะ DOM** |
 | `receipt.js`, `pages.js`, `render.js` | สร้าง HTML ของแต่ละหน้า |
 | `actions.js` | การกระทำของผู้ใช้ |
 | `share-image.js` | วาดใบเสร็จเป็นรูป PNG ด้วย canvas (`receiptImageBlob()`, `shareReceiptImage()`) สีอ่านจากตัวแปร CSS ของ `.receipt-wrap` |

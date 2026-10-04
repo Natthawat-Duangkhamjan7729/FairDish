@@ -25,6 +25,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
   if (e.target.id === "groupName"){ e.preventDefault(); createGroup(); }
+  if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
 });
 document.addEventListener("input", function(e){
@@ -76,7 +77,7 @@ document.addEventListener("click", async function(e){
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-start-group],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,"+
-            "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,"+
+            "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],"+
             "[data-me],[data-forget-group],#groupCreate,#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -91,6 +92,9 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-del-member"))) return askDelete(v);
   if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
+
+  /* v2.5: ใครจ่ายให้ร้าน */
+  if ((v = t.getAttribute("data-payer"))) return togglePayer(v);
 
   /* v2.4: ตอนจบมื้อ */
   if (t.id==="shareImgBtn") return shareReceiptImage();
@@ -147,8 +151,8 @@ document.addEventListener("click", async function(e){
   if (t.id==="confirmReset"){
     if (ui.ctx && !resetNameMatches()) return;
     ui.confirmReset = false;
-    var before = JSON.parse(JSON.stringify({ members:state.members, menus:state.menus, shared:state.shared, charges:state.charges }));
-    state.members=[]; state.menus=[]; state.shared=[];
+    var before = JSON.parse(JSON.stringify({ members:state.members, menus:state.menus, shared:state.shared, charges:state.charges, payers:state.payers }));
+    state.members=[]; state.menus=[]; state.shared=[]; state.payers=[];
     state.charges = state.charges.filter(function(c){ return c.fixed; });
     state.charges.forEach(function(c){ c.on=false; });
     state.menuForm=null; state.sharedForm=null; state.chargeForm=null; state.open={};
@@ -256,4 +260,10 @@ document.getElementById("installDialog").addEventListener("click", function(e){
 });
 document.getElementById("meDialog").addEventListener("click", function(e){
   if (e.target === this) closeMeDialog();
+});
+
+/* v2.5: ยอดที่หัวจ่ายแต่ละคนจ่าย — บันทึกตอนพิมพ์เสร็จ (ออกจากช่อง / กด Enter) */
+document.addEventListener("change", function(e){
+  var id = e.target && e.target.getAttribute && e.target.getAttribute("data-payer-amt");
+  if (id) setPayerAmount(id, e.target.value);
 });

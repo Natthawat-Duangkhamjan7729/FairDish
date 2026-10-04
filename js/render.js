@@ -113,7 +113,7 @@ function myTotalHTML(){
   var mine = myShare();
   if (!mine) return "";
   return '<a class="my-total" href="'+billHref()+'">'+
-    '<span class="my-label">ยอดของคุณ</span>'+
+    '<span class="my-label">ยอดของคุณ'+(myTransferText() ? '<span class="my-sub">'+esc(myTransferText())+'</span>' : '')+'</span>'+
     '<span class="my-amt">'+baht(mine.rounded)+' <small>บาท</small></span>'+
     '<span class="my-go" aria-hidden="true">›</span></a>';
 }
