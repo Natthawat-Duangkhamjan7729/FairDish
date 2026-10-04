@@ -303,7 +303,7 @@ function validateMenuForm(f){
   else if (price < 0) errs.price = "ราคาต้องไม่ติดลบ";
   else if (price > MAX_PRICE) errs.price = "ราคาสูงเกินจริง ลองตรวจจำนวนศูนย์อีกครั้ง";
 
-  if (state.members.length === 0) errs.eaters = "ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในแท็บ "คน" ก่อน";
+  if (state.members.length === 0) errs.eaters = "ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในแท็บ \"คน\" ก่อน";
   else if (f.eaters.length === 0) errs.eaters = "เลือกคนที่กินเมนูนี้อย่างน้อย 1 คน";
   return errs;
 }
