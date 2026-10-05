@@ -129,7 +129,7 @@ document.addEventListener("click", async function(e){
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
             "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
-            "[data-dissolve],[data-dissolve-ok],[data-open-join],[data-share-close],[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
+            "[data-scan-close],[data-scan-paste],[data-dissolve],[data-dissolve-ok],[data-open-join],[data-share-close],[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
             "[data-onb-start],[data-tour-start],[data-tour-next],[data-tour-skip],[data-tour-done],[data-tour-back],[data-tour-install]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -214,7 +214,9 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-myname-clear")) return clearMyName();
   if (t.getAttribute("data-add-self")) return addSelf();
   if (t.getAttribute("data-share-close")) return closeShareDialog();
-  if (t.getAttribute("data-open-join")) return openJoinSheet();
+  if (t.getAttribute("data-open-join")) return openJoin();               // v4.13: มีกล้อง = หน้าต่างสแกน · ไม่มี = วางลิงก์
+  if (t.getAttribute("data-scan-close")) return closeScanDialog();
+  if (t.getAttribute("data-scan-paste")) return openJoinSheet();
   if (t.getAttribute("data-dissolve")) return openDissolveSheet();       // v4.11: ยุบกลุ่ม
   if (t.getAttribute("data-dissolve-ok")) return dissolveGroup();          // v4.11: สแกน/วางลิงก์เข้ากลุ่ม
   if (t.getAttribute("data-me-join")) return joinAsMe();                // v4.9: เข้าร่วมกลุ่ม
@@ -398,6 +400,11 @@ document.getElementById("meDialog").addEventListener("click", function(e){
 document.getElementById("shareDialog").addEventListener("click", function(e){
   if (e.target === this) closeShareDialog();
 });
+/* v4.13: หน้าต่างสแกน — ปิดทางไหนก็ตาม (Esc / พื้นหลัง / ปุ่มปิด) ต้องปิดกล้อง */
+document.getElementById("scanDialog").addEventListener("click", function(e){
+  if (e.target === this) closeScanDialog();
+});
+document.getElementById("scanDialog").addEventListener("close", stopScan);
 
 /* v2.5: ยอดที่หัวจ่ายแต่ละคนจ่าย — บันทึกตอนพิมพ์เสร็จ (ออกจากช่อง / กด Enter) */
 document.addEventListener("change", function(e){

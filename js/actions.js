@@ -907,7 +907,7 @@ async function openKindSheet(){
   renderGlobalSheet('<div class="sheet-head-row"><h2 class="sheet-title" id="kindTitle">'+L("วันนี้หารอะไร")+'</h2>'+
       // v4.11: เข้ากลุ่มของเพื่อนด้วย QR / ลิงก์ (ข้างหัวข้อ)
       (Cloud.ready() ? '<button class="link-btn scan-link" type="button" data-open-join="1">'+
-        (ui.camera === false ? ICON_USERS+' '+L("เข้ากลุ่มด้วยลิงก์") : ICON_SCAN+' '+L("สแกนเข้ากลุ่ม"))+'</button>' : '')+'</div>'+
+        (canUseCamera() ? ICON_SCAN+' '+L("สแกนเข้ากลุ่ม") : ICON_USERS+' '+L("เข้ากลุ่มด้วยลิงก์"))+'</button>' : '')+'</div>'+
     '<p class="sheet-sub">'+L("เลือกครั้งเดียวตอนเริ่ม")+'</p>'+
     '<div class="kind-grid">'+card("meal","meal")+card("trip","trip")+tripGroupCard()+'</div>'+
     '<p class="sheet-note">'+note+'</p>', "kindTitle");
@@ -950,9 +950,6 @@ async function dissolveGroup(){
 /* ---- v4.11: เข้ากลุ่มของเพื่อน — สแกน QR ในแอป (เบราว์เซอร์ที่มี BarcodeDetector) หรือวางลิงก์/รหัส ---- */
 var ICON_SCAN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>';
 var scanStream = null, scanTimer = null;
-function canScanQr(){
-  return ui.camera !== false && typeof window.BarcodeDetector === "function" && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-}
 /** v4.12: เครื่องนี้มีกล้องไหม (PC ส่วนใหญ่ไม่มี → ไม่มีระบบสแกน มีแค่วางลิงก์) — ui.camera: null ยังไม่รู้ / true / false */
 async function detectCamera(){
   try {
@@ -961,17 +958,15 @@ async function detectCamera(){
     ui.camera = list.some(function(d){ return d.kind === "videoinput"; });
   } catch(e){ ui.camera = false; }
 }
+function canUseCamera(){ return ui.camera !== false && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia); }
+/** ปุ่ม "สแกนเข้ากลุ่ม": มีกล้อง = หน้าต่างสแกน · ไม่มีกล้อง (PC) = แผ่นวางลิงก์ */
+function openJoin(){ return canUseCamera() ? openScanDialog() : openJoinSheet(); }
+/** แผ่นวางลิงก์/รหัสกลุ่ม */
 function openJoinSheet(){
-  stopScan();
+  closeScanDialog();
   ui.sheet = "join";
-  // v4.12: มีกล้อง + อ่าน QR ได้ = เปิดกล้องหลังทันที · มีกล้องแต่เบราว์เซอร์อ่าน QR ไม่ได้ (Safari) = ใช้แอปกล้อง · ไม่มีกล้อง (PC) = วางลิงก์อย่างเดียว
-  var cam = canScanQr(), noCam = ui.camera === false;
-  renderGlobalSheet('<h2 class="sheet-title" id="joinTitle">'+(noCam ? L("เข้ากลุ่มของเพื่อน") : L("สแกนเข้ากลุ่ม"))+'</h2>'+
-    '<p class="sheet-sub">'+(noCam ? L("วางลิงก์ที่เพื่อนส่งมา") : L("สแกน QR จากเครื่องเพื่อน หรือวางลิงก์ที่เพื่อนส่งมา"))+'</p>'+
-    (cam ? '<div class="scan-box"><video id="scanVideo" playsinline muted aria-label="'+L("กล้องสแกน QR")+'"></video></div>'+
-           '<p class="field-msg muted" id="scanMsg" aria-live="polite">'+L("กำลังเปิดกล้อง…")+'</p>'
-         : noCam ? ''
-         : '<p class="hint">'+L("เปิดแอปกล้องของมือถือแล้วสแกน QR ของเพื่อนได้เลย ลิงก์จะเปิด FairDish ให้เอง")+'</p>')+
+  renderGlobalSheet('<h2 class="sheet-title" id="joinTitle">'+L("เข้ากลุ่มของเพื่อน")+'</h2>'+
+    '<p class="sheet-sub">'+L("วางลิงก์ที่เพื่อนส่งมา")+'</p>'+
     '<div class="form-box">'+
       '<label class="sr-only" for="groupJoinInput">'+L("ลิงก์หรือรหัสกลุ่ม")+'</label>'+
       '<input type="text" id="groupJoinInput" placeholder="'+L("วางลิงก์หรือรหัสกลุ่ม")+'" autocomplete="off" aria-describedby="groupJoinMsg">'+
@@ -979,35 +974,96 @@ function openJoinSheet(){
       '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
       '<button class="btn-sm" type="button" id="groupJoin">'+L("เข้ากลุ่ม")+'</button></div>'+
     '</div>', "joinTitle");
-  if (cam) startScan();
+}
+
+/* ---- v4.13: หน้าต่างสแกน QR — กล้องหลัง + กรอบสแกน ใช้ได้ทุกมือถือ
+   ตัวอ่าน: BarcodeDetector ของเบราว์เซอร์ (ถ้ามี) ไม่งั้นโหลด jsQR (js/vendor/jsQR.js) ตอนเปิดกล้องครั้งแรก ---- */
+function openScanDialog(){
+  closeGlobalSheet();
+  var box = document.getElementById("scanDialog");
+  if (!box) return openJoinSheet();
+  box.innerHTML =
+    '<div class="install-head"><div><h2 id="scanTitle">'+L("สแกนเข้ากลุ่ม")+'</h2>'+
+      '<p>'+L("ส่องกล้องไปที่ QR บนเครื่องเพื่อน แล้วรอสักครู่")+'</p></div>'+
+      '<button class="icon-btn" type="button" data-scan-close="1" aria-label="'+L("ปิด")+'">'+ICON_X+'</button></div>'+
+    '<div class="scan-view">'+
+      '<video id="scanVideo" playsinline muted autoplay aria-label="'+L("กล้องสแกน QR")+'"></video>'+
+      '<div class="scan-frame" aria-hidden="true"><i class="sc tl"></i><i class="sc tr"></i><i class="sc bl"></i><i class="sc br"></i><i class="scan-line"></i></div>'+
+    '</div>'+
+    '<p class="field-msg muted scan-msg" id="scanMsg" aria-live="polite">'+L("กำลังเปิดกล้อง…")+'</p>'+
+    '<button class="link-btn center scan-paste" type="button" data-scan-paste="1">'+L("สแกนไม่ได้? วางลิงก์แทน")+'</button>';
+  if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
+  startScan();
+}
+function closeScanDialog(){
+  stopScan();
+  var box = document.getElementById("scanDialog");
+  if (!box || !box.open) return;
+  if (typeof box.close === "function") box.close(); else box.removeAttribute("open");
+}
+function loadScriptOnce(src){
+  return new Promise(function(ok, fail){
+    if (document.querySelector('script[data-src="'+src+'"]')) return ok();
+    var s = document.createElement("script");
+    s.src = src; s.setAttribute("data-src", src);
+    s.onload = function(){ ok(); }; s.onerror = function(){ s.remove(); fail(new Error("load " + src)); };
+    document.head.appendChild(s);
+  });
+}
+/** ฟังก์ชันอ่าน QR จากวิดีโอ → Promise<[ข้อความ]> */
+async function qrReader(){
+  if (typeof window.BarcodeDetector === "function"){
+    try {
+      var det = new window.BarcodeDetector({ formats:["qr_code"] });
+      return function(v){ return det.detect(v).then(function(cs){ return cs.map(function(c){ return c.rawValue; }); }); };
+    } catch(e){}
+  }
+  if (typeof window.jsQR !== "function") await loadScriptOnce("js/vendor/jsQR.js");
+  var c = document.createElement("canvas"), ctx = c.getContext("2d", { willReadFrequently:true });
+  return function(v){
+    var w = v.videoWidth, h = v.videoHeight;
+    if (!w || !h) return Promise.resolve([]);
+    var k = Math.min(1, 640 / Math.max(w, h));            // ย่อภาพก่อนอ่าน เร็วขึ้นมากบนมือถือ
+    c.width = Math.round(w * k); c.height = Math.round(h * k);
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    var r = window.jsQR(ctx.getImageData(0, 0, c.width, c.height).data, c.width, c.height, { inversionAttempts:"dontInvert" });
+    return Promise.resolve(r && r.data ? [r.data] : []);
+  };
 }
 async function startScan(){
-  var msg = function(t){ var el = document.getElementById("scanMsg"); if (el) el.textContent = t; };
+  var msg = function(t, bad){ var el = document.getElementById("scanMsg"); if (el){ el.textContent = t; el.className = "field-msg scan-msg " + (bad ? "error" : "muted"); } };
+  var open = function(){ var b = document.getElementById("scanDialog"); return !!(b && b.open && document.getElementById("scanVideo")); };
+  stopScan();
   try {
-    var stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }, audio:false });
-    var v = document.getElementById("scanVideo");
-    if (!v || ui.sheet !== "join"){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }   // ปิดแผ่นไปก่อนกล้องเปิดเสร็จ
+    var stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:"environment" } }, audio:false });   // กล้องหลัง
+    if (!open()){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }        // ปิดหน้าต่างไปก่อนกล้องเปิดเสร็จ
     scanStream = stream;
+    var v = document.getElementById("scanVideo");
     v.srcObject = stream;
     await v.play();
-    var det = new window.BarcodeDetector({ formats:["qr_code"] });
+    var read = await qrReader();
+    if (!scanStream) return;
     msg(L("ส่องกล้องไปที่ QR ของเพื่อน"));
     var tick = async function(){
-      if (!scanStream || !document.getElementById("scanVideo")) return stopScan();
+      if (!scanStream || !open()) return stopScan();
       try {
-        var codes = await det.detect(v);
-        for (var i = 0; i < codes.length; i++){
-          var hash = groupHashFromInput(codes[i].rawValue);
-          if (hash){ closeGlobalSheet(); location.hash = hash; return; }
+        var texts = await read(document.getElementById("scanVideo"));
+        for (var i = 0; i < texts.length; i++){
+          var hash = groupHashFromInput(texts[i]);
+          if (hash){
+            if (navigator.vibrate) try { navigator.vibrate(60); } catch(e){}
+            closeScanDialog(); location.hash = hash; return;
+          }
         }
-        if (codes.length) msg(L("QR นี้ไม่ใช่ลิงก์กลุ่มของ FairDish"));
+        if (texts.length) msg(L("QR นี้ไม่ใช่ลิงก์กลุ่มของ FairDish"), true);
       } catch(e){}
-      scanTimer = setTimeout(tick, 250);
+      scanTimer = setTimeout(tick, 200);
     };
     tick();
   } catch(e){
     stopScan();
-    msg(L("เปิดกล้องไม่ได้ — วางลิงก์ด้านล่างแทน หรือใช้แอปกล้องของมือถือสแกน"));
+    msg(e && e.name === "NotAllowedError" ? L("ไม่ได้รับอนุญาตให้ใช้กล้อง — เปิดสิทธิ์กล้องในการตั้งค่าเบราว์เซอร์ หรือวางลิงก์แทน")
+                                          : L("เปิดกล้องไม่ได้ — วางลิงก์ด้านล่างแทน หรือใช้แอปกล้องของมือถือสแกน"), true);
   }
 }
 function stopScan(){

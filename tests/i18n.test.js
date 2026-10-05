@@ -15,7 +15,7 @@ function loadEN(){
 }
 function keysInCode(){
   const keys = new Set();
-  for (const f of fs.readdirSync(dir)){
+  for (const f of fs.readdirSync(dir).filter(f => f.endsWith(".js"))){   // v4.13: ข้ามโฟลเดอร์ js/vendor
     if (/library|i18n/.test(f)) continue;
     const s = fs.readFileSync(path.join(dir, f), "utf8");
     const re = /\bL\(\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;

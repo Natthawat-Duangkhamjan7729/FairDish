@@ -73,7 +73,7 @@ function route(){
   else if ((path==="/share" || path==="/bill") && groupId) refreshGroup(false);   // สถานะยืนยัน/ติ๊กโอนของเพื่อนต้องเป็นล่าสุด
   if (path !== "/me"){ ui.guestFor = null; ui.guestSel = null; ui.guestDone = false; }
   document.title = groupId && Store.groupName ? Store.groupName + " · FairDish" : L(r.title);
-  closeMeDialog(); closeInstall(); closeShareDialog();   // เปลี่ยนหน้าแล้วหน้าต่างที่ค้างอยู่ต้องปิดตาม
+  closeMeDialog(); closeInstall(); closeShareDialog(); closeScanDialog();   // เปลี่ยนหน้าแล้วหน้าต่างที่ค้างอยู่ต้องปิดตาม
   closeGlobalSheet();
   if (path !== "/bill") ui.showDone = false;
   // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน

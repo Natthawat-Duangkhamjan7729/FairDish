@@ -499,8 +499,20 @@ body.show-foot .foot{display:block}
 .sheet-head-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
 .scan-link{display:inline-flex;align-items:center;gap:var(--s1);white-space:nowrap}
 .scan-link svg{width:18px;height:18px}
-.scan-box{border-radius:var(--r-md);overflow:hidden;background:var(--ink);aspect-ratio:1/1;max-height:min(60vh,360px);margin:var(--s3) auto 0;width:100%}
-.scan-box video{width:100%;height:100%;object-fit:cover;display:block}
+/* v4.13: หน้าต่างสแกน — วิดีโอเต็มกรอบ พื้นที่นอกช่องสแกนมืดลง มุมสี่มุม + เส้นสแกนวิ่ง */
+.scan-view{position:relative;width:100%;aspect-ratio:1/1;max-height:min(62vh,420px);margin:0 auto;border-radius:var(--r-md);overflow:hidden;background:#000}
+.scan-view video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.scan-frame{position:absolute;left:14%;top:14%;width:72%;height:72%;border-radius:18px;box-shadow:0 0 0 999px rgba(0,0,0,.45)}
+.scan-frame .sc{position:absolute;width:34px;height:34px;border:4px solid #FFF;border-radius:4px}
+.scan-frame .tl{left:-2px;top:-2px;border-right:none;border-bottom:none;border-top-left-radius:18px}
+.scan-frame .tr{right:-2px;top:-2px;border-left:none;border-bottom:none;border-top-right-radius:18px}
+.scan-frame .bl{left:-2px;bottom:-2px;border-right:none;border-top:none;border-bottom-left-radius:18px}
+.scan-frame .br{right:-2px;bottom:-2px;border-left:none;border-top:none;border-bottom-right-radius:18px}
+.scan-line{position:absolute;left:8%;right:8%;top:8%;height:3px;border-radius:3px;background:var(--primary);box-shadow:0 0 12px var(--primary)}
+@media(prefers-reduced-motion:no-preference){ .scan-line{animation:scanMove 2.2s ease-in-out infinite alternate} }
+@keyframes scanMove{from{top:8%}to{top:90%}}
+.scan-msg{text-align:center;margin-top:var(--s3)}
+.scan-paste{margin:var(--s2) auto 0;display:flex;justify-content:center}
 .share-dialog .btn-pair{margin:var(--s3) 0 var(--s4)}
 #homeActive>*+*{margin-top:var(--s4)}   /* v4.10: การ์ดบิลในเครื่อง + บิลกลุ่มเรียงกัน */
 .me-or{font-size:var(--fs-small);color:var(--ink-2);margin:var(--s4) 0 var(--s2)}

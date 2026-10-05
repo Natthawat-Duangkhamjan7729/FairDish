@@ -54,6 +54,7 @@
 - เปลี่ยนเวอร์ชัน: แก้ `APP_VERSION` ใน `js/state.js`, footer ใน `index.html` และ README ให้ตรงกัน
 - ห้ามเพิ่ม dependency, bundler หรือ framework โดยไม่ได้ตกลงกันก่อน
   (Supabase ตกลงแล้วสำหรับระบบกลุ่ม — เรียกผ่าน `fetch` ไม่ใช้ไลบรารี)
+  (v4.13 ตกลงแล้ว: jsQR 1.4.0 ที่ `js/vendor/jsQR.js` (Apache-2.0, ไลเซนส์อยู่ข้างกัน) อ่าน QR ตอนสแกนเข้ากลุ่ม — โหลดด้วย `loadScriptOnce()` ตอนเปิดกล้องเท่านั้น ห้ามใส่ใน `index.html`)
 - ลิงก์ไปหน้าหารบิล/ใบสรุปยอดใช้ `splitHref()` / `billHref()` เพื่อให้อยู่ในกลุ่มเดิม
   (ลิงก์ใน `index.html` ใส่ `data-link="split|bill"` แล้ว `updateChrome()` ตั้ง href ให้)
 - แถวรายการและชิปชื่อไม่ใส่ไอคอนแก้/ลบ — แตะแถว/ชื่อเพื่อเปิดโหมดแก้ ปุ่มลบและปุ่มอื่นอยู่ในนั้น
@@ -97,7 +98,7 @@
   ยุบกลุ่ม: `delete_group(p_id, p_owner)` ใน schema.sql — กุญแจคนสร้าง `myGroups[].owner` · ชวนเพื่อน = `openShareDialog()` (หน้า `/share` ยังเปิดจากลิงก์ได้)
   QR ถึงเวอร์ชัน 15 (220 ไบต์) · ชื่อฟังก์ชันระดับบนสุดห้ามซ้ำข้ามไฟล์ (tests/syntax.test.js เช็ก)
 - v4.12: มือถือไม่มีแท็บ "สรุป" (`steps()`) — ใครจ่าย/ใครโอน (`settleHTML()`) อยู่ใน `#billSettle` ของใบสรุปยอด, การสอนมือถือไปใบสรุปจาก `#totalBar`
-  แถบ in-app browser `renderInAppBar()` (install.js) · `ui.camera` จาก `detectCamera()` คุมระบบสแกน · ทริปตั้งชื่อตอนเริ่ม `openTripNameSheet()`
+  แถบ in-app browser `renderInAppBar()` (install.js) · `ui.camera` จาก `detectCamera()` คุมระบบสแกน (v4.13: `openJoin()` → หน้าต่าง `#scanDialog` / แผ่นวางลิงก์) · ทริปตั้งชื่อตอนเริ่ม `openTripNameSheet()`
   ห้ามโฟกัสช่องพิมพ์เองในหน้าที่ขึ้นโดยผู้ใช้ไม่ได้กด (หน้าถามชื่อ, หน้าต่างเข้าร่วมกลุ่ม) — แป้นพิมพ์มือถือเด้งบัง
 - v4.2: **ห้ามเก็บเบอร์โทร เลขบัตรประชาชน หรือข้อมูลระบุตัวตนอื่นในข้อมูลบิล** (บิลกลุ่มอยู่บน Supabase และใครมีลิงก์ก็อ่านได้ — PDPA)
   `normalizeBill()` เก็บ members แค่ `{ id, name }`

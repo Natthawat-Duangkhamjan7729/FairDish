@@ -553,6 +553,9 @@ EN = {
   /* v4.11: สแกนเข้ากลุ่ม · ยุบกลุ่ม · เข้ารหัส */
   "สแกนเข้ากลุ่ม":"Scan to join",
   "เข้ากลุ่มด้วยลิงก์":"Join with a link",
+  "ส่องกล้องไปที่ QR บนเครื่องเพื่อน แล้วรอสักครู่":"Point the camera at the QR on your friend's phone and hold still",
+  "สแกนไม่ได้? วางลิงก์แทน":"Can't scan? Paste the link instead",
+  "ไม่ได้รับอนุญาตให้ใช้กล้อง — เปิดสิทธิ์กล้องในการตั้งค่าเบราว์เซอร์ หรือวางลิงก์แทน":"Camera access was denied — allow the camera in your browser settings, or paste the link instead",
   "เปิดอยู่ในแอป {app} — บิลที่ทำจะถูกเก็บไว้ในแอปนี้เท่านั้น เปิดในเบราว์เซอร์ดีกว่า ข้อมูลจะอยู่ครบทุกครั้งที่เปิด":"You're inside {app} — bills you make stay in this app only. Open FairDish in your browser so your data is there every time",
   "แตะ ••• แล้วเลือก \"เปิดใน Safari\"":"Tap ••• and choose \"Open in Safari\"",
   "แตะ ⋮ แล้วเลือก \"เปิดในเบราว์เซอร์\"":"Tap ⋮ and choose \"Open in browser\"",
