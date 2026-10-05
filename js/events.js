@@ -135,7 +135,7 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-guest-again")){ ui.guestDone = false; return rerenderGuest(); }
   if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return window.scrollTo(0,0); }
   if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return window.scrollTo(0,0); }
-  if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; location.hash = splitHref(); return; }
+  if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; ui.gotoSettle = true; location.hash = splitHref(); return; }   // v4.3: จอคอมเลื่อนแผงขวาไปที่ "ใครจ่าย"
   if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
   if (t.id==="inviteBtn") return inviteFromBill();

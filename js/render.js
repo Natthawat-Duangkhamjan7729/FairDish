@@ -4,6 +4,23 @@
 /* =========================================================
    7. แสดงผลหน้าแอป
    ========================================================= */
+/** v4.3: จอคอม (≥1024px) — แถบเมนูซ้าย + แผงสรุปขวาในหน้าหารบิล (ค่าเดียวกับ media query ใน css/style.css) */
+var WIDE_MQ = window.matchMedia ? window.matchMedia("(min-width:1024px)") : null;
+function isWide(){ return !!(WIDE_MQ && WIDE_MQ.matches); }
+/** จอข้ามเส้น 1024px ตอนอยู่หน้าหารบิล → วาดหน้าใหม่ (แท็บสรุปหาย/กลับมา) โดยไม่ออกจากมื้อในทริป */
+function onWideChange(){
+  if (currentPath() !== "/split") return;
+  var y = window.scrollY;
+  document.getElementById("view").innerHTML = pageSplit();
+  render();
+  syncSheetLock();
+  window.scrollTo(0, y);
+}
+if (WIDE_MQ){
+  if (WIDE_MQ.addEventListener) WIDE_MQ.addEventListener("change", onWideChange);
+  else if (WIDE_MQ.addListener) WIDE_MQ.addListener(onWideChange);
+}
+
 function render(){
   renderMealHead(); renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
   renderStepTabs(); renderTotalBar(); renderAppBarSub();
@@ -100,19 +117,26 @@ function setStep(step, focusTab){
 }
 function renderTotalBar(){
   var bar = document.getElementById("totalBar");
+  var side = document.getElementById("sideTotal");    // v4.3: จอคอม — ยอดมื้อในทริปอยู่ในแผงขวา
   if (!bar) return;
-  if (ui.loading || !hasData()){
+  var html = (ui.loading || !hasData()) ? "" : totalBarHTML();
+  if (side) side.innerHTML = html ? '<div class="side-total">'+html+'</div>' : "";
+  if (!html || isWide()){
     bar.hidden = true; bar.innerHTML = "";
     document.body.classList.remove("has-total");
     return;
   }
+  bar.hidden = false;
+  document.body.classList.add("has-total");
+  bar.innerHTML = html;
+}
+/** ยอดรวม + ปุ่มไปต่อ (แถบล่างจอบนมือถือ / แผงขวาของมื้อในทริปบนคอม) */
+function totalBarHTML(){
   var r = compute();
   var me = myMemberId();
   var mine = me ? r.list.filter(function(p){ return p.id===me; })[0] : null;
-  bar.hidden = false;
-  document.body.classList.add("has-total");
   var inMeal = !!ui.tripStash;
-  bar.innerHTML = '<div class="t-sum"><span class="t-label">'+(inMeal ? L("ยอดมื้อนี้") : L("รวมทั้งหมด"))+(mine ? ' · '+L("ฉัน {amt}", { amt:baht(mine.rounded) }) : '')+'</span>'+
+  return '<div class="t-sum"><span class="t-label">'+(inMeal ? L("ยอดมื้อนี้") : L("รวมทั้งหมด"))+(mine ? ' · '+L("ฉัน {amt}", { amt:baht(mine.rounded) }) : '')+'</span>'+
       '<span class="t-amt">'+baht(r.grand)+' ฿</span></div>'+
     (inMeal ? '<button class="btn-main" type="button" data-back-trip="1">'+L("กลับไปที่ทริป")+'</button>'
             : '<a class="btn-main" href="'+billHref()+'">'+L("ดูใบสรุปยอด")+'</a>');

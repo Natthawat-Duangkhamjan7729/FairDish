@@ -903,6 +903,113 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .lang-switch button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 
 /* ===================================================================
+   v4.3 — ใช้ได้ทุกอุปกรณ์
+   มือถือ (<600px) เหมือนเดิม · แท็บเล็ต (600–1023px) กว้าง 720px ยังมีแท็บล่าง แผ่นฟอร์มเป็นหน้าต่างกลางจอ
+   คอม (≥1024px — ค่าเดียวกับ isWide() ใน js/render.js) แถบเมนูซ้าย + หน้าหารบิลมีแผงสรุปขวา + ใบสรุปยอดสองคอลัมน์
+   =================================================================== */
+.tabbar .side-only{display:none}
+.split-side .step-panel{margin-top:0}
+.side-total{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3);padding:18px var(--s4);background:var(--card);border-radius:var(--r-md);box-shadow:var(--shadow)}
+.side-total .t-amt{font-size:28px}
+
+@media(min-width:600px){
+  :root{--shell:720px}
+  /* แถบหัว/แท็บล่าง/แถบยอดรวมกว้างเต็มจอ เนื้อหาแต่ละหน้ากว้างไม่เกิน --shell */
+  .app-shell{max-width:none;border-inline:none}
+  .page{max-width:var(--shell);margin-inline:auto}
+  .tabbar{max-width:none;padding-inline:max(var(--s3), calc(50% - 280px))}
+  .total-bar{max-width:none;padding-inline:max(var(--s4), calc(50% - var(--shell) / 2 + var(--s4)))}
+  /* แผ่นล่างจอ → หน้าต่างกลางจอ */
+  .sheet-wrap{display:grid;place-items:center;padding:var(--s5)}
+  .sheet{position:relative;left:auto;right:auto;bottom:auto;width:100%;max-width:560px;max-height:calc(100dvh - 2 * var(--s5));
+    padding:var(--s5) var(--s5) var(--s5);border-radius:var(--r-lg);box-shadow:0 30px 60px -20px var(--toast-shadow)}
+  .sheet-grip{display:none}
+  /* ประวัติ: รายการบิลสองคอลัมน์ */
+  .page-history{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--s3);align-content:start}
+  .page-history>.list-head,.page-history>.join-fold,.page-history>.empty{grid-column:1/-1}
+  .step-tabs{border-radius:0 0 var(--r-md) var(--r-md)}
+}
+@media(min-width:600px) and (prefers-reduced-motion:no-preference){
+  .sheet-wrap:not(.still) .sheet{animation:sheet-pop .2s cubic-bezier(.2,.8,.3,1)}
+  @keyframes sheet-pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+}
+
+@media(min-width:1024px){
+  :root{--shell:1120px;--side:248px}
+  body,body.no-tabbar,body.no-tabbar.has-total{padding-left:var(--side);padding-bottom:var(--s6)}
+  body.onb{padding-left:0}
+
+  /* แถบเมนูซ้าย (#tabbar ตัวเดียวกับแท็บล่าง) */
+  .tabbar,body.no-tabbar .tabbar{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:var(--s1);
+    top:0;right:auto;width:var(--side);max-width:none;margin:0;min-height:0;padding:var(--s4) var(--s3) var(--s5);
+    border-top:none;border-right:1px solid var(--line);overflow-y:auto}
+  body.onb .tabbar{display:none}
+  .tabbar .side-only{display:flex}
+  .tabbar a,.tabbar button{flex-direction:row;align-items:center;justify-content:flex-start;gap:var(--s3);min-height:48px;padding:0 var(--s3);
+    border-radius:var(--r-sm);font-size:var(--fs-body);color:var(--ink-2)}
+  .tabbar a svg{width:22px;height:22px;flex:0 0 auto}
+  .tabbar a:hover{background:var(--surface-2);color:var(--ink)}
+  .tabbar a.on{background:var(--link-soft);color:var(--link)}
+  .tabbar .side-brand{order:-2;min-height:52px;margin-bottom:var(--s3);gap:10px;color:var(--ink)}
+  .tabbar .side-brand:hover{background:none}
+  .side-brand img{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);object-fit:cover}
+  .side-brand b{font-family:var(--font-head);font-size:20px;font-weight:600;letter-spacing:-.2px}
+  .tabbar .tab-new{order:-1;justify-content:center;gap:var(--s2);min-height:50px;margin-bottom:var(--s4);border-radius:var(--r-pill);
+    background:var(--coral-grad);color:var(--on-fill);box-shadow:0 4px 0 var(--coral-edge),0 12px 22px -10px var(--coral-glow);font-weight:600}
+  .tabbar .tab-new:active{transform:translateY(3px);box-shadow:0 1px 0 var(--coral-edge)}
+  .tab-plus,.tab-new:active .tab-plus{width:auto;height:auto;margin:0;background:none;box-shadow:none;transform:none}
+  .tab-plus svg{width:20px;height:20px}
+  .tabbar [data-tab=more]{margin-top:auto}
+  /* ปุ่มตั้งค่า/โลโก้ซ้ำกับแถบซ้าย */
+  a.appbar-icon[href="#/more"],.home-top .logo-mark,.home-top .home-brand{display:none}
+  .home-top{justify-content:flex-end}
+
+  .toast,body.no-tabbar .toast,body.no-tabbar.has-total .toast{left:calc(50% + var(--side) / 2);bottom:var(--s5)}
+  body.onb .toast{left:50%}
+  .total-bar{left:var(--side)}
+  .guest-bar{padding-inline:max(var(--s4), calc((100vw - var(--side)) / 2 - 360px + var(--s4)))}   /* % ของ fixed อิงความกว้างจอ ไม่ใช่ตัวแถบ */
+  body.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3))}
+
+  /* หน้าที่เป็นข้อความ/ฟอร์มสั้น ๆ ไม่ยืดเต็มจอ */
+  .page{max-width:720px}
+  .page-onb{max-width:560px}
+  .page-app,.page-bill,.page-home{max-width:var(--shell)}
+
+  /* หน้าแรก: บิลที่เปิดอยู่ซ้าย บิลล่าสุดขวา */
+  .page-home{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr auto;column-gap:var(--s6);align-content:start}
+  .page-home>.home-top,.page-home>.home-title,.page-home>#homeIntro{grid-column:1/-1}
+  .page-home>#homeActive{grid-column:1;grid-row:3}
+  .page-home>.new-bill{grid-column:1;grid-row:4;align-self:start}
+  .page-home>#homeRecent{grid-column:2;grid-row:3/6}
+  .page-home>#homeIntro{grid-row:6}
+  #homeRecent .list-title{margin-top:var(--s2)}
+  .intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:1fr repeat(5,auto) 1fr;column-gap:var(--s7);margin-top:var(--s4)}
+  .intro>.intro-art{grid-column:1;grid-row:1/-1;align-self:center;margin:0}
+  .intro>:not(.intro-art){grid-column:2}
+  .intro>:nth-child(2){grid-row:2} .intro>:nth-child(3){grid-row:3} .intro>:nth-child(4){grid-row:4}
+  .intro>:nth-child(5){grid-row:5} .intro>:nth-child(6){grid-row:6}
+  /* ยังไม่มีบิลเลย: ปุ่มเริ่มบิลใหม่เต็มแถว */
+  .page-home:has(#homeActive:empty):has(#homeRecent:empty)>.new-bill{grid-column:1/-1}
+
+  /* หน้าหารบิล: กรอกซ้าย สรุปสดขวา */
+  .split-grid{display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,32vw,400px);column-gap:var(--s5);align-items:start}
+  .split-main .step-tabs{margin-inline:0;padding-inline:0}
+  .split-side{position:sticky;top:calc(var(--appbar-h) + var(--s2));max-height:calc(100dvh - var(--appbar-h) - var(--s4));overflow-y:auto;
+    overscroll-behavior:contain;padding-top:var(--s2);scrollbar-width:thin}
+  .split-side .step-panel{margin-bottom:0}
+
+  /* ใบสรุปยอด: ใบเสร็จซ้าย ยอดของฉัน/ใครโอนให้ใคร/ปุ่มขวา (แถวสุดท้าย 1fr รับความสูงของใบเสร็จ) */
+  .bill-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);grid-template-rows:repeat(6,auto) 1fr;column-gap:var(--s6);align-items:start}
+  .bill-grid>*{grid-column:2}
+  .bill-grid>.receipt-wrap{grid-column:1;grid-row:1/-1;width:100%;max-width:460px;margin-top:0}
+  .bill-grid>.bill-transfers,.bill-grid>.settle-cta,.bill-grid>.btn-stack{margin-top:var(--s4)}
+}
+@media(min-width:1024px) and (hover:hover){
+  .step-tabs [role=tab]:not([aria-selected=true]):hover{border-color:var(--link-line);color:var(--ink)}
+  .kind-card:hover{transform:translateY(-1px)}
+}
+
+/* ===================================================================
    v2.1 — โหมดมืด: เปลี่ยนแค่ค่าตัวแปร ใบเสร็จยังเป็นกระดาษสีอ่อน (ดู :root,.receipt-wrap ด้านบน)
    =================================================================== */
 @media (prefers-color-scheme: dark){
