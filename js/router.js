@@ -52,6 +52,7 @@ function currentGroupId(){
   var g = parseGroupPath(hashPath());
   return g ? g.id : null;
 }
+var lastRoutePath = null;
 function route(){
   if (ui.tripStash) exitMeal();          // v3.1: เปลี่ยนหน้า = ออกจากมื้อกลับไปที่ทริป (ข้อมูล commit ไปแล้ว)
   var path = currentPath();
@@ -59,6 +60,9 @@ function route(){
   var r = routes[path];
   // v4.4.1: เปิดเว็บครั้งแรกจากลิงก์หน้าอื่น → แสดงหน้าแนะนำก่อน แล้วพากลับมาหน้านั้น (ลิงก์กลุ่มที่เพื่อนส่งมาไม่ต้องผ่านหน้าแนะนำ)
   if (ui.showOnb && path !== "/" && !groupId){ ui.onbNext = location.hash; location.hash = "#/"; return; }
+  // v4.8.1: จำว่าเข้าหน้าชวนเพื่อนมาจากหน้าไหน ปุ่มย้อนกลับจะได้กลับไปที่เดิม (สร้างกลุ่มจากบิลส่วนตัวก็นับ)
+  if (path === "/share" && lastRoutePath !== "/share") ui.shareBack = (lastRoutePath === "/split" || lastRoutePath === "/bill") ? lastRoutePath : null;
+  lastRoutePath = path;
   if (ui.tour && (TOUR_ROUTES.indexOf(path) < 0 || groupId)) tourEnd(false);   // v4.5: ออกนอกหน้าที่สอน = จบการสอน
   if (needsBill(path) && groupId !== ui.ctx) loadContext(groupId);
   else if ((path==="/share" || path==="/bill") && groupId) refreshGroup(false);   // สถานะยืนยัน/ติ๊กโอนของเพื่อนต้องเป็นล่าสุด

@@ -94,6 +94,12 @@ function inviteLink(id){ return state.kind === "trip" ? groupLink(id) : confirmL
 function inviteLabel(){ return state.kind === "trip" ? L("สร้างกลุ่มทริป · ชวนเพื่อน") : L("ชวนเพื่อนตรวจยอด · ยืนยันเมนู"); }
 function confirmHref(){ return ui.ctx ? "#/g/"+ui.ctx+"/me" : "#/split"; }
 function shareHref(){ return ui.ctx ? "#/g/"+ui.ctx+"/share" : billHref(); }
+/** v4.8.1: ย้อนกลับจากหน้าชวนเพื่อน = หน้าที่กดแชร์มา (หารบิล / ใบสรุปยอด — route() จำไว้ใน ui.shareBack)
+    เปิดตรง ๆ หรือมาจากหน้าอื่น: ทริปกลับหน้าหารบิล (ไปใส่ค่าใช้จ่ายต่อ) มื้ออาหารกลับใบสรุปยอด */
+function shareBackHref(){
+  var p = ui.shareBack || (state.kind === "trip" ? "/split" : "/bill");
+  return p === "/split" ? splitHref() : billHref();
+}
 
 /* =========================================================
    หน้าชวนเพื่อนเข้ากลุ่ม #/g/<id>/share (ดีไซน์ 2f)
@@ -105,7 +111,7 @@ function pageShare(){
   if (!ui.ctx) return appBar({ back:"#/", title:L("ชวนเพื่อนเข้ากลุ่ม") })+
     '<div class="page"><p class="empty">'+L("เปิดจากบิลกลุ่มเท่านั้น")+'</p></div>';
   if (ui.groupError) return pageGroupError();
-  var bar = appBar({ back:billHref(), title:L("ชวนเพื่อนเข้ากลุ่ม"), sub:ui.loading ? "" : esc(Store.groupName) });
+  var bar = appBar({ back:shareBackHref(), title:L("ชวนเพื่อนเข้ากลุ่ม"), sub:ui.loading ? "" : esc(Store.groupName) });
   if (ui.loading) return bar + '<div class="page"><p class="empty">'+L("กำลังโหลดข้อมูลกลุ่ม…")+'</p></div>';
   if (isWide()) return pageShareWide();                 // v4.4: QR | สถานะ | หน้าที่เพื่อนเห็น (wide.js)
   var link = inviteLink(ui.ctx), q = QR.encode(link);
