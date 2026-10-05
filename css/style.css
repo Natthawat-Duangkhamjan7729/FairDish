@@ -1274,16 +1274,8 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .ws-grid{grid-template-columns:250px minmax(0,1fr) 330px}
 }
 
-/* v4.5.2: สวิตช์ (ตั้งค่า → โหมดมืด) */
-.switch-row{display:flex;align-items:center;gap:var(--s3);width:100%;min-height:56px;padding:var(--s2) 0;text-align:left;color:var(--ink)}
-.switch-text{flex:1;min-width:0;line-height:1.4}
-.switch-text b{display:block;font-weight:600}
-.switch-text span{font-size:var(--fs-small);color:var(--ink-2)}
-.switch{position:relative;flex:0 0 auto;width:52px;height:30px;border-radius:var(--r-pill);background:var(--line-2);transition:background .18s}
-.switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--card);box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .18s}
-.switch-row[aria-checked=true] .switch{background:var(--purple-grad)}
-.switch-row[aria-checked=true] .switch i{transform:translateX(22px)}
-.switch-row:focus-visible .switch{outline:3px solid var(--focus-ring);outline-offset:2px}
+/* v4.5.3: ตัวเลือกธีม 3 แบบ ใช้หน้าตาเดียวกับสวิตช์ภาษา */
+.theme-switch button{padding:0 var(--s4);font-size:var(--fs-small)}
 
 /* ===================================================================
    v4.5 — สอนใช้แบบกดจริง (js/tour.js): วงไฮไลต์ปุ่มที่ต้องกด + ตัวกันกดรอบ ๆ + กล่องคำอธิบาย

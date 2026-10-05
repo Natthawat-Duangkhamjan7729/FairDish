@@ -221,7 +221,9 @@ function pageBill(){
   if (ui.loading) return bar + '<div class="page"><p class="empty">'+L("กำลังโหลดข้อมูลบิล…")+'</p></div>';
   if (!hasData()){
     return bar + '<div class="page"><p class="empty">'+L("ยังไม่มีข้อมูลบิล เริ่มจากใส่ชื่อคนและรายการในหน้าหารบิลก่อน")+'</p>'+
-      '<a class="btn-main btn-block" style="margin-top:var(--s4)" href="'+splitHref()+'">'+L("ไปหน้าหารบิล")+'</a></div>';
+      '<a class="btn-main btn-block" style="margin-top:var(--s4)" href="'+splitHref()+'">'+L("ไปหน้าหารบิล")+'</a>'+
+      // v4.5.3: ชวนเพื่อนได้ตั้งแต่บิลยังว่าง (เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์)
+      (!ui.ctx && Cloud.ready() ? '<button class="btn-line btn-block" style="margin-top:var(--s3)" id="inviteBtn">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม")+'</button>' : '')+'</div>';
   }
   var r = compute();
   var s = settleBill(r);
@@ -353,6 +355,7 @@ function pageGroupError(){
     '</div></div>';
 }
 
+var THEMES = [ { id:"system", label:"ตามระบบ" }, { id:"dark", label:"มืด" }, { id:"light", label:"สว่าง" } ];
 function pageMore(){
   function link(href, name, sub){
     return billRow(href, name, sub, "");
@@ -364,10 +367,10 @@ function pageMore(){
     '</section>'+
     '<section class="step-card" aria-labelledby="h-theme">'+
       '<div class="step-head"><h2 id="h-theme">'+L("ธีม")+'</h2></div>'+
-      // v4.5.2: สวิตช์โหมดมืด (ค่าเริ่มต้น = สว่าง)
-      '<button class="switch-row" type="button" role="switch" aria-checked="'+(ui.theme === "dark")+'" data-theme-pick="'+(ui.theme === "dark" ? "light" : "dark")+'">'+
-        '<span class="switch-text"><b>'+L("โหมดมืด")+'</b><span>'+L("สีเข้ม สบายตาตอนกลางคืน")+'</span></span>'+
-        '<span class="switch" aria-hidden="true"><i></i></span></button>'+
+      // v4.5.3: สวิตช์เลือก 3 แบบ (ค่าเริ่มต้น = สว่าง)
+      '<div class="lang-switch theme-switch" role="group" aria-labelledby="h-theme">'+THEMES.map(function(t){
+        return '<button type="button" data-theme-pick="'+t.id+'" aria-pressed="'+(ui.theme === t.id)+'">'+L(t.label)+'</button>';
+      }).join("")+'</div>'+
     '</section>'+
     '<h2 class="list-head">'+L("เกี่ยวกับ FairDish")+'</h2>'+
     link("#/how",L("วิธีใช้"),L("ทีละขั้น + คำถามที่ถูกถามบ่อย"))+

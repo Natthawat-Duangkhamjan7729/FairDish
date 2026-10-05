@@ -14,8 +14,8 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#FFF6DF" id="themeColor">
 <!-- ใช้ธีมที่ผู้ใช้เลือกไว้ก่อนวาดหน้า กันจอกะพริบ (ค่าเดียวกับ Store.themeKey) -->
-<!-- v4.5.2: ค่าเริ่มต้นเป็นสว่างเสมอ (ไม่ตามเครื่อง) เปิดโหมดมืดได้ในตั้งค่า -->
-<script>(function(){var t="light";try{if(localStorage.getItem("fairdish:theme:v1")==="dark")t="dark";}catch(e){}document.documentElement.setAttribute("data-theme",t);if(t==="dark")document.getElementById("themeColor").setAttribute("content","#1A1426");})();</script>
+<!-- v4.5.3: ธีม ตามระบบ / มืด / สว่าง — ยังไม่เคยเลือก = สว่าง (ค่าเดียวกับ Store.themeKey) -->
+<script>(function(){var t="light";try{var s=localStorage.getItem("fairdish:theme:v1");if(s==="dark"||s==="system")t=s;}catch(e){}if(t!=="system")document.documentElement.setAttribute("data-theme",t);var d=t==="dark"||(t==="system"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.getElementById("themeColor").setAttribute("content","#1A1426");})();</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FairDish">
@@ -31,7 +31,7 @@
 <main id="view"></main>
 
 <footer class="foot">
-  <span>FairDish v4.5.2 Developer Beta · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
+  <span>FairDish v4.5.3 Developer Beta · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
 </footer>
 </div>
 

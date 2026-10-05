@@ -65,6 +65,7 @@ function refreshView(){
   renderSideNav();                    // v4.4: ลิงก์บิลที่เปิดอยู่ + ป้ายโอนแล้ว ในแถบซ้าย
   if (path==="/me") rerenderGuest(true);
   if (path==="/share"){ document.getElementById("view").innerHTML = pageShare(); fitShareQr(); }
+  if (ui.inviteAfterLoad && ui.ctx === null && !ui.loading){ ui.inviteAfterLoad = false; inviteFromBill(); }   // v4.5.3: กดชวนเพื่อนตอนยังไม่ได้โหลดบิล
   // v3.2: เพิ่งย้ายบิลส่วนตัวขึ้นกลุ่ม (เปิดหน้าชวนเพื่อนอยู่แล้ว)
   if (ui.shareAfterLoad && ui.ctx && !ui.loading){
     ui.shareAfterLoad = false;

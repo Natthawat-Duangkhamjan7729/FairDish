@@ -71,10 +71,16 @@ function renderSideNav(){
   nav.hidden = !show;
   nav.innerHTML = show ? sideNavHTML() : "";
 }
+/** ชวนเพื่อน: บิลกลุ่ม → หน้าชวนเพื่อน · บิลส่วนตัว → สร้างกลุ่มทันที (บิลว่างก็ได้ เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์)
+    v4.5.3: เดิมบิลว่าง/ยังไม่โหลดจะพาไปใบสรุปยอดซึ่งไม่มีปุ่มชวน — ถ้าอยู่หน้านั้นอยู่แล้วกดแล้วไม่เกิดอะไรเลย */
 async function sideInvite(){
+  if (ui.tour) return inviteFromBill();                 // แจ้งว่าตอนฝึกยังชวนไม่ได้
+  if (!Cloud.ready()) return toast(L("ระบบกลุ่มยังไม่เปิดใช้ในเว็บนี้ (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์) ยังหารบิลในเครื่องได้ตามปกติ"),"error");
   if (ui.ctx){ location.hash = shareHref(); return; }
-  if (ui.ctx === null && !ui.loading && hasData()) return inviteFromBill();
-  location.hash = billHref();      // ยังไม่ได้โหลดบิล หรือบิลยังว่าง — ใบสรุปยอดมีปุ่มชวนเพื่อนพร้อมคำอธิบาย
+  if (ui.ctx === null && !ui.loading) return inviteFromBill();
+  ui.inviteAfterLoad = true;                            // ยังไม่ได้โหลดบิลส่วนตัว → โหลดก่อนแล้วสร้างกลุ่มต่อ (refreshView)
+  if (currentPath() === "/split" || currentPath() === "/bill") return;
+  location.hash = "#/split";
 }
 
 /* =========================================================

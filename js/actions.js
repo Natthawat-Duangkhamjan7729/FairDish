@@ -936,12 +936,15 @@ async function deleteMeal(){
 function billIsEmpty(){ return !state.menus.length && !state.shared.length; }
 
 /* ---- v2.1: ธีม ---- */
-/** v4.5.2: สว่าง (ค่าเริ่มต้น) หรือมืด — ค่าเดิม "system" จากเวอร์ชันก่อน = สว่าง */
+/** v4.5.3: "system" | "dark" | "light" — ยังไม่เคยเลือก (ไม่มีค่า) = สว่าง */
 function applyTheme(theme){
-  ui.theme = theme === "dark" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", ui.theme);
+  ui.theme = (theme === "dark" || theme === "system") ? theme : "light";
+  var root = document.documentElement;
+  if (ui.theme === "system") root.removeAttribute("data-theme");
+  else root.setAttribute("data-theme", ui.theme);
+  var dark = ui.theme === "dark" || (ui.theme === "system" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
   var meta = document.getElementById("themeColor");
-  if (meta) meta.setAttribute("content", ui.theme === "dark" ? "#1A1426" : "#FFF6DF");
+  if (meta) meta.setAttribute("content", dark ? "#1A1426" : "#FFF6DF");
 }
 async function setTheme(theme){
   applyTheme(theme);

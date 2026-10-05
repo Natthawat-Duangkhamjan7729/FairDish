@@ -517,5 +517,7 @@ EN = {
   "ส้มตำ":"Som tam",
   /* v4.5.2: สวิตช์โหมดมืด */
   "โหมดมืด":"Dark mode",
-  "สีเข้ม สบายตาตอนกลางคืน":"Darker colours, easier on the eyes at night"
+  "สีเข้ม สบายตาตอนกลางคืน":"Darker colours, easier on the eyes at night",
+  /* v4.5.3 */
+  "ตามระบบ":"System"
 };

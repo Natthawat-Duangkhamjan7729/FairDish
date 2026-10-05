@@ -57,7 +57,7 @@ test("L(): ภาษาไทยเป็นค่าตั้งต้น เ�
 test("v4.1: ข้อความที่เก็บเป็นตาราง (หน้าแนะนำ ธีม สถานะยืนยัน ค่าบริการ) มีคำแปลครบ", () => {
   const ctx = vm.createContext({});
   for (const f of ["i18n.js", "i18n-en.js", "state.js", "pages.js", "confirm.js"]) vm.runInContext(fs.readFileSync(path.join(dir, f), "utf8"), ctx);
-  vm.runInContext("this.__keys = [].concat(ONBOARD.reduce(function(a,o){ return a.concat(o); }, []), " +
+  vm.runInContext("this.__keys = [].concat(ONBOARD.reduce(function(a,o){ return a.concat(o); }, []), THEMES.map(function(t){ return t.label; }), " +
     "Object.keys(CONFIRM_BADGE).map(function(k){ return CONFIRM_BADGE[k][1]; }), defaultCharges().map(function(c){ return c.label; }));", ctx);
   const missing = [...ctx.__keys].filter(k => /[฀-๿]/.test(k) && !(k in ctx.EN));
   assert.deepEqual(missing, []);
