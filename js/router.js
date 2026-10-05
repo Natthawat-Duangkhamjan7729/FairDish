@@ -80,7 +80,7 @@ function route(){
   document.body.classList.remove("has-total");
   updateChrome();
   if (path==="/split"){ render(); maybeAskWhoAmI(); }   // เข้ากลุ่มทางหน้าใบสรุปก่อน ก็ยังถาม "คุณคือใคร" ตอนมาหน้าหารบิล
-  if (path==="/") fillHome();
+  if (path==="/"){ fillHome(); maybeAskName(); }   // v4.6: ถามชื่อครั้งแรก (หลังหน้าแนะนำ)
   if (path==="/me") document.body.classList.toggle("has-total", !!document.querySelector(".guest-bar"));
   if (path==="/share") fitShareQr();
   if ((path==="/history" || path==="/groups" || path==="/h") && isWide()) renderHistoryWide();

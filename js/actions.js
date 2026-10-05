@@ -517,6 +517,8 @@ function maybeAskWhoAmI(){
   if (!g || g.me || g.asked) return;
   g.asked = true;            // ถามครั้งเดียวต่อกลุ่มต่อเครื่อง กดข้ามก็ไม่ถามซ้ำ
   saveMyGroups();
+  var mine = myNameMemberId();   // v4.6: มีชื่อตรงกับชื่อที่ให้เราเรียก = เลือกให้เลย ไม่ต้องถาม
+  if (mine) return chooseMe(mine);
   openMeDialog();
 }
 function openMeDialog(){
@@ -553,6 +555,7 @@ function addMyselfFromDialog(){
   closeMeDialog();
   setStep("members");
   var input = document.getElementById("memberInput");
+  if (input && !input.value && ui.myName) input.value = ui.myName;   // v4.6
   if (input){ input.focus(); input.scrollIntoView({ block:"center" }); }
 }
 /** ยอดของ "ฉัน" ในบิลนี้ หรือ null */
@@ -662,6 +665,13 @@ async function setLang(lang){
 async function finishOnboard(tour){
   ui.showOnb = false; ui.onbStep = 0;
   try { await Store.writeRaw(ONBOARD_KEY, "done"); } catch(e){}
+  // v4.6: ถามชื่อก่อน แล้วค่อยไปการสอน/หน้าที่ตั้งใจเปิด
+  if (!ui.nameAsked) return openNameDialog(function(){ afterOnboard(tour); });
+  afterOnboard(tour);
+}
+/** tour: true = ไปการสอน, "demo" = เปิดบิลตัวอย่าง, อื่น ๆ = กลับหน้าที่ตั้งใจเปิด */
+function afterOnboard(tour){
+  if (tour === "demo") return startNewBill("meal", true);
   if (tour === true) return tourStart();
   var next = ui.onbNext;                 // v4.4.1: กลับไปหน้าที่ตั้งใจเปิดก่อนเห็นหน้าแนะนำ
   ui.onbNext = null;

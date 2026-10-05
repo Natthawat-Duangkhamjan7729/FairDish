@@ -239,7 +239,7 @@ function renderMembers(){
 }
 /** ข้อความผิดพลาด + กล่องยืนยันการลบสมาชิก (ใช้ทั้งหน้ามือถือและพื้นที่ทำงานจอใหญ่) */
 function memberExtraHTML(){
-  var html = "";
+  var html = addSelfHTML();   // v4.6
   if (ui.editError) html += '<div class="notice error"><p>'+esc(ui.editError)+'</p></div>';
   if (ui.save === "error" && ui.saveFailedIn !== "menu") html += saveErrorNotice();
   if (ui.confirmMember){

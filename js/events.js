@@ -35,6 +35,8 @@ document.addEventListener("keydown", function(e){
     if (e.key === "Enter" && ui.wsSuggest.active >= 0){ e.preventDefault(); return pickWsSuggest(ui.wsSuggest.active); }
   }
   if (e.key !== "Enter") return;
+  if (e.target.id === "nameInput"){ e.preventDefault(); return saveNameFromDialog(); }
+  if (e.target.id === "myNameInput"){ e.preventDefault(); return saveMyNameFromSettings(); }
   if (e.target.id === "memberInput"){ e.preventDefault(); if (wsActive()) pushUndo(); addMember(); }
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
@@ -124,6 +126,7 @@ document.addEventListener("click", async function(e){
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
             "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
+            "[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
             "[data-onb-start],[data-tour-start],[data-tour-next],[data-tour-skip],[data-tour-done],[data-tour-back],[data-tour-install]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -188,7 +191,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-share-pick"))) return pickShareMember(v);
   if ((v = t.getAttribute("data-hist-sel"))){ ui.histSel = v; return renderHistoryWide(); }
   if ((v = t.getAttribute("data-hist-filter"))){ ui.histFilter = v; return renderHistoryWide(); }
-  if (t.getAttribute("data-onb-demo")){ ui.onbNext = null; await finishOnboard(); return startNewBill("meal", true); }
+  if (t.getAttribute("data-onb-demo")){ ui.onbNext = null; return finishOnboard("demo"); }
   if (t.id==="inviteBtn") return inviteFromBill();
 
   /* v2.5: ใครจ่ายให้ร้าน */
@@ -200,6 +203,11 @@ document.addEventListener("click", async function(e){
   if (t.id==="nudgeClose") return dismissInstallNudge();
 
   /* v2.4: ถามคุณคือใคร */
+  if (t.getAttribute("data-name-save")) return saveNameFromDialog();     // v4.6: ชื่อที่ให้เราเรียก
+  if (t.getAttribute("data-name-skip")) return closeNameDialog();
+  if (t.getAttribute("data-myname-save")) return saveMyNameFromSettings();
+  if (t.getAttribute("data-myname-clear")) return clearMyName();
+  if (t.getAttribute("data-add-self")) return addSelf();
   if ((v = t.getAttribute("data-me-pick"))) return chooseMe(v);
   if (t.getAttribute("data-me-close")) return closeMeDialog();
   if (t.getAttribute("data-me-add")) return addMyselfFromDialog();
@@ -375,6 +383,11 @@ document.getElementById("installDialog").addEventListener("click", function(e){
 document.getElementById("meDialog").addEventListener("click", function(e){
   if (e.target === this) closeMeDialog();
 });
+/* v4.6: หน้าต่างถามชื่อ — แตะพื้นหลัง/Esc/ไว้ทีหลัง ปิดได้ทุกทาง แล้วทำต่อใน onNameDialogClosed() */
+document.getElementById("nameDialog").addEventListener("click", function(e){
+  if (e.target === this) closeNameDialog();
+});
+document.getElementById("nameDialog").addEventListener("close", onNameDialogClosed);
 
 /* v2.5: ยอดที่หัวจ่ายแต่ละคนจ่าย — บันทึกตอนพิมพ์เสร็จ (ออกจากช่อง / กด Enter) */
 document.addEventListener("change", function(e){

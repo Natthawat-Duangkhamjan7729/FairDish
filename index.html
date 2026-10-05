@@ -31,7 +31,7 @@
 <main id="view"></main>
 
 <footer class="foot">
-  <span>FairDish v4.5.3 Developer Beta · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
+  <span>FairDish v4.6 Developer Beta · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
 </footer>
 </div>
 
@@ -58,6 +58,8 @@
 <dialog class="install-dialog" id="installDialog" aria-labelledby="installTitle"></dialog>
 <!-- v2.4: ถาม "คุณคือใคร" ตอนเปิดกลุ่มครั้งแรก (เนื้อหาสร้างโดย js/actions.js) -->
 <dialog class="install-dialog" id="meDialog" aria-labelledby="meTitle"></dialog>
+<!-- v4.6: ถามชื่อที่ให้เราเรียกตอนใช้งานครั้งแรก (เนื้อหาสร้างโดย js/profile.js) -->
+<dialog class="install-dialog" id="nameDialog" aria-labelledby="nameTitle"></dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -85,6 +87,7 @@
 <script src="js/confirm.js" defer></script>
 <script src="js/wide.js" defer></script>
 <script src="js/tour.js" defer></script>
+<script src="js/profile.js" defer></script>
 <script src="js/router.js" defer></script>
 <script src="js/events.js" defer></script>
 <script src="js/main.js" defer></script>

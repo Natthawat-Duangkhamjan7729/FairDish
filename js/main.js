@@ -110,6 +110,10 @@ async function boot(){
   try { ui.myGroups = await Store.loadGroups(); } catch(e){ ui.myGroups = []; }
   try { ui.history = await Store.loadHistory(); } catch(e){ ui.history = []; }
   try { ui.showOnb = (await Store.readRaw(ONBOARD_KEY)) !== "done"; } catch(e){ ui.showOnb = false; }
+  try {
+    var prof = await Store.loadProfile();
+    if (prof){ ui.myName = cleanMyName(prof.name).slice(0, MAX_NAME); ui.nameAsked = !!prof.asked; }
+  } catch(e){}
   try { ui.installNudgeOff = (await Store.readRaw(INSTALL_NUDGE_KEY)) === "off"; } catch(e){}
   updateInstallButton();
   route();

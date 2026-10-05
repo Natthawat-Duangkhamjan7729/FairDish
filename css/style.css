@@ -483,6 +483,13 @@ body.show-foot .foot{display:block}
 .me-other{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s3)}
 .me-other .btn-quiet{font-size:var(--fs-small);padding:var(--s2) var(--s4)}
 .me-skip{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);min-height:var(--tap);padding:0 var(--s2)}
+/* v4.6: ชื่อที่ให้เราเรียก */
+#nameDialog .btn-main{margin-top:var(--s2)}
+.name-skip{justify-content:center;margin-top:var(--s2)}
+.home-hello{margin:var(--s4) 0 0}
+.home-hello+.home-title{margin-top:0}
+.add-self{margin-top:var(--s3)}
+#myNameMsg+.link-btn{margin-top:var(--s2)}
 
 /* ---- v2.4: จบมื้อ + ชวนติดตั้ง ---- */
 .finish-pop{display:inline-block}

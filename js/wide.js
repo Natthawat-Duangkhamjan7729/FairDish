@@ -126,6 +126,7 @@ function pageOnboardWide(){
    ========================================================= */
 function pageHomeWide(){
   return '<div class="wpage w-home">'+
+    helloHTML()+
     '<div class="w-head"><h1>'+L("บิลของฉัน")+'</h1>'+langSwitch()+
       '<button class="install-btn" id="installBtn" type="button" aria-haspopup="dialog" hidden>'+ICON_INSTALL+'<span>'+L("ติดตั้งแอป")+'</span></button></div>'+
     '<div class="w-home-grid">'+

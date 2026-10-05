@@ -10,6 +10,7 @@ var Store = {
   menuKey: "fairdish:menu-memory:v1",   // คีย์ใหม่ ไม่ทับข้อมูลบิลที่เคยบันทึกไว้
   groupsKey: "fairdish:groups:v1",      // กลุ่มที่เครื่องนี้เคยเปิด + "ฉันคือใคร"
   themeKey: "fairdish:theme:v1",
+  profileKey: "fairdish:profile:v1",    // v4.6: { name, asked } ชื่อที่ให้เราเรียก — อยู่ในเครื่องเท่านั้น
   historyKey: "fairdish:history:v1",    // v3.2: บิลส่วนตัวที่เก็บเข้าประวัติ        // v2.1: "system" | "light" | "dark" (index.html อ่านค่านี้ก่อนวาดหน้า)
   groupId: null,                        // null = บิลส่วนตัวในเครื่อง
   groupName: "",
@@ -107,5 +108,13 @@ var Store = {
   },
   async saveHistory(list){
     await this.writeRaw(this.historyKey, JSON.stringify(list));
+  },
+  async loadProfile(){
+    var raw = await this.readRaw(this.profileKey);
+    var p = raw ? JSON.parse(raw) : null;
+    return p && typeof p === "object" ? p : null;
+  },
+  async saveProfile(p){
+    await this.writeRaw(this.profileKey, JSON.stringify(p));
   }
 };

@@ -64,6 +64,7 @@ function pageHome(){
       '<button class="install-btn" id="installBtn" type="button" aria-haspopup="dialog" hidden>'+ICON_INSTALL+'<span>'+L("ติดตั้งแอป")+'</span></button>'+
       settingsLink()+
     '</div>'+
+    helloHTML()+
     '<h1 class="home-title">'+L("บิลของฉัน")+'</h1>'+
     '<div id="homeActive"></div>'+
     '<button class="new-bill" type="button" data-open-kind="1" aria-haspopup="dialog">'+
@@ -362,6 +363,7 @@ function pageMore(){
   }
   return appBar({ back:"#/", title:L("ตั้งค่า") })+
     '<div class="page">'+
+    myNameSectionHTML()+
     '<section class="step-card" aria-labelledby="h-lang">'+
       '<div class="step-head"><h2 id="h-lang">'+L("ภาษา")+'</h2></div>'+langSwitch()+
     '</section>'+

@@ -519,5 +519,21 @@ EN = {
   "โหมดมืด":"Dark mode",
   "สีเข้ม สบายตาตอนกลางคืน":"Darker colours, easier on the eyes at night",
   /* v4.5.3 */
-  "ตามระบบ":"System"
+  "ตามระบบ":"System",
+  /* v4.6: ชื่อที่ให้เราเรียก */
+  "อยากให้เราเรียกคุณว่าอะไรดี?":"What should we call you?",
+  "ชื่อเล่นสั้น ๆ ก็ได้ เราจะใช้ทักทาย และช่วยใส่ชื่อคุณเข้าโต๊ะได้ในแตะเดียว เปลี่ยนได้ทุกเมื่อในหน้าตั้งค่า":"A short nickname is fine. We'll use it to greet you and to add you to the table in one tap. You can change it any time in Settings.",
+  "ชื่อที่ให้เราเรียก":"What we call you",
+  "เช่น มาร์ค":"e.g. Mark",
+  "ตกลง":"OK",
+  "ไว้ทีหลัง":"Maybe later",
+  "ตั้งชื่อได้ทุกเมื่อในหน้าตั้งค่า":"You can set your name any time in Settings",
+  "ยินดีที่ได้รู้จัก {name} 👋":"Nice to meet you, {name} 👋",
+  "บันทึกชื่อลงเครื่องไม่สำเร็จ ใช้ได้เฉพาะรอบนี้":"Couldn't save your name on this device — it only lasts this session",
+  "ตอนนี้เราเรียกคุณว่า {name}":"We call you {name}",
+  "ยังไม่ได้ตั้งชื่อ ใส่ชื่อเล่นสั้น ๆ ได้เลย":"No name yet — a short nickname works",
+  "ลบชื่อ":"Remove name",
+  "ต่อไปเราจะเรียกคุณว่า {name}":"From now on we'll call you {name}",
+  "ลบชื่อแล้ว":"Name removed",
+  "+ เพิ่มตัวเอง ({name})":"+ Add myself ({name})"
 };
