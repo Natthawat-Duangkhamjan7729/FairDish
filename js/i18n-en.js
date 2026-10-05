@@ -514,5 +514,8 @@ EN = {
   "คัดลอกสรุปยอด หรือแชร์รูปใบเสร็จส่งเข้ากลุ่มได้เลย ส่วน \"ชวนเพื่อน\" จะสร้างลิงก์ให้เพื่อนติ๊กเมนูเอง (ตอนฝึกยังกดไม่ได้)":"Copy the summary or share the receipt image to your group. \"Invite friends\" makes a link so friends tick their own dishes (not available while practising)",
   /* v4.5.1: ปุ่มถัดไปในการสอน */
   "ไม่อยากกรอก? กดถัดไป ระบบใส่ตัวอย่างให้ดู":"Don't want to type? Tap Next and we'll fill in an example",
-  "ส้มตำ":"Som tam"
+  "ส้มตำ":"Som tam",
+  /* v4.5.2: สวิตช์โหมดมืด */
+  "โหมดมืด":"Dark mode",
+  "สีเข้ม สบายตาตอนกลางคืน":"Darker colours, easier on the eyes at night"
 };

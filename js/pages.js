@@ -353,7 +353,6 @@ function pageGroupError(){
     '</div></div>';
 }
 
-var THEMES = [ { id:"system", label:"ตามเครื่อง" }, { id:"light", label:"สว่าง" }, { id:"dark", label:"มืด" } ];
 function pageMore(){
   function link(href, name, sub){
     return billRow(href, name, sub, "");
@@ -365,9 +364,10 @@ function pageMore(){
     '</section>'+
     '<section class="step-card" aria-labelledby="h-theme">'+
       '<div class="step-head"><h2 id="h-theme">'+L("ธีม")+'</h2></div>'+
-      '<div class="pick" role="group" aria-labelledby="h-theme">'+THEMES.map(function(t){
-        return '<button data-theme-pick="'+t.id+'" aria-pressed="'+(ui.theme===t.id)+'">'+L(t.label)+'</button>';
-      }).join("")+'</div>'+
+      // v4.5.2: สวิตช์โหมดมืด (ค่าเริ่มต้น = สว่าง)
+      '<button class="switch-row" type="button" role="switch" aria-checked="'+(ui.theme === "dark")+'" data-theme-pick="'+(ui.theme === "dark" ? "light" : "dark")+'">'+
+        '<span class="switch-text"><b>'+L("โหมดมืด")+'</b><span>'+L("สีเข้ม สบายตาตอนกลางคืน")+'</span></span>'+
+        '<span class="switch" aria-hidden="true"><i></i></span></button>'+
     '</section>'+
     '<h2 class="list-head">'+L("เกี่ยวกับ FairDish")+'</h2>'+
     link("#/how",L("วิธีใช้"),L("ทีละขั้น + คำถามที่ถูกถามบ่อย"))+

@@ -115,7 +115,14 @@ function tourStart(){
   ui.onbNext = null;
   ui.step = "members";
   state.menuForm = null; state.sharedForm = null; state.chargeForm = null;
-  ui.ctx = undefined;                     // ให้ route() โหลดบิลใหม่ — loadContext() ใส่บิลฝึกแทนบิลในเครื่อง
+  // v4.5.2: ใส่บิลฝึกว่าง ๆ ทันที (บิลส่วนตัว ไม่ผ่าน loadContext) — ก่อนหน้านี้ช่วงรอโหลด การสอนเห็นบิลจริงที่เปิดค้าง
+  // ว่ามีคน/เมนูแล้วจึงข้ามขั้นไป ตอนนี้เริ่มจากขั้นแรกเสมอ (จบการสอน ui.ctx = undefined → โหลดบิลจริงกลับมา)
+  loadToken++;                            // ยกเลิก loadContext ที่ค้างอยู่ไม่ให้เขียนทับบิลฝึก
+  Store.groupId = null; Store.version = 0; Store.groupName = "";
+  applyBill(practiceBill());
+  ui.ctx = null; ui.loading = false; ui.groupError = "";
+  setSave("saved");
+  ui.wsPast = []; ui.wsFocus = null;
   tourGo(0);
   if (location.hash === "#/split") route(); else location.hash = "#/split";
   tourLoop();
