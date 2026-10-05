@@ -445,6 +445,12 @@ body.show-foot .foot{display:block}
 .install-btn svg{width:18px;height:18px}
 .install-btn:hover{border-color:var(--link)}
 .install-btn[hidden]{display:none}
+/* v4.5: มือถือจอแคบ — ปุ่มติดตั้งเหลือแค่ไอคอน (ข้อความยังอ่านได้ด้วยโปรแกรมอ่านหน้าจอ) แถวหัวหน้าแรกจะได้ไม่ล้นจอ */
+@media(max-width:440px){
+  .home-top .install-btn{padding:0;width:var(--tap-sm);justify-content:center}
+  .home-top .install-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .home-top .home-brand{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
 .install-dialog{width:min(480px,calc(100vw - 2 * var(--s4)));max-height:calc(100dvh - 2 * var(--s4));overflow-y:auto;
   padding:var(--s5) var(--s4);border:1px solid var(--line);border-radius:var(--r-lg);
   background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
@@ -1266,6 +1272,40 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .w-share-grid{grid-template-columns:300px minmax(0,1fr) 320px;grid-template-areas:"qr status prev"}
   .w-hist{grid-template-columns:440px minmax(0,1fr)}
   .ws-grid{grid-template-columns:250px minmax(0,1fr) 330px}
+}
+
+/* ===================================================================
+   v4.5 — สอนใช้แบบกดจริง (js/tour.js): วงไฮไลต์ปุ่มที่ต้องกด + ตัวกันกดรอบ ๆ + กล่องคำอธิบาย
+   =================================================================== */
+.tour[hidden]{display:none}
+.tour-block{position:fixed;z-index:95;display:none;background:transparent}
+.tour-ring{position:fixed;z-index:96;display:none;border-radius:18px;pointer-events:none;
+  box-shadow:0 0 0 3px var(--link),0 0 0 8px var(--focus-ring),0 0 0 9999px var(--scrim)}
+.tour-scrim{position:fixed;inset:0;z-index:95;background:var(--scrim)}
+.tour-tip{position:fixed;z-index:97;left:12px;top:12px;width:min(340px,calc(100vw - 24px));padding:14px 16px 16px;border-radius:var(--r-md);
+  background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:0 24px 48px -16px var(--toast-shadow)}
+.tour-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
+.tour-count{font-size:12px;font-weight:700;color:var(--link)}
+.tour-top .link-btn{min-height:32px;font-size:13px;color:var(--ink-2)}
+.tour-tip h2{font-family:var(--font-head);font-size:18px;font-weight:600;line-height:1.35;margin-top:2px}
+.tour-body{margin-top:var(--s1);font-size:var(--fs-small);line-height:1.6;color:var(--ink-2)}
+.tour-away{margin-top:var(--s2);font-size:var(--fs-small);font-weight:600;color:var(--danger);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.tour-away[hidden]{display:none}
+.tour-btns{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s3);justify-content:flex-end}
+.tour-tip.mini{width:auto;max-width:calc(100vw - 16px);padding:6px 6px 6px 14px;border-radius:var(--r-pill)}
+.tour-tip.mini .tour-top{flex-direction:row-reverse;gap:var(--s3)}
+.tour-tip.mini .tour-count,.tour-tip.mini .tour-body,.tour-tip.mini .tour-away{display:none}
+.tour-tip.mini{display:flex;align-items:center;gap:var(--s2);flex-direction:row-reverse}
+.tour-tip.mini h2{font-size:14px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tour-tip.mini .tour-btns{margin:0}
+.tour-end{left:50% !important;top:50% !important;transform:translate(-50%,-50%);width:min(400px,calc(100vw - 32px));text-align:center;padding:24px 22px 22px}
+.tour-end h2{font-size:22px;margin-top:var(--s3)}
+.tour-end p{margin-top:var(--s2);font-size:15px;color:var(--ink-2);line-height:1.6}
+.tour-end .tour-btns{flex-direction:column;align-items:stretch;margin-top:var(--s5)}
+.tour-mascot{width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid var(--card);box-shadow:var(--shadow);margin:0 auto}
+@media(prefers-reduced-motion:no-preference){
+  .tour-ring{transition:left .2s ease,top .2s ease,width .2s ease,height .2s ease}
+  .tour-end{animation:fade-in .25s ease}
 }
 
 /* ===================================================================

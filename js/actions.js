@@ -264,6 +264,7 @@ function tripSuggestions(q){
   return { items:hits.slice(0, SUGGEST_LIMIT), total:hits.length };
 }
 async function rememberMenu(name, price){
+  if (ui.tour) return;                 // v4.5: เมนูจากบิลฝึกไม่ต้องจำ
   if (state.kind === "trip") return;   // จำราคาเฉพาะเมนูอาหาร
   var key = normText(name);
   var found = null;
@@ -657,16 +658,18 @@ async function setLang(lang){
 }
 
 /* ---- v4.1: หน้าแนะนำ ---- */
-async function finishOnboard(){
+/** tour = true: กด "เริ่มใช้งาน" → ต่อด้วยการสอนแบบกดจริง (v4.5) · "ข้าม" = ไม่สอน */
+async function finishOnboard(tour){
   ui.showOnb = false; ui.onbStep = 0;
   try { await Store.writeRaw(ONBOARD_KEY, "done"); } catch(e){}
+  if (tour === true) return tourStart();
   var next = ui.onbNext;                 // v4.4.1: กลับไปหน้าที่ตั้งใจเปิดก่อนเห็นหน้าแนะนำ
   ui.onbNext = null;
   if (next && next !== "#/" && next !== location.hash){ location.hash = next; return; }
   if (currentPath() === "/") route(); else location.hash = "#/";
 }
 function onboardNext(){
-  if ((ui.onbStep || 0) >= 2) return finishOnboard();
+  if ((ui.onbStep || 0) >= 2) return finishOnboard(true);
   ui.onbStep = (ui.onbStep || 0) + 1;
   document.getElementById("view").innerHTML = pageOnboard();
 }
@@ -707,6 +710,7 @@ async function replaceLocalBill(next, step){
 }
 async function startNewBill(kind, demo){
   closeGlobalSheet();
+  if (ui.tour) tourEnd(false);         // v4.5: เริ่มบิลจริงระหว่างสอน = จบการสอน (บิลฝึกทิ้งไป)
   kind = kind === "trip" ? "trip" : "meal";
   try {
     var archived = await replaceLocalBill(emptyBill(kind), "members");
@@ -717,6 +721,7 @@ async function startNewBill(kind, demo){
   }
 }
 async function restoreHistory(id){
+  if (ui.tour) tourEnd(false);
   var h = ui.history.filter(function(x){ return x.id === id; })[0];
   if (!h) return;
   try {
@@ -820,6 +825,7 @@ async function togglePaid(key){
 
 /* ---- v3.2: ชวนเพื่อนเข้ากลุ่มจากบิลส่วนตัว = ย้ายบิลนี้ขึ้นกลุ่ม ---- */
 async function inviteFromBill(){
+  if (ui.tour) return toast(L("ตอนฝึกยังชวนเพื่อนไม่ได้ — จบการสอนแล้วลองกับบิลจริงได้เลย"),"error");
   if (ui.ctx || !Cloud.ready() || ui.creatingGroup) return;
   var btn = document.getElementById("inviteBtn");
   var data = serialize();

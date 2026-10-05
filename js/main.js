@@ -27,7 +27,8 @@ async function loadContext(groupId){
   if (ui.groupError){ ui.loading = false; return refreshView(); }
 
   try {
-    var saved = await Store.load();
+    // v4.5: ระหว่างสอนใช้ = บิลฝึกว่าง ๆ แทนบิลในเครื่อง (ไม่อ่าน ไม่เขียนบิลจริง)
+    var saved = (ui.tour && !groupId) ? practiceBill() : await Store.load();
     if (token !== loadToken) return;
     if (groupId && !saved) ui.groupError = "notfound";
     else {

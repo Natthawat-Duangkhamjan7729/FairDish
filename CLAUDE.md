@@ -35,6 +35,7 @@
 | `share-image.js` | วาดใบเสร็จเป็นรูป PNG ด้วย canvas (`receiptImageBlob()`, `shareReceiptImage()`) สีอ่านจากตัวแปร CSS ของ `.receipt-wrap` |
 | `confirm.js` | v4.1: เพื่อนยืนยันเมนู (`applyConfirm`, `confirmStatusOf`, `saveConfirm` รวมกับข้อมูลล่าสุดเมื่อชน) + หน้า `#/g/<id>/share` และ `#/g/<id>/me` |
 | `wide.js` | v4.4: หน้าจอใหญ่ (≥600px) — แถบนำทางซ้าย, หน้าแนะนำหน้าเดียว, หน้าแรก, พื้นที่ทำงานหารบิล (`pageWorkspace`, `renderWorkspace`, แตะ/ลากชื่อ, เลิกทำ `pushUndo`/`wsUndo`), ใบสรุปยอด, ชวนเพื่อน, ประวัติแบบรายการ+รายละเอียด, `onWideChange()` |
+| `tour.js` | v4.5: สอนใช้แบบกดจริง — `TOUR_STEPS` (ขั้น: เป้าหมายที่ไฮไลต์, เงื่อนไขทำสำเร็จจาก `state`, mode mobile/wide), `tourStart()` / `tourEnd()`, วาดชั้นสอนใน `#tour` |
 | `install.js` | ปุ่ม/หน้าต่าง "ติดตั้งแอป" (มือถือเท่านั้น แสดงวิธีของระบบที่ตรวจพบระบบเดียว) — `detectPlatform()`, `detectInApp()`, `beforeinstallprompt` |
 | `router.js` | hash router (`#/split`, `#/bill`, `#/history`, `#/h/<id>` บิลในประวัติ, `#/g/<id>`, `#/g/<id>/bill`, `#/g/<id>/share`, `#/g/<id>/me`, `#/more`; `#/groups` เดิม = หน้าประวัติ) + แท็บล่าง (`tabOf()`: home / history — หน้าหารบิลและใบสรุปไม่มีแท็บล่าง) |
 | `events.js` | event delegation ของทั้งหน้า |
@@ -71,6 +72,8 @@
   `renderMembers()` / `renderMenus()` / `renderSummary()` ส่งต่อไป `renderWs*()` เมื่อ `wsActive()` — การแก้ข้อมูลในพื้นที่ทำงานต้องเรียก `pushUndo()` ก่อน
   ปุ่มลัด (N, M, T, Ctrl/⌘+Z, Esc) อยู่ใน `wideShortcut()` ของ `events.js` และไม่ทำงานตอนกำลังพิมพ์
   ช่องเพิ่มรายการบรรทัดเดียว (`#wsName`) ใช้เมนูแนะนำชุดเดียวกับฟอร์มแผ่น (`menuSuggestions()` + `suggestBoxHTML()` ใน `actions.js`)
+- v4.5: ระหว่างสอนใช้ (`ui.tour`) ใช้ "บิลฝึก" (`practiceBill()` ใส่แทนบิลในเครื่องตอน `loadContext()`) — `commit()` / `rememberMenu()` ไม่บันทึกอะไร,
+  ชวนเพื่อน/สร้างกลุ่มถูกปิด, เริ่มบิลใหม่หรือเปิดหน้าอื่นนอก `#/split` `#/bill` = จบการสอน · แก้ปุ่ม/หน้าที่การสอนชี้ ต้องแก้ `target` ใน `TOUR_STEPS` ด้วย
 - v4.4.1: หน้าแนะนำขึ้นครั้งเดียวต่อเครื่อง (`ONBOARD_KEY` = `fairdish:onboarded:v2` ใน `pages.js` — เปลี่ยนเลขเมื่ออยากให้ทุกคนเห็นใหม่)
   เปิดครั้งแรกจากหน้าอื่น `route()` จำหน้าไว้ใน `ui.onbNext` แล้วพาไปหน้าแนะนำก่อน — ลิงก์กลุ่ม (`#/g/...`) ไม่ต้องผ่านหน้าแนะนำ
 - v4.2: **ห้ามเก็บเบอร์โทร เลขบัตรประชาชน หรือข้อมูลระบุตัวตนอื่นในข้อมูลบิล** (บิลกลุ่มอยู่บน Supabase และใครมีลิงก์ก็อ่านได้ — PDPA)

@@ -123,7 +123,8 @@ document.addEventListener("click", async function(e){
             "[data-guest-who],[data-guest-add],[data-guest-item],[data-guest-save],[data-guest-change],[data-guest-again],"+
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
-            "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest]";
+            "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
+            "[data-onb-start],[data-tour-start],[data-tour-next],[data-tour-skip],[data-tour-done],[data-tour-back],[data-tour-install]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
   var v;
@@ -168,6 +169,11 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; location.hash = splitHref(); return; }
   if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
+
+  /* v4.5: สอนใช้แบบกดจริง */
+  if (ui.tour && tourClick(t)) return;
+  if (t.getAttribute("data-onb-start")) return finishOnboard(true);
+  if (t.getAttribute("data-tour-start")) return tourStart();
 
   /* v4.4: จอใหญ่ */
   if ((v = t.getAttribute("data-ws-suggest")) !== null) return pickWsSuggest(parseInt(v, 10));

@@ -107,7 +107,7 @@ function pageOnboardWide(){
         '</div>'+
       '</div>'+
       '<div class="w-onb-actions">'+
-        '<div class="w-onb-btns"><button class="btn-main" type="button" data-onb-skip="1">'+L("เริ่มใช้งาน")+'</button>'+
+        '<div class="w-onb-btns"><button class="btn-main" type="button" data-onb-start="1">'+L("เริ่มใช้งาน")+'</button>'+
           '<button class="btn-line" type="button" data-onb-demo="1">'+L("ลองกับข้อมูลตัวอย่าง")+'</button></div>'+
         '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
       '</div>'+

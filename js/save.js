@@ -91,6 +91,11 @@ function setSave(next){
                         saved:L("บันทึกแล้ว"), error:L("ยังไม่ได้บันทึก") })[next] || "";
 }
 async function commit(successMessage, source){
+  if (ui.tour){                        // v4.5: บิลฝึกของการสอน — ไม่บันทึกลงเครื่อง บิลจริงไม่ถูกแตะ
+    setSave("saved");
+    if (successMessage) toast(successMessage,"ok");
+    return true;
+  }
   setSave("saving");
   try {
     await Store.save(serialize());

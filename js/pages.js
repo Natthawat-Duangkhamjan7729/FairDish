@@ -372,6 +372,7 @@ function pageMore(){
     '<h2 class="list-head">'+L("เกี่ยวกับ FairDish")+'</h2>'+
     link("#/how",L("วิธีใช้"),L("ทีละขั้น + คำถามที่ถูกถามบ่อย"))+
     link("#/about",L("เกี่ยวกับ"),L("ทีมผู้จัดทำและขอบเขตของเวอร์ชันนี้"))+
+    '<button class="list-row list-btn" type="button" data-tour-start="1"><span class="list-body"><b>'+L("สอนใช้แบบกดจริง")+'</b><span>'+L("ฝึกหารบิลทีละขั้นด้วยบิลฝึก บิลจริงไม่ถูกแตะ")+'</span></span><span class="list-go">'+ICON_CHEVRON+'</span></button>'+
     '<button class="list-row list-btn" type="button" data-onb-again="1"><span class="list-body"><b>'+L("ดูหน้าแนะนำอีกครั้ง")+'</b><span>'+L("3 หน้าแรกตอนเปิดแอปครั้งแรก")+'</span></span><span class="list-go">'+ICON_CHEVRON+'</span></button>'+
     '<p class="hint" style="text-align:center;margin-top:var(--s5)">FairDish v'+APP_VERSION+'</p>'+
   '</div>';

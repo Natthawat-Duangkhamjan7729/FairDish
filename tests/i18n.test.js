@@ -62,3 +62,12 @@ test("v4.1: ข้อความที่เก็บเป็นตารา�
   const missing = [...ctx.__keys].filter(k => /[฀-๿]/.test(k) && !(k in ctx.EN));
   assert.deepEqual(missing, []);
 });
+
+test("v4.5/v4.4: ตารางข้อความของการสอนใช้ (TOUR_STEPS) และตัวกรองประวัติมีคำแปลครบ", () => {
+  const ctx = vm.createContext({ window:{}, document:{}, WIDE_MQ:null });
+  for (const f of ["i18n.js", "i18n-en.js", "state.js", "wide.js", "tour.js"]) vm.runInContext(fs.readFileSync(path.join(dir, f), "utf8"), ctx);
+  vm.runInContext("this.__keys = [].concat(TOUR_STEPS.map(function(s){ return s.title; }), TOUR_STEPS.map(function(s){ return s.body; }), " +
+    "HIST_FILTERS.map(function(f){ return f[1]; }));", ctx);
+  const missing = [...ctx.__keys].filter(k => /[฀-๿]/.test(k) && !(k in ctx.EN));
+  assert.deepEqual(missing, []);
+});
