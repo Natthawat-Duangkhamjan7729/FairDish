@@ -33,7 +33,7 @@ async function loadContext(groupId){
     if (groupId && !saved) ui.groupError = "notfound";
     else {
       applyBill(saved);
-      if (groupId) rememberGroup(groupId, Store.groupName, state.kind);
+      if (groupId){ rememberGroup(groupId, Store.groupName, state.kind); snapGroup(groupId, saved); }
     }
     ui.loading = false;
     setSave("saved");
@@ -108,6 +108,7 @@ async function refreshGroup(manual, live){
       applyBill(g.data);
       Store.version = g.version;
       Store.groupName = g.name;
+      snapGroup(id, g.data);
       ui.noReveal = !manual;            // อัปเดตอัตโนมัติไม่เล่นแอนิเมชันใบเสร็จซ้ำ
       refreshView();
       ui.noReveal = false;

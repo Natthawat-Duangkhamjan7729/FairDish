@@ -549,6 +549,7 @@ EN = {
   "คุณคือใครในทริปนี้?":"Who are you on this trip?",
   /* v4.9: สแกนเข้ากลุ่มครั้งแรก — ถามชื่อแล้วถามเข้าร่วม */
   "เข้าร่วมกลุ่ม {name} ไหม?":"Join {name}?",
+  "เสร็จแล้ว":"Done",
   "เข้าร่วมแล้วใส่ค่าใช้จ่ายที่คุณจ่ายได้เลย และเห็นยอดของคุณตัวใหญ่ (จำไว้ในเครื่องนี้)":"Join to add what you paid and see your total up top (remembered on this device)",
   "เข้าร่วมแล้วยอดที่คุณต้องจ่ายจะแสดงตัวใหญ่ให้เห็นทันที (จำไว้ในเครื่องนี้)":"Join and your total shows up top right away (remembered on this device)",
   "เข้าร่วมในชื่อ {name}":"Join as {name}",

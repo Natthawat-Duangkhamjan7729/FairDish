@@ -147,7 +147,8 @@ function pageHomeWide(){
   '</div>';
 }
 /** การ์ดบิลที่กำลังหาร (จอใหญ่) — มีวงกลมชื่อคน และบอกว่าใครจ่ายให้ร้าน */
-function activeCardWide(saved){
+function activeCardWide(saved, o){
+  var c = cardLinks(saved, o);
   var b = normalizeBill(saved);
   var r = computeBill(b), s = settleBill(r, b);
   var prog = s.ok ? paidProgress(s.transfers, b.paid) : null;
@@ -157,10 +158,10 @@ function activeCardWide(saved){
   }).filter(Boolean) : [];
   var avs = b.members.slice(0, 6).map(function(p, k){ return '<span title="'+esc(p.name)+'">'+avatarHTML(p.name, k)+'</span>'; }).join("")+
     (b.members.length > 6 ? '<span class="av av-more" aria-hidden="true">+'+(b.members.length - 6)+'</span>' : '');
-  return '<section class="w-active" aria-labelledby="h-active">'+
-    '<div class="active-top"><span class="badge warn">'+L("กำลังหาร")+'</span>'+
-      '<span class="active-meta">'+L("{n} คน · {k} {items}", { n:b.members.length, k:b.menus.length, items:ktOf(b.kind,"items") })+'</span></div>'+
-    '<div class="w-active-mid"><div class="w-active-sum"><h2 id="h-active">'+ktOf(b.kind,"icon")+' '+esc(savedBillName(saved))+'</h2>'+
+  return '<section class="w-active'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
+    '<div class="active-top">'+statusBadge(prog && prog.all)+
+      '<span class="active-meta">'+(c.group ? L("บิลกลุ่ม")+' · ' : '')+L("{n} คน · {k} {items}", { n:b.members.length, k:b.menus.length, items:ktOf(b.kind,"items") })+'</span></div>'+
+    '<div class="w-active-mid"><div class="w-active-sum"><h2 id="'+c.hid+'">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
       '<div class="w-active-amt mono">'+baht(r.grand)+' <span>฿</span></div></div>'+
       '<div class="w-avs" aria-label="'+L("{n} คน", { n:b.members.length })+'">'+avs+'</div></div>'+
     (prog && prog.total
@@ -168,7 +169,7 @@ function activeCardWide(saved){
           (payerNames.length ? '<span class="muted">'+L("{name} จ่ายให้ร้านไปก่อน", { name:esc(payerNames.join(", ")) })+'</span>' : '')+'</div>'+
         '<div class="progress"><i style="width:'+Math.round(prog.done / prog.total * 100)+'%"></i></div>'
       : '<div class="w-active-prog"><span class="muted">'+(b.kind === "trip" ? L("ใส่คนจ่ายของแต่ละรายการ แล้วจะสรุปว่าใครโอนให้ใคร") : L("เลือกคนจ่ายให้ร้านในใบสรุปยอด แล้วจะสรุปว่าใครโอนให้ใคร"))+'</span></div>')+
-    '<div class="btn-pair"><a class="btn-main" href="#/split">'+L("ทำต่อ")+'</a><a class="btn-line" href="#/bill">'+L("ใบสรุปยอด")+'</a></div>'+
+    '<div class="btn-pair"><a class="btn-main" href="'+c.split+'">'+L("ทำต่อ")+'</a><a class="btn-line" href="'+c.bill+'">'+L("ใบสรุปยอด")+'</a></div>'+
   '</section>';
 }
 /** ยังไม่มีบิลที่กำลังหาร — แนะนำแอปแทน */
@@ -186,7 +187,7 @@ function emptyCardWide(){
 function billEntries(){
   var groups = ui.myGroups.map(function(g){
     return { id:"g:"+g.id, group:g, kind:"group", icon:ktOf(g.kind,"icon"), name:g.name, at:g.at || 0,
-      tag:L("บิลกลุ่ม"), sub:g.at ? L("เปิดล่าสุด {date}", { date:shortDate(g.at) }) : "", amt:"", href:"#/g/"+g.id };
+      tag:g.done ? L("เสร็จแล้ว") : L("บิลกลุ่ม"), sub:g.at ? L("เปิดล่าสุด {date}", { date:shortDate(g.at) }) : "", amt:"", href:"#/g/"+g.id };
   });
   var hist = ui.history.map(function(h){
     var b = normalizeBill(h.data);
@@ -196,9 +197,9 @@ function billEntries(){
   });
   return { groups:groups, hist:hist };
 }
-function recentCardsWide(){
+function recentCardsWide(skip){
   var e = billEntries();
-  var list = e.groups.concat(e.hist).sort(function(a, b){ return b.at - a.at; }).slice(0, 6);
+  var list = e.groups.filter(function(x){ return !(skip && skip[x.group.id]); }).concat(e.hist).sort(function(a, b){ return b.at - a.at; }).slice(0, 6);
   if (!list.length) return "";
   return '<div class="list-title"><h2>'+L("บิลล่าสุด")+'</h2><a class="link-btn" href="#/history">'+L("ดูทั้งหมด ›")+'</a></div>'+
     '<div class="w-recent">'+list.map(function(x){

@@ -96,25 +96,39 @@ function homeIntroHTML(){
     '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
   '</section>';
 }
-/** การ์ด "กำลังหาร" ของบิลส่วนตัวในเครื่อง */
-function activeBillHTML(saved){
+/** v4.10: บิลเสร็จแล้ว = มีคนต้องโอน และติ๊กว่าโอนครบทุกคนแล้ว */
+function billDone(saved){
+  var b = normalizeBill(saved), r = computeBill(b), s = settleBill(r, b);
+  return !!(s.ok && paidProgress(s.transfers, b.paid).all);
+}
+function statusBadge(done){
+  return done ? '<span class="badge ok">'+L("เสร็จแล้ว")+'</span>' : '<span class="badge warn">'+L("กำลังหาร")+'</span>';
+}
+/** ลิงก์/ชื่อของการ์ด — บิลในเครื่อง (ไม่ส่ง o) หรือบิลกลุ่ม o = { id, name } */
+function cardLinks(saved, o){
+  return o ? { split:"#/g/"+o.id, bill:"#/g/"+o.id+"/bill", name:o.name, hid:"h-active-"+o.id, group:true }
+           : { split:"#/split", bill:"#/bill", name:savedBillName(saved), hid:"h-active", group:false };
+}
+/** การ์ดความคืบหน้าในหน้าหลัก — บิลส่วนตัวในเครื่อง หรือบิลกลุ่ม (v4.10) */
+function activeBillHTML(saved, o){
+  var c = cardLinks(saved, o);
   var b = normalizeBill(saved);
   var r = computeBill(b);
   var s = settleBill(r, b);
   var prog = s.ok ? paidProgress(s.transfers, b.paid) : null;
-  var meta = L("{n} คน · {k} {items}", { n:b.members.length, k:b.menus.length, items:ktOf(b.kind,"items") });
+  var meta = (c.group ? L("บิลกลุ่ม")+' · ' : '')+L("{n} คน · {k} {items}", { n:b.members.length, k:b.menus.length, items:ktOf(b.kind,"items") });
   var progress = (prog && prog.total)
     ? '<div class="progress-text">'+(prog.all ? L("โอนครบทุกคนแล้ว 🎉") : L("โอนแล้ว {done}/{total}", { done:prog.done, total:prog.total }))+'</div>'+
       '<div class="progress"><i style="width:'+Math.round(prog.done / prog.total * 100)+'%"></i></div>'
     : '';
-  return '<section class="active-card" aria-labelledby="h-active">'+
-    '<div class="active-top"><span class="badge warn">'+L("กำลังหาร")+'</span><span class="active-meta">'+meta+'</span></div>'+
-    '<h2 id="h-active" class="active-name">'+ktOf(b.kind,"icon")+' '+esc(savedBillName(saved))+'</h2>'+
+  return '<section class="active-card'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
+    '<div class="active-top">'+statusBadge(prog && prog.all)+'<span class="active-meta">'+meta+'</span></div>'+
+    '<h2 id="'+c.hid+'" class="active-name">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
     '<div class="active-sum">'+baht(r.grand)+' ฿</div>'+
     progress+
     '<div class="btn-pair">'+
-      '<a class="btn-main" href="#/split">'+L("ทำต่อ")+'</a>'+
-      '<a class="btn-line" href="#/bill">'+L("ใบสรุปยอด")+'</a>'+
+      '<a class="btn-main" href="'+c.split+'">'+L("ทำต่อ")+'</a>'+
+      '<a class="btn-line" href="'+c.bill+'">'+L("ใบสรุปยอด")+'</a>'+
     '</div>'+
   '</section>';
 }
@@ -132,11 +146,12 @@ function historyRowHTML(h){
 }
 function groupRowHTML(g){
   return billRow('#/g/'+esc(g.id), ktOf(g.kind,"icon")+' '+esc(g.name),
-    '<span class="tag-group">'+ICON_USERS+' '+L("บิลกลุ่ม")+'</span>'+(g.at ? ' · '+L("เปิดล่าสุด {date}", { date:esc(shortDate(g.at)) }) : ''), '');
+    '<span class="tag-group">'+ICON_USERS+' '+L("บิลกลุ่ม")+'</span>'+(g.done ? ' · '+L("เสร็จแล้ว") : '')+
+    (g.at ? ' · '+L("เปิดล่าสุด {date}", { date:esc(shortDate(g.at)) }) : ''), '');
 }
-/** บิลล่าสุด = กลุ่มที่เคยเปิด + บิลในประวัติ เรียงตามเวลา */
-function recentItems(){
-  var list = ui.myGroups.map(function(g){ return { at:g.at || 0, html:groupRowHTML(g) }; })
+/** บิลล่าสุด = กลุ่มที่เคยเปิด + บิลในประวัติ เรียงตามเวลา (skip = กลุ่มที่ขึ้นเป็นการ์ดด้านบนแล้ว) */
+function recentItems(skip){
+  var list = ui.myGroups.filter(function(g){ return !(skip && skip[g.id]); }).map(function(g){ return { at:g.at || 0, html:groupRowHTML(g) }; })
     .concat(ui.history.map(function(h){ return { at:h.at || 0, html:historyRowHTML(h) }; }));
   list.sort(function(a,b){ return b.at - a.at; });
   return list;

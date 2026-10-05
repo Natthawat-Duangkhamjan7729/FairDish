@@ -493,6 +493,7 @@ body.show-foot .foot{display:block}
 .home-hello{margin:var(--s4) 0 0}
 .home-hello+.home-title{margin-top:0}
 .add-self{margin-top:var(--s3)}
+#homeActive>*+*{margin-top:var(--s4)}   /* v4.10: การ์ดบิลในเครื่อง + บิลกลุ่มเรียงกัน */
 .me-or{font-size:var(--fs-small);color:var(--ink-2);margin:var(--s4) 0 var(--s2)}
 #meDialog .form-box{margin-top:var(--s2)}
 .guest-join{margin:var(--s3) 0 var(--s4)}

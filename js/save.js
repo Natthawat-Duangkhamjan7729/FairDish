@@ -98,7 +98,9 @@ async function commit(successMessage, source){
   }
   setSave("saving");
   try {
-    await Store.save(serialize());
+    var data = serialize();
+    await Store.save(data);
+    if (Store.groupId) snapGroup(Store.groupId, data);   // v4.10: การ์ดในหน้าหลักเห็นยอดล่าสุด
     setSave("saved");
     ui.saveFailedIn = null;
     if (successMessage) toast(successMessage,"ok");

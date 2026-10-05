@@ -88,6 +88,8 @@
   ปุ่ม `#inviteBtn` ในขั้นใส่คน) ลิงก์ = บิลกลุ่ม `#/g/<id>` ใช้ `inviteLink()` / `inviteLabel()` ใน confirm.js อย่าเรียก `confirmLink()` ตรง ๆ ในหน้าชวน
 - v4.9: เปิดลิงก์กลุ่มโดยยังไม่เคยตอบชื่อ → `route()` เรียก `askNameForLink()` (หน้าถามชื่อ `ui.nameFor` = ลิงก์ที่รอ) แล้วกลับลิงก์เดิม
   `maybeAskWhoAmI()` / `openMeDialog()` = ถาม "เข้าร่วมกลุ่มไหม?" (`joinGroup()` เพิ่มชื่อ + ตั้ง `me`) · เข้าร่วมแล้วเปิดซ้ำ = เลือกชื่ออย่างเดียว
+- v4.10: หน้าหลัก `fillHome()` = การ์ดบิลในเครื่อง + บิลกลุ่ม (`homeGroups()` จาก `g.snap` ที่ `snapGroup()` จำไว้ตอนโหลด/บันทึก/อัปเดตสด,
+  `refreshHomeGroups()` ดึงล่าสุดแล้ววาดซ้ำ) · เสร็จแล้ว = `billDone()` โชว์ครั้งเดียว (`DONE_SEEN_KEY` / `g.doneSeen`, `ui.doneShown` กันหายตอนวาดซ้ำ)
 - v4.2: **ห้ามเก็บเบอร์โทร เลขบัตรประชาชน หรือข้อมูลระบุตัวตนอื่นในข้อมูลบิล** (บิลกลุ่มอยู่บน Supabase และใครมีลิงก์ก็อ่านได้ — PDPA)
   `normalizeBill()` เก็บ members แค่ `{ id, name }`
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย

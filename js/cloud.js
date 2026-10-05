@@ -68,6 +68,15 @@ function rememberGroup(id, name, kind){
   if (ui.myGroups.length > MY_GROUPS_LIMIT) ui.myGroups = ui.myGroups.slice(0, MY_GROUPS_LIMIT);
   return saveMyGroups();
 }
+/** v4.10: จำข้อมูลล่าสุดของกลุ่มไว้ในเครื่อง ให้หน้าหลักขึ้นการ์ดความคืบหน้าได้ทันที (และรู้ว่าเสร็จแล้วหรือยัง) */
+function snapGroup(id, data){
+  var g = myGroup(id);
+  if (!g || !data) return;
+  g.snap = data;
+  g.done = billDone(data);
+  if (!g.done) g.doneSeen = false;
+  saveMyGroups();
+}
 /** id ของสมาชิกที่ผู้ใช้เครื่องนี้เลือกว่าเป็นตัวเอง (เฉพาะในกลุ่ม) */
 function myMemberId(){
   if (!ui.ctx) return null;

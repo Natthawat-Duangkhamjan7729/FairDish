@@ -670,7 +670,42 @@ async function saveQrImage(){
 }
 
 /* ---- v3.2: หน้าหลัก "บิลของฉัน" ---- */
-async function fillHome(){
+/* ---- v4.10: การ์ดความคืบหน้าในหน้าหลัก = บิลในเครื่อง + บิลกลุ่มที่ยังไม่จบ
+   บิลที่เสร็จแล้ว (โอนครบ) ขึ้นป้าย "เสร็จแล้ว" ให้เห็นครั้งเดียว — เปิดหน้าหลักครั้งต่อไป บิลในเครื่องเก็บเข้าประวัติ
+   บิลกลุ่มลงไปอยู่ใน "บิลล่าสุด" (ui.doneShown กันไม่ให้หายไปตอนวาดซ้ำในการเปิดครั้งเดียวกัน) ---- */
+var DONE_SEEN_KEY = "fairdish:done-seen:v1";   // savedAt ของบิลในเครื่องที่เห็นการ์ด "เสร็จแล้ว" ไปแล้ว
+var HOME_GROUP_DAYS = 30, HOME_GROUP_MAX = 3;
+function homeGroups(){
+  var cut = Date.now() - HOME_GROUP_DAYS * 864e5;
+  return ui.myGroups.filter(function(g){
+    return g.snap && (g.at || 0) > cut && (!g.done || !g.doneSeen || ui.doneShown[g.id]);
+  }).slice(0, HOME_GROUP_MAX);
+}
+/** ดึงข้อมูลล่าสุดของกลุ่มที่อาจขึ้นในหน้าหลัก แล้ววาดใหม่ถ้ามีอะไรเปลี่ยน */
+async function refreshHomeGroups(){
+  if (!Cloud.ready()) return;
+  var cut = Date.now() - HOME_GROUP_DAYS * 864e5;
+  var list = ui.myGroups.filter(function(g){ return (g.at || 0) > cut && !(g.done && g.doneSeen); }).slice(0, 5);
+  var changed = false;
+  await Promise.all(list.map(async function(g){
+    try {
+      var r = await Cloud.get(g.id);
+      if (!r) return;
+      var snap = r.data || {};
+      if (JSON.stringify(snap) !== JSON.stringify(g.snap)){ g.snap = snap; changed = true; }
+      if (r.name && r.name !== g.name){ g.name = r.name; changed = true; }
+      var done = billDone(snap);
+      if (done !== !!g.done){ g.done = done; changed = true; }
+      if (!done) g.doneSeen = false;                 // มีคนเอาติ๊กออก = กลับมาเป็นกำลังหาร
+    } catch(e){}
+  }));
+  if (!changed) return;
+  await saveMyGroups();
+  if (currentPath() === "/") fillHome(true);
+}
+/** again = วาดซ้ำในการเปิดหน้าหลักครั้งเดียวกัน (หลังดึงข้อมูลกลุ่ม) ไม่ดึงซ้ำ */
+async function fillHome(again){
+  if (!again) ui.doneShown = {};
   var saved = null;
   try { saved = await Store.loadLocalBill(); } catch(e){}
   if (currentPath() !== "/") return;
@@ -679,19 +714,44 @@ async function fillHome(){
   var intro = document.getElementById("homeIntro");
   if (!active) return;
   var has = billHasData(saved);
+  if (has && billDone(saved) && !ui.doneShown.local){
+    var seen = null;
+    try { seen = await Store.readRaw(DONE_SEEN_KEY); } catch(e){}
+    if (seen && seen === saved.savedAt){
+      try {                                                // เห็นครั้งที่สองแล้ว → เก็บเข้าประวัติ เริ่มบิลในเครื่องว่าง ๆ
+        await archiveBill(saved);
+        await Store.saveLocalBill(emptyBill(normalizeBill(saved).kind));
+        if (ui.ctx === null) ui.ctx = undefined;          // ให้หน้าหารบิลโหลดบิลว่างใหม่ ไม่ใช้ของเก่าในหน่วยความจำ
+        has = false; saved = null;
+      } catch(e){}
+    } else {
+      ui.doneShown.local = true;
+      try { await Store.writeRaw(DONE_SEEN_KEY, saved.savedAt || "seen"); } catch(e){}
+    }
+  }
+  if (currentPath() !== "/") return;
+  var groups = homeGroups(), skip = {}, marked = false;
+  groups.forEach(function(g){
+    skip[g.id] = true;
+    if (g.done && !g.doneSeen){ g.doneSeen = true; ui.doneShown[g.id] = true; marked = true; }
+  });
+  if (marked) saveMyGroups();
+  if (!again) refreshHomeGroups();
   if (isWide()){                                        // v4.4: หน้าแรกจอใหญ่ (wide.js)
-    active.innerHTML = has ? activeCardWide(saved) : emptyCardWide();
-    recent.innerHTML = recentCardsWide();
+    active.innerHTML = (has ? activeCardWide(saved) : (groups.length ? "" : emptyCardWide()))+
+      groups.map(function(g){ return activeCardWide(g.snap, { id:g.id, name:g.name }); }).join("");
+    recent.innerHTML = recentCardsWide(skip);
     intro.innerHTML = "";
     return updateInstallButton();
   }
-  active.innerHTML = has ? activeBillHTML(saved) : "";
-  var items = recentItems();
+  active.innerHTML = (has ? activeBillHTML(saved) : "")+
+    groups.map(function(g){ return activeBillHTML(g.snap, { id:g.id, name:g.name }); }).join("");
+  var items = recentItems(skip);
   recent.innerHTML = items.length
     ? '<div class="list-title"><h2>'+L("บิลล่าสุด")+'</h2><a class="link-btn" href="#/history">'+L("ดูทั้งหมด")+'</a></div>'+
       items.slice(0,3).map(function(x){ return x.html; }).join("")
     : "";
-  intro.innerHTML = (!has && !items.length) ? homeIntroHTML() : "";
+  intro.innerHTML = (!has && !groups.length && !items.length) ? homeIntroHTML() : "";
   updateInstallButton();
 }
 
