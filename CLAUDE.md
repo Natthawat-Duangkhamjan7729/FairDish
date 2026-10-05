@@ -70,6 +70,9 @@
 - v4.4: พื้นที่ทำงานจอใหญ่ใช้ฟังก์ชันวาดเดิมผ่าน id เดิม (`#memberInput`, `#menuFormSlot`, `#chargeList`, `#sharedList`, `#mealHead`)
   `renderMembers()` / `renderMenus()` / `renderSummary()` ส่งต่อไป `renderWs*()` เมื่อ `wsActive()` — การแก้ข้อมูลในพื้นที่ทำงานต้องเรียก `pushUndo()` ก่อน
   ปุ่มลัด (N, M, T, Ctrl/⌘+Z, Esc) อยู่ใน `wideShortcut()` ของ `events.js` และไม่ทำงานตอนกำลังพิมพ์
+  ช่องเพิ่มรายการบรรทัดเดียว (`#wsName`) ใช้เมนูแนะนำชุดเดียวกับฟอร์มแผ่น (`menuSuggestions()` + `suggestBoxHTML()` ใน `actions.js`)
+- v4.4.1: หน้าแนะนำขึ้นครั้งเดียวต่อเครื่อง (`ONBOARD_KEY` = `fairdish:onboarded:v2` ใน `pages.js` — เปลี่ยนเลขเมื่ออยากให้ทุกคนเห็นใหม่)
+  เปิดครั้งแรกจากหน้าอื่น `route()` จำหน้าไว้ใน `ui.onbNext` แล้วพาไปหน้าแนะนำก่อน — ลิงก์กลุ่ม (`#/g/...`) ไม่ต้องผ่านหน้าแนะนำ
 - v4.2: **ห้ามเก็บเบอร์โทร เลขบัตรประชาชน หรือข้อมูลระบุตัวตนอื่นในข้อมูลบิล** (บิลกลุ่มอยู่บน Supabase และใครมีลิงก์ก็อ่านได้ — PDPA)
   `normalizeBill()` เก็บ members แค่ `{ id, name }`
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย

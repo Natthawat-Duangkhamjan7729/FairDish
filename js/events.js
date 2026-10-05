@@ -28,6 +28,12 @@ document.addEventListener("keydown", function(e){
     if (e.key === "Escape"){ e.preventDefault(); return closeSuggestions(); }
     if (e.key === "Enter" && ui.suggest.active >= 0){ e.preventDefault(); return pickSuggestion(ui.suggest.active); }
   }
+  if (e.target.id === "wsName" && ui.wsSuggest && ui.wsSuggest.open && ui.wsSuggest.items.length){   // v4.4.1: เมนูแนะนำจอใหญ่
+    if (e.key === "ArrowDown"){ e.preventDefault(); return moveWsSuggest(1); }
+    if (e.key === "ArrowUp"){ e.preventDefault(); return moveWsSuggest(-1); }
+    if (e.key === "Escape"){ e.preventDefault(); return closeWsSuggest(); }
+    if (e.key === "Enter" && ui.wsSuggest.active >= 0){ e.preventDefault(); return pickWsSuggest(ui.wsSuggest.active); }
+  }
   if (e.key !== "Enter") return;
   if (e.target.id === "memberInput"){ e.preventDefault(); if (wsActive()) pushUndo(); addMember(); }
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
@@ -72,6 +78,7 @@ document.addEventListener("input", function(e){
       renderSuggestions();
     }
   }
+  if (e.target && e.target.id === "wsName"){ ui.wsSuggest = { open:true, items:[], active:-1 }; renderWsSuggest(); }
   if (e.target && e.target.id === "histQ"){ ui.histQ = e.target.value; renderHistoryWide(); }   // v4.4: ค้นหาประวัติ (ไม่วาดช่องค้นหาใหม่ จะได้พิมพ์ต่อได้)
   if (e.target && e.target.id === "resetConfirmName"){
     var ok = document.getElementById("confirmReset");
@@ -90,6 +97,7 @@ document.addEventListener("click", async function(e){
   if (ui.suggest.open && e.target.closest && !e.target.closest("#mSuggest") && e.target.id !== "mName"){
     closeSuggestions();
   }
+  if (ui.wsSuggest && ui.wsSuggest.open && e.target.closest && !e.target.closest("#wsSuggest") && e.target.id !== "wsName") closeWsSuggest();
   var toggle = e.target.closest ? e.target.closest("[data-toggle]") : null;
   if (toggle){
     var toggleId = toggle.getAttribute("data-toggle");
@@ -115,7 +123,7 @@ document.addEventListener("click", async function(e){
             "[data-guest-who],[data-guest-add],[data-guest-item],[data-guest-save],[data-guest-change],[data-guest-again],"+
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
-            "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo]";
+            "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
   var v;
@@ -162,6 +170,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
 
   /* v4.4: จอใหญ่ */
+  if ((v = t.getAttribute("data-ws-suggest")) !== null) return pickWsSuggest(parseInt(v, 10));
   if ((v = t.getAttribute("data-ws-focus"))) return wsFocusPerson(v);
   if ((v = t.getAttribute("data-ws-eat"))){ v = v.split(":"); return wsToggleEater(v[0], v[1]); }
   if ((v = t.getAttribute("data-ws-all"))) return wsToggleAll(v);
@@ -173,7 +182,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-share-pick"))) return pickShareMember(v);
   if ((v = t.getAttribute("data-hist-sel"))){ ui.histSel = v; return renderHistoryWide(); }
   if ((v = t.getAttribute("data-hist-filter"))){ ui.histFilter = v; return renderHistoryWide(); }
-  if (t.getAttribute("data-onb-demo")){ await finishOnboard(); return startNewBill("meal", true); }
+  if (t.getAttribute("data-onb-demo")){ ui.onbNext = null; await finishOnboard(); return startNewBill("meal", true); }
   if (t.id==="inviteBtn") return inviteFromBill();
 
   /* v2.5: ใครจ่ายให้ร้าน */
@@ -401,4 +410,9 @@ document.addEventListener("drop", function(e){
   ui.wsDrag = null;
   document.body.classList.remove("ws-dragging");
   wsToggleEater(card.getAttribute("data-ws-drop"), pid, true);
+});
+
+/* v4.4.1: แตะช่องชื่อรายการบนจอใหญ่ = แสดงเมนูที่สั่งบ่อย (เหมือนฟอร์มแผ่น) */
+document.addEventListener("focusin", function(e){
+  if (e.target && e.target.id === "wsName" && !(ui.wsSuggest && ui.wsSuggest.open)) openWsSuggest();
 });

@@ -238,8 +238,10 @@ function pageWorkspace(){
         (inMeal ? '<div id="mealHead"></div>' : '')+
         '<div class="ws-col-head"><h2 id="h-ws-menu">'+(trip ? kt("itemsTitle") : L("เมนู"))+'</h2><span id="wsMenuMeta"></span></div>'+
         '<div class="ws-add" role="group" aria-label="'+kt("add")+'">'+
-          '<label class="sr-only" for="wsName">'+kt("nameLabel")+'</label>'+
-          '<input type="text" id="wsName" placeholder="'+(trip ? kt("namePh") : L("ชื่อเมนู เช่น ส้มตำปู"))+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-keyshortcuts="N">'+
+          '<div class="ws-name-wrap"><label class="sr-only" for="wsName">'+kt("nameLabel")+'</label>'+
+          '<input type="text" id="wsName" placeholder="'+(trip ? kt("namePh") : L("ชื่อเมนู เช่น ส้มตำปู"))+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-keyshortcuts="N" '+
+            'role="combobox" aria-expanded="false" aria-controls="wsSuggestList" aria-autocomplete="list">'+
+          '<div id="wsSuggest"></div></div>'+
           '<label class="sr-only" for="wsPrice">'+kt("pricePh")+'</label>'+
           '<input type="number" id="wsPrice" inputmode="decimal" step="0.01" min="0" placeholder="'+L("ราคา")+'" class="mono">'+
           '<button class="btn-sm" type="button" id="wsAdd">'+L("+ เพิ่ม")+' '+kbd("N")+'</button>'+
@@ -508,6 +510,7 @@ async function wsAddMenu(){
   }
   pushUndo();
   state.menus.unshift(item);
+  closeWsSuggest();
   nameEl.value = ""; priceEl.value = "";
   if (msg){ msg.className = "field-msg muted"; msg.textContent = ""; }
   ui.savingMenu = true;
@@ -517,6 +520,52 @@ async function wsAddMenu(){
   await rememberMenu(name, price);
   ui.savingMenu = false;
   render();
+}
+/* ---- เมนูแนะนำในช่องบรรทัดเดียว (ใช้ menuSuggestions() / suggestBoxHTML() เดียวกับฟอร์มแผ่น) ---- */
+function renderWsSuggest(){
+  var box = document.getElementById("wsSuggest"), input = document.getElementById("wsName");
+  if (!box || !input) return;
+  var st = ui.wsSuggest || (ui.wsSuggest = { open:false, items:[], active:-1 });
+  var query = input.value;
+  var found = st.open ? menuSuggestions(query) : { items:[], total:0 };
+  st.items = found.items;
+  if (st.active >= st.items.length) st.active = -1;
+  if (!st.items.length){
+    box.innerHTML = "";
+    input.setAttribute("aria-expanded", "false");
+    input.setAttribute("aria-activedescendant", "");
+    return;
+  }
+  box.innerHTML = suggestBoxHTML(found, query, st.active, "wsSuggest", "data-ws-suggest");
+  input.setAttribute("aria-expanded", "true");
+  input.setAttribute("aria-activedescendant", st.active >= 0 ? "wsSuggest" + st.active : "");
+}
+function openWsSuggest(){
+  ui.wsSuggest = { open:true, items:[], active:-1 };
+  renderWsSuggest();
+}
+function closeWsSuggest(){
+  ui.wsSuggest = { open:false, items:[], active:-1 };
+  renderWsSuggest();
+}
+function moveWsSuggest(step){
+  var st = ui.wsSuggest, n = st && st.items.length;
+  if (!n) return;
+  var next = st.active + step;
+  st.active = next < 0 ? n - 1 : (next >= n ? 0 : next);
+  renderWsSuggest();
+}
+/** เลือกเมนูแนะนำ: ใส่ชื่อ, ใส่ราคาที่เคยสั่งถ้าช่องราคายังว่าง แล้วไปช่องราคา */
+function pickWsSuggest(i){
+  var it = ui.wsSuggest && ui.wsSuggest.items[i];
+  var nameEl = document.getElementById("wsName"), priceEl = document.getElementById("wsPrice");
+  if (!it || !nameEl) return;
+  nameEl.value = it.name;
+  if (priceEl && it.price != null && !String(priceEl.value).trim()) priceEl.value = it.price;
+  closeWsSuggest();
+  var msg = document.getElementById("wsAddMsg");
+  if (msg){ msg.className = "field-msg muted"; msg.textContent = ""; }
+  if (priceEl){ priceEl.focus(); priceEl.select(); }
 }
 function wsFocusPerson(id){
   ui.wsFocus = ui.wsFocus === id ? null : id;

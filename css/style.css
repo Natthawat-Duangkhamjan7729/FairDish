@@ -1095,6 +1095,9 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .ws-tip{display:none}
   .ws-add{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border-radius:18px;border:1px dashed var(--line-2);background:var(--surface)}
   .ws-add input{flex:1 1 160px;min-width:0;min-height:var(--tap)}
+  .ws-name-wrap{position:relative;flex:1 1 160px;min-width:0;display:flex}
+  .ws-name-wrap input{flex:1}
+  #wsSuggest .suggest{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:35;margin:0;max-height:min(60vh,420px);overflow-y:auto}
   .ws-add #wsPrice{flex:0 0 104px}
   .ws-add .btn-sm{display:inline-flex;align-items:center;gap:6px}
   #wsAddMsg:empty{display:none}

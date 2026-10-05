@@ -197,26 +197,31 @@ function renderSuggestions(){
     input.setAttribute("aria-expanded","false");
     return;
   }
+  box.innerHTML = suggestBoxHTML(found, query, ui.suggest.active, "mSuggest", "data-suggest");
+  input.setAttribute("aria-expanded","true");
+  var active = items[ui.suggest.active];
+  input.setAttribute("aria-activedescendant", active ? ("mSuggest"+ui.suggest.active) : "");
+}
+
+/** กล่องเมนูแนะนำ — ใช้ทั้งฟอร์มแผ่น (#mName → "mSuggest"/data-suggest) และช่องบรรทัดเดียวจอใหญ่ (#wsName → "wsSuggest"/data-ws-suggest) */
+function suggestBoxHTML(found, query, active, prefix, attr){
+  var items = found.items;
   var head = String(query||"").trim()
     ? (found.total > items.length
         ? L("{label} {n} จาก {total} รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง", { label:kt("suggest"), n:items.length, total:found.total })
         : L("{label} {n} รายการ", { label:kt("suggest"), n:items.length }))
     : kt("suggestOften");
-  box.innerHTML = '<div class="suggest" id="mSuggestList" role="listbox" aria-label="'+kt("suggest")+'">'+
+  return '<div class="suggest" id="'+prefix+'List" role="listbox" aria-label="'+kt("suggest")+'">'+
     '<div class="s-head">'+head+'</div>'+
     items.map(function(it,i){
-      return '<button type="button" role="option" id="mSuggest'+i+'" data-suggest="'+i+'" aria-selected="'+(i===ui.suggest.active)+'">'+
+      return '<button type="button" role="option" id="'+prefix+i+'" '+attr+'="'+i+'" aria-selected="'+(i===active)+'">'+
         '<span class="s-name">'+highlight(it.name, query)+'</span>'+
         (it.remembered ? '<span class="s-tag">'+L("เคยสั่ง")+'</span>' : '')+
         (it.price!=null ? '<span class="s-price">'+baht(it.price)+'</span>' : '')+
       '</button>';
     }).join("")+
   '</div>';
-  input.setAttribute("aria-expanded","true");
-  var active = items[ui.suggest.active];
-  input.setAttribute("aria-activedescendant", active ? ("mSuggest"+ui.suggest.active) : "");
 }
-
 function moveSuggestion(step){
   var n = ui.suggest.items.length;
   if (!n) return;
@@ -655,6 +660,9 @@ async function setLang(lang){
 async function finishOnboard(){
   ui.showOnb = false; ui.onbStep = 0;
   try { await Store.writeRaw(ONBOARD_KEY, "done"); } catch(e){}
+  var next = ui.onbNext;                 // v4.4.1: กลับไปหน้าที่ตั้งใจเปิดก่อนเห็นหน้าแนะนำ
+  ui.onbNext = null;
+  if (next && next !== "#/" && next !== location.hash){ location.hash = next; return; }
   if (currentPath() === "/") route(); else location.hash = "#/";
 }
 function onboardNext(){

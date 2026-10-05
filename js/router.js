@@ -57,6 +57,8 @@ function route(){
   var path = currentPath();
   var groupId = currentGroupId();
   var r = routes[path];
+  // v4.4.1: เปิดเว็บครั้งแรกจากลิงก์หน้าอื่น → แสดงหน้าแนะนำก่อน แล้วพากลับมาหน้านั้น (ลิงก์กลุ่มที่เพื่อนส่งมาไม่ต้องผ่านหน้าแนะนำ)
+  if (ui.showOnb && path !== "/" && !groupId){ ui.onbNext = location.hash; location.hash = "#/"; return; }
   if (needsBill(path) && groupId !== ui.ctx) loadContext(groupId);
   else if ((path==="/share" || path==="/bill") && groupId) refreshGroup(false);   // สถานะยืนยัน/ติ๊กโอนของเพื่อนต้องเป็นล่าสุด
   if (path !== "/me"){ ui.guestFor = null; ui.guestSel = null; ui.guestDone = false; }

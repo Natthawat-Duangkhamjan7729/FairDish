@@ -59,8 +59,8 @@ var ui = {
   history:[],           // v3.2: บิลส่วนตัวที่เก็บเข้าประวัติแล้ว (ใหม่สุดก่อน)
   sheet:null,           // v3.2: แผ่นล่างจอที่เปิดอยู่นอกหน้าหารบิล "kind" | "rename"
   showDone:false,       // v3.2: โอนครบทุกคนแล้ว → หน้าใบสรุปแสดงหน้าจอ "จบมื้อแล้ว"
-  showOnb:false, onbStep:0,   // v4.1: หน้าแนะนำ 3 หน้า (ครั้งแรกที่เปิดหน้าหลัก)
-  wsFocus:null, wsPast:[], wsDrag:null,   // v4.4: จอใหญ่ — คนที่เลือกดู, ประวัติเลิกทำ, ชื่อที่กำลังลาก
+  showOnb:false, onbStep:0, onbNext:null,   // v4.1: หน้าแนะนำ 3 หน้า (ครั้งแรกที่เปิดหน้าหลัก)
+  wsFocus:null, wsPast:[], wsDrag:null, wsSuggest:{ open:false, items:[], active:-1 },   // v4.4: จอใหญ่ — คนที่เลือกดู, ประวัติเลิกทำ, ชื่อที่กำลังลาก
   histQ:"", histFilter:"all", histSel:null, sharePick:null,   // v4.4: ประวัติ (ค้นหา/กรอง/ที่เลือก), คนที่ดูตัวอย่างในหน้าชวนเพื่อน
   guestFor:null, guestSel:null, guestDone:false, guestSaving:false,   // v4.1: หน้าที่เพื่อนเห็น #/g/<id>/me
   shareAfterLoad:false  // v3.2: เพิ่งสร้างกลุ่มจากบิลส่วนตัว → เปิดหน้าต่างชวนเพื่อนเมื่อโหลดกลุ่มเสร็จ
@@ -70,7 +70,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.4";
+var APP_VERSION = "4.4.1";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */
