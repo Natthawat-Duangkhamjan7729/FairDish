@@ -60,6 +60,8 @@ function route(){
   var r = routes[path];
   // v4.4.1: เปิดเว็บครั้งแรกจากลิงก์หน้าอื่น → แสดงหน้าแนะนำก่อน แล้วพากลับมาหน้านั้น (ลิงก์กลุ่มที่เพื่อนส่งมาไม่ต้องผ่านหน้าแนะนำ)
   if (ui.showOnb && path !== "/" && !groupId){ ui.onbNext = location.hash; location.hash = "#/"; return; }
+  // v4.10.1: เข้าแอปครั้งแรกจากลิงก์/QR กลุ่ม = ต้อนรับแบบกลุ่มแล้ว (ถามชื่อ + ถามเข้าร่วม) ไม่ต้องเจอหน้าแนะนำแอปตอนกดกลับ
+  if (groupId && ui.showOnb && !ui.tour){ ui.showOnb = false; Store.writeRaw(ONBOARD_KEY, "done").catch(function(){}); }
   if (groupId && !ui.nameAsked && !ui.tour){ askNameForLink(location.hash); return; }   // v4.9: สแกนเข้ากลุ่มครั้งแรก = ถามชื่อก่อน
   // v4.8.1: จำว่าเข้าหน้าชวนเพื่อนมาจากหน้าไหน ปุ่มย้อนกลับจะได้กลับไปที่เดิม (สร้างกลุ่มจากบิลส่วนตัวก็นับ)
   if (path === "/share" && lastRoutePath !== "/share") ui.shareBack = (lastRoutePath === "/split" || lastRoutePath === "/bill") ? lastRoutePath : null;

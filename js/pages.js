@@ -55,7 +55,7 @@ function settingsLink(){
 
 /* ---------------- หน้าหลัก: บิลของฉัน ---------------- */
 function pageHome(){
-  if (ui.showOnb && !ui.nameFor) return isWide() ? pageOnboardWide() : pageOnboard();
+  if (ui.showOnb) return isWide() ? pageOnboardWide() : pageOnboard();
   if (needName()) return pageAskName();                // v4.6: หน้าถามชื่อ ต่อจากหน้าแนะนำ
   if (isWide()) return pageHomeWide();
   return '<div class="page page-home">'+
