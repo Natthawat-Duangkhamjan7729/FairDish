@@ -37,6 +37,8 @@ test("รู้ว่าเปิดผ่านเบราว์เซอร�
   const app = loadApp();
   assert.equal(app.detectInApp(UA.lineIos), "line");
   assert.equal(app.detectInApp(UA.fbAndroid), "facebook");
+  assert.equal(app.detectInApp("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/MessengerForiOS;FBAV/430.0]"), "messenger");
+  assert.equal(app.detectInApp("Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36 musical_ly_2023 BytedanceWebview/d8a21c6"), "tiktok");
   assert.equal(app.detectInApp(UA.iphone), "");
   assert.equal(app.detectInApp(UA.android), "");
 });

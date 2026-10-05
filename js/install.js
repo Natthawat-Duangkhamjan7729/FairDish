@@ -18,8 +18,10 @@ function detectPlatform(ua, platform, touchPoints){
 function detectInApp(ua){
   ua = String(ua || "");
   if (/\bLine\//i.test(ua)) return "line";
+  if (/Messenger|FB_IAB\/MESSENGER|\bOrca-Android/i.test(ua)) return "messenger";   // v4.12
   if (/FBAN|FBAV|FB_IAB/i.test(ua)) return "facebook";
   if (/Instagram/i.test(ua)) return "instagram";
+  if (/musical_ly|BytedanceWebview|TikTok/i.test(ua)) return "tiktok";   // v4.12
   return "";
 }
 
@@ -35,7 +37,33 @@ var Install = {
   }
 };
 
-var INSTALL_APPS = { line:"LINE", facebook:"Facebook", instagram:"Instagram" };
+var INSTALL_APPS = { line:"LINE", facebook:"Facebook", messenger:"Messenger", instagram:"Instagram", tiktok:"TikTok" };
+
+/* ---- v4.12: เปิดอยู่ในเบราว์เซอร์ของแอปแชต (LINE, IG, Messenger …) → แนะนำเปิดในเบราว์เซอร์จริง
+   บิลส่วนตัว/ชื่อ/กลุ่มของฉัน เก็บใน localStorage ของแอปนั้น เปิดลิงก์ใหม่จากแอปอื่นแล้วจะไม่เห็นข้อมูลเดิม ---- */
+var INAPP_SKIP_KEY = "fairdish:inapp-skip";   // sessionStorage: กด "ใช้ในแอปนี้ต่อ" แล้วไม่ถามซ้ำจนปิดแอป
+function renderInAppBar(){
+  var bar = document.getElementById("inappBar");
+  if (!bar) return;
+  var app = detectInApp(navigator.userAgent), skip = false;
+  try { skip = sessionStorage.getItem(INAPP_SKIP_KEY) === "1"; } catch(e){}
+  if (!app || skip){ bar.hidden = true; bar.innerHTML = ""; return; }
+  var ios = Install.platform() === "ios";
+  var external = location.origin + location.pathname + "?openExternalBrowser=1" + location.hash;   // LINE เปิดเบราว์เซอร์จริงให้เองเมื่อเจอพารามิเตอร์นี้
+  bar.hidden = false;
+  bar.innerHTML = '<p>'+L("เปิดอยู่ในแอป {app} — บิลที่ทำจะถูกเก็บไว้ในแอปนี้เท่านั้น เปิดในเบราว์เซอร์ดีกว่า ข้อมูลจะอยู่ครบทุกครั้งที่เปิด", { app:INSTALL_APPS[app] })+'</p>'+
+    '<div class="inapp-acts">'+
+      (app === "line"
+        ? '<a class="btn-sm btn-xs" href="'+esc(external)+'">'+L("เปิดในเบราว์เซอร์")+'</a>'
+        : '<span class="inapp-how">'+(ios ? L("แตะ ••• แล้วเลือก \"เปิดใน Safari\"") : L("แตะ ⋮ แล้วเลือก \"เปิดในเบราว์เซอร์\""))+'</span>'+
+          '<button class="btn-quiet btn-xs" type="button" id="installCopyLink">'+L("คัดลอกลิงก์")+'</button>')+
+      '<button class="link-btn" type="button" id="inappSkip">'+L("ใช้ในแอปนี้ต่อ")+'</button>'+
+    '</div>';
+}
+function skipInApp(){
+  try { sessionStorage.setItem(INAPP_SKIP_KEY, "1"); } catch(e){}
+  renderInAppBar();
+}
 var ICON_IOS_SHARE='<svg class="i-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
 var ICON_ADD_SQUARE='<svg class="i-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
 var ICON_KEBAB='<svg class="i-inline" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';

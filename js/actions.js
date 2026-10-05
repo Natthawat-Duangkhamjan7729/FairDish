@@ -428,7 +428,7 @@ function copySummary(){ copyText(summaryText(), L("คัดลอกสรุ�
 /* ---- v2.5: ใครจ่ายให้ร้าน → ใครโอนให้ใคร ---- */
 /** วาดหน้าใบสรุปใหม่โดยไม่เล่นแอนิเมชันซ้ำและไม่เลื่อนจอ */
 function rerenderBill(){
-  if (currentPath() === "/split"){ renderSummary(); renderTotalBar(); return; }   // v3.2: ใครจ่ายอยู่ในแท็บสรุป
+  if (currentPath() === "/split"){ renderSummary(); renderTotalBar(); return; }   // จอใหญ่: สรุปยอดสดในพื้นที่ทำงาน
   if (currentPath() !== "/bill") return;
   var y = window.scrollY;
   ui.noReveal = true;
@@ -554,8 +554,8 @@ function openMeDialog(){
       : '')+
     '<div class="me-other name-skip"><button class="me-skip" data-me-close="1">'+L("ไม่ใช่ตอนนี้")+'</button></div>';
   if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
-  var input = document.getElementById("joinNameInput");
-  if (input) input.focus();
+  var close = box.querySelector("[data-me-close]");    // v4.12: showModal โฟกัสช่องแรกเอง (แป้นพิมพ์เด้ง) — ย้ายไปปุ่มปิดแทน
+  if (close) close.focus({ preventScroll:true });
 }
 /** v4.9: เข้าร่วมกลุ่ม (ชื่อเดิม joinGroup ชนกับฟังก์ชันวางลิงก์เข้ากลุ่ม — แก้ใน v4.11) = เพิ่มชื่อตัวเองเป็นสมาชิก + จำว่า "ฉันคือคนนี้" (ชื่อซ้ำกับที่มีอยู่ = เลือกคนนั้นแทน) */
 async function joinAsMe(){
@@ -821,16 +821,38 @@ async function replaceLocalBill(next, step){
   state.menuForm = null; state.sharedForm = null; state.chargeForm = null;
   if (ui.ctx === null && !ui.loading) applyBill(next);   // บิลส่วนตัวเปิดอยู่แล้ว ใส่ข้อมูลใหม่ได้เลย
   else ui.ctx = undefined;                               // ให้ route() โหลดบิลส่วนตัวใหม่
-  if (location.hash === "#/split") route(); else location.hash = "#/split";
+  var dest = step === "summary" ? "#/bill" : "#/split";   // v4.12: เปิดบิลจากประวัติ = ดูใบสรุปยอด
+  if (location.hash === dest) route(); else location.hash = dest;
   return archived;
 }
-async function startNewBill(kind, demo){
+/** v4.12: ทริป / ทริปแบบกลุ่ม — ตั้งชื่อได้ก่อนเริ่ม (ไม่บังคับ ว่างไว้ = ชื่อตั้งต้น "ทริป 5 ต.ค.") */
+function openTripNameSheet(kind){
+  if (ui.tour) return startNewBill(kind);
+  ui.sheet = "tripname";
+  var def = defaultBillName("trip");
+  renderGlobalSheet('<h2 class="sheet-title" id="tripNameTitle">'+(kind === "trip-group" ? L("ตั้งชื่อทริปแบบกลุ่ม") : L("ตั้งชื่อทริป"))+'</h2>'+
+    '<p class="sheet-sub">'+L("ไม่บังคับ — ไม่ตั้งก็ใช้ชื่อ {name}", { name:esc(def) })+'</p>'+
+    '<div class="form-box">'+
+      '<label class="sr-only" for="tripNameInput">'+L("ชื่อทริป")+'</label>'+
+      '<input type="text" id="tripNameInput" maxlength="'+MAX_GROUP_NAME+'" autocomplete="off" placeholder="'+L("เช่น เชียงใหม่ 3 วัน 2 คืน")+'">'+
+      '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
+      '<button class="btn-sm" type="button" data-trip-go="'+kind+'">'+(kind === "trip-group" ? L("สร้างกลุ่มทริป") : L("เริ่มทริป"))+'</button></div>'+
+    '</div>', "tripNameTitle");
+}
+function goTripFromSheet(kind){
+  var input = document.getElementById("tripNameInput");
+  var name = input ? input.value.trim().replace(/\s+/g, " ").slice(0, MAX_GROUP_NAME) : "";
+  startNewBill(kind, false, name);
+}
+async function startNewBill(kind, demo, name){
   closeGlobalSheet();
   if (ui.tour) tourEnd(false);         // v4.5: เริ่มบิลจริงระหว่างสอน = จบการสอน (บิลฝึกทิ้งไป)
   var group = kind === "trip-group";    // v4.8: ทริปแบบกลุ่ม = เริ่มทริปว่างแล้วสร้างกลุ่มทันที
   kind = (kind === "trip" || group) ? "trip" : "meal";
   try {
-    var archived = await replaceLocalBill(emptyBill(kind), "members");
+    var fresh = emptyBill(kind);
+    if (name) fresh.name = name;          // v4.12: ชื่อที่ตั้งตอนเริ่ม (บิลกลุ่มใช้เป็นชื่อกลุ่ม)
+    var archived = await replaceLocalBill(fresh, "members");
     if (demo) return loadDemo();
     if (group){
       if (ui.ctx === null && !ui.loading) inviteFromBill(); else ui.inviteAfterLoad = true;   // ยังโหลดอยู่ → refreshView สร้างต่อ
@@ -884,7 +906,8 @@ async function openKindSheet(){
   ui.sheet = "kind";
   renderGlobalSheet('<div class="sheet-head-row"><h2 class="sheet-title" id="kindTitle">'+L("วันนี้หารอะไร")+'</h2>'+
       // v4.11: เข้ากลุ่มของเพื่อนด้วย QR / ลิงก์ (ข้างหัวข้อ)
-      (Cloud.ready() ? '<button class="link-btn scan-link" type="button" data-open-join="1">'+ICON_SCAN+' '+L("สแกนเข้ากลุ่ม")+'</button>' : '')+'</div>'+
+      (Cloud.ready() ? '<button class="link-btn scan-link" type="button" data-open-join="1">'+
+        (ui.camera === false ? ICON_USERS+' '+L("เข้ากลุ่มด้วยลิงก์") : ICON_SCAN+' '+L("สแกนเข้ากลุ่ม"))+'</button>' : '')+'</div>'+
     '<p class="sheet-sub">'+L("เลือกครั้งเดียวตอนเริ่ม")+'</p>'+
     '<div class="kind-grid">'+card("meal","meal")+card("trip","trip")+tripGroupCard()+'</div>'+
     '<p class="sheet-note">'+note+'</p>', "kindTitle");
@@ -928,16 +951,26 @@ async function dissolveGroup(){
 var ICON_SCAN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>';
 var scanStream = null, scanTimer = null;
 function canScanQr(){
-  return typeof window.BarcodeDetector === "function" && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  return ui.camera !== false && typeof window.BarcodeDetector === "function" && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+}
+/** v4.12: เครื่องนี้มีกล้องไหม (PC ส่วนใหญ่ไม่มี → ไม่มีระบบสแกน มีแค่วางลิงก์) — ui.camera: null ยังไม่รู้ / true / false */
+async function detectCamera(){
+  try {
+    if (!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)){ ui.camera = false; return; }
+    var list = await navigator.mediaDevices.enumerateDevices();
+    ui.camera = list.some(function(d){ return d.kind === "videoinput"; });
+  } catch(e){ ui.camera = false; }
 }
 function openJoinSheet(){
   stopScan();
   ui.sheet = "join";
-  var cam = canScanQr();
-  renderGlobalSheet('<h2 class="sheet-title" id="joinTitle">'+L("เข้ากลุ่มของเพื่อน")+'</h2>'+
-    '<p class="sheet-sub">'+L("สแกน QR จากเครื่องเพื่อน หรือวางลิงก์ที่เพื่อนส่งมา")+'</p>'+
+  // v4.12: มีกล้อง + อ่าน QR ได้ = เปิดกล้องหลังทันที · มีกล้องแต่เบราว์เซอร์อ่าน QR ไม่ได้ (Safari) = ใช้แอปกล้อง · ไม่มีกล้อง (PC) = วางลิงก์อย่างเดียว
+  var cam = canScanQr(), noCam = ui.camera === false;
+  renderGlobalSheet('<h2 class="sheet-title" id="joinTitle">'+(noCam ? L("เข้ากลุ่มของเพื่อน") : L("สแกนเข้ากลุ่ม"))+'</h2>'+
+    '<p class="sheet-sub">'+(noCam ? L("วางลิงก์ที่เพื่อนส่งมา") : L("สแกน QR จากเครื่องเพื่อน หรือวางลิงก์ที่เพื่อนส่งมา"))+'</p>'+
     (cam ? '<div class="scan-box"><video id="scanVideo" playsinline muted aria-label="'+L("กล้องสแกน QR")+'"></video></div>'+
            '<p class="field-msg muted" id="scanMsg" aria-live="polite">'+L("กำลังเปิดกล้อง…")+'</p>'
+         : noCam ? ''
          : '<p class="hint">'+L("เปิดแอปกล้องของมือถือแล้วสแกน QR ของเพื่อนได้เลย ลิงก์จะเปิด FairDish ให้เอง")+'</p>')+
     '<div class="form-box">'+
       '<label class="sr-only" for="groupJoinInput">'+L("ลิงก์หรือรหัสกลุ่ม")+'</label>'+

@@ -66,6 +66,7 @@ var ui = {
   myName:"", nameAsked:false,   // v4.6: ชื่อที่ให้เราเรียก + เคยถามแล้วหรือยัง (js/profile.js)
   nameFor:null,
   doneShown:{},
+  camera:null,                  // v4.12: เครื่องนี้มีกล้องไหม (detectCamera) — ไม่มี = ไม่มีระบบสแกน QR
   groupKeys:{},                 // v4.11: กุญแจเข้ารหัสของกลุ่ม (จากลิงก์ที่เปิด / ตอนสร้าง) — ถาวรอยู่ใน myGroups[].key                 // v4.10: การ์ด "เสร็จแล้ว" ที่ขึ้นในการเปิดหน้าหลักครั้งนี้ (วาดซ้ำแล้วยังอยู่)                 // v4.9: ลิงก์กลุ่มที่รอไปต่อหลังตอบชื่อ
   shareBack:null,               // v4.8.1: หน้าที่กดเข้าหน้าชวนเพื่อนมา "/split" | "/bill"
   shareAfterLoad:false  // v3.2: เพิ่งสร้างกลุ่มจากบิลส่วนตัว → เปิดหน้าต่างชวนเพื่อนเมื่อโหลดกลุ่มเสร็จ
@@ -75,7 +76,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.11";
+var APP_VERSION = "4.12";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */

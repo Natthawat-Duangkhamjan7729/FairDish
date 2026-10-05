@@ -163,7 +163,7 @@ function steps(){
   if (ui.tripStash) return [ { id:"menus", label:L("เมนู") }, { id:"shared", label:L("ส่วนกลาง") } ];   // v3.1: แก้มื้อในทริป
   var list = [ { id:"members", label:L("คน") }, { id:"menus", label:kt("items") } ];
   if (state.kind !== "trip") list.push({ id:"shared", label:L("ส่วนกลาง") });
-  list.push({ id:"summary", label:L("สรุป") });          // v3.2: สรุปยอด + ใครจ่าย + ใครโอนให้ใคร
+  // v4.12: ไม่มีแท็บ "สรุป" แล้ว — ข้อมูลสรุปซ้ำกับใบสรุปยอด ปุ่ม "ดูใบสรุปยอด" ที่แถบล่างพาไปที่เดียว (ใครจ่าย/ใครโอนอยู่ในใบสรุป)
   return list;
 }
 function stepTab(st){
@@ -218,8 +218,7 @@ function pageSplit(){
       '<p class="sub-head">'+L("หารเท่ากันทุกคน")+'</p>'+
       '<div id="sharedList"></div><div id="sharedFormSlot"></div>'))+
 
-    (inMeal ? '' : stepPanel("summary", kt("summary"), "summaryAside",
-      '<div id="summary" aria-live="polite"></div>'))+
+
 
     resetConfirmHTML()+
     (inMeal ? '<div class="app-foot"><button data-back-trip="1">'+L("← กลับไปที่ทริป")+'</button>'+
@@ -258,7 +257,7 @@ function pageBill(){
         (myTransferText() ? '<span class="my-sub">'+esc(myTransferText())+'</span>' : '')+'</span>'+
         '<span class="my-amt">'+baht(mine.rounded)+' <small>'+L("บาท")+'</small></span></div>' : '')+
       receiptHTML(r,{ interactive:true, reveal:!ui.noReveal })+
-      billTransfersHTML(r, s)+
+      '<section class="bill-settle" id="billSettle">'+settleHTML(r)+'</section>'+   // v4.12: ใครจ่ายให้ร้าน + ใครโอนให้ใคร (เดิมอยู่แท็บสรุป)
       '<div class="btn-stack">'+
         '<button class="btn-main btn-block" id="copyBtn">'+ICON_COPY+' '+L("คัดลอกสรุปยอด")+'</button>'+
         '<button class="btn-line btn-block" id="shareImgBtn">'+ICON_SHARE+' '+L("แชร์รูปใบเสร็จ")+'</button>'+
@@ -267,16 +266,6 @@ function pageBill(){
         '<a class="link-btn center" href="'+splitHref()+'">'+L("แก้ไขรายการ")+'</a>'+
       '</div>'+
     '</div>';
-}
-/** ส่วน "ใครโอนให้ใคร" ในหน้าใบสรุป — ติ๊กว่าโอนแล้วได้ ยังไม่รู้คนจ่าย = ปุ่มพาไปแท็บสรุป */
-function billTransfersHTML(r, s){
-  if (!s.ok){
-    var msg = s.reason === "unpaid"
-      ? L("ยังไม่ได้ใส่ว่าใครจ่าย {n} รายการ ใส่ให้ครบแล้วจะรู้ว่าใครต้องโอนให้ใคร", { n:s.count })
-      : (s.reason === "none" ? L("เลือกคนจ่ายให้ร้านก่อน แล้วจะสรุปให้ว่าใครโอนให้ใคร") : L("ยอดที่คนจ่ายใส่ไว้ยังไม่ตรงกับยอดบิล"));
-    return '<div class="notice warn settle-cta"><p>'+msg+'</p><button class="btn-quiet" data-goto-summary="1">'+(s.reason === "unpaid" ? L("ไปใส่คนจ่าย") : L("เลือกคนจ่าย"))+'</button></div>';
-  }
-  return '<section class="bill-transfers" aria-labelledby="h-bill-tf">'+transfersBlock(s, true, "h-bill-tf")+'</section>';
 }
 /** จบมื้อ/จบทริป — ทุกคนติ๊กว่าโอนครบแล้ว */
 function pageDone(r, s){

@@ -108,11 +108,18 @@ async function refreshGroup(manual, live){
     if (ui.ctx !== id) return;
     if (!g){ ui.groupError = "notfound"; return refreshView(); }
     if (g.version !== Store.version){
-      var before = groupSnapshot();
+      var before = groupSnapshot(), wasDone = billDone(serialize());
       applyBill(g.data);
       Store.version = g.version;
       Store.groupName = g.name;
       snapGroup(id, g.data);
+      // v4.12: เพื่อนติ๊กโอนคนสุดท้าย → ทุกเครื่องในกลุ่มขึ้นหน้า "จบทริป/จบมื้อ" เอง (ไม่รบกวนคนที่กำลังยืนยันเมนูในหน้า /me)
+      var path = currentPath();
+      if (!wasDone && billDone(g.data) && (path === "/split" || path === "/bill" || path === "/share")){
+        ui.showDone = true;
+        closeShareDialog();
+        if (path !== "/bill"){ location.hash = billHref(); return; }
+      }
       ui.noReveal = !manual;            // อัปเดตอัตโนมัติไม่เล่นแอนิเมชันใบเสร็จซ้ำ
       refreshView();
       ui.noReveal = false;
@@ -150,6 +157,7 @@ async function boot(){
   } catch(e){}
   try { ui.installNudgeOff = (await Store.readRaw(INSTALL_NUDGE_KEY)) === "off"; } catch(e){}
   updateInstallButton();
+  detectCamera();                     // v4.12: ไม่รอ — แผ่นเลือกประเภทบิลใช้ตอนผู้ใช้กดเปิด
   route();
 }
 boot();

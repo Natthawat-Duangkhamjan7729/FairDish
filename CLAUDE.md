@@ -24,7 +24,7 @@
 | `i18n.js`, `i18n-en.js` | v4.1: `L("ข้อความไทย", {ค่าแทรก})` แปลตาม `LANG` (th/en), คำแปลอังกฤษคีย์เป็นข้อความไทย, `shortDate()` / `monthLabel()` / `longDate()` |
 | `store.js` | ชั้นเก็บข้อมูล (localStorage หรือบิลกลุ่มผ่าน `Cloud` เมื่อ `Store.groupId` ถูกตั้ง) |
 | `state.js` | `state`, `ui`, ค่าคงที่, `APP_VERSION` |
-| `qr.js` | `QR.encode()` / `QR.svg()` สร้าง QR code เอง (byte, เวอร์ชัน 1–10, ระดับแก้ผิด H) — ไม่แตะ DOM |
+| `qr.js` | `QR.encode()` / `QR.svg()` สร้าง QR code เอง (byte, เวอร์ชัน 1–15, ระดับแก้ผิด H) — ไม่แตะ DOM |
 | `seal.js` | v4.11: `Seal` เข้ารหัสบิลกลุ่ม AES-GCM (WebCrypto) — `lock()` / `open()` / `newKey()` ไม่แตะ DOM (tests/seal.test.js) |
 | `cloud.js` | `Cloud` เรียก RPC ของ Supabase ด้วย `fetch`, รหัส/ลิงก์กลุ่ม, "กลุ่มของฉัน" |
 | `menu-library.js` | คลังเมนูแนะนำ |
@@ -62,7 +62,7 @@
 - มื้ออาหารในทริป = รายการ `{ type:"meal", name, payer, meal:{ menus, shared, charges } }`
   ตอนแก้มื้อ `enterMeal()` สลับ `state.menus/shared/charges` เป็นของมื้อชั่วคราว (`ui.tripStash` เก็บของทริป) และ `serialize()` ประกอบกลับเป็นทริป
   `route()` / `applyBill()` ออกจากมื้อให้เอง — โค้ดที่วนรายการทริปต้องข้ามหรือจัดการ `type === "meal"` (ไม่มี `eaters`/`price` จริง)
-- หน้าหารบิลแบ่งเป็นแท็บ (`steps()` ใน `pages.js`, `ui.step` — คน / เมนู / ส่วนกลาง / สรุป (มือถือเท่านั้น — จอใหญ่ใช้ `pageWorkspace()` ไม่มีแท็บ); ทริปไม่มีแท็บส่วนกลาง, ในมื้อของทริปมีแค่เมนู / ส่วนกลาง) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
+- หน้าหารบิลแบ่งเป็นแท็บ (`steps()` ใน `pages.js`, `ui.step` — คน / เมนู / ส่วนกลาง (v4.12: ไม่มีแท็บสรุปแล้ว) (มือถือเท่านั้น — จอใหญ่ใช้ `pageWorkspace()` ไม่มีแท็บ); ทริปไม่มีแท็บส่วนกลาง, ในมื้อของทริปมีแค่เมนู / ส่วนกลาง) ทุกแผงถูกสร้างครบแต่ซ่อนด้วย `hidden`
   ฟังก์ชัน `render*()` จึงหา element ได้เสมอ — "ใครจ่ายให้ร้าน / ใครโอนให้ใคร" อยู่ในแท็บสรุป (`settleHTML()` ใน `receipt.js`)
 - ฟอร์มเพิ่ม/แก้ (เมนู ค่าส่วนกลาง ค่าบริการ) เป็นแผ่นล่างจอ: ห่อด้วย `sheetHTML()` ใน `render.js` แล้วปิดด้วย `data-close-sheet` / Esc
   แผ่นนอกหน้าหารบิล (เลือกประเภทบิล, ตั้งชื่อบิล) ใช้ `renderGlobalSheet()` / `closeGlobalSheet()` ใน `actions.js`
@@ -96,6 +96,9 @@
   เรียกเซิร์ฟเวอร์ผ่าน `Cloud.create/get/save` เท่านั้น (เข้ารหัส/ถอดให้เอง) · ไม่มีกุญแจ = `groupError "nokey"` · กลุ่มที่ไม่มีกุญแจ = ข้อมูลแบบเดิม
   ยุบกลุ่ม: `delete_group(p_id, p_owner)` ใน schema.sql — กุญแจคนสร้าง `myGroups[].owner` · ชวนเพื่อน = `openShareDialog()` (หน้า `/share` ยังเปิดจากลิงก์ได้)
   QR ถึงเวอร์ชัน 15 (220 ไบต์) · ชื่อฟังก์ชันระดับบนสุดห้ามซ้ำข้ามไฟล์ (tests/syntax.test.js เช็ก)
+- v4.12: มือถือไม่มีแท็บ "สรุป" (`steps()`) — ใครจ่าย/ใครโอน (`settleHTML()`) อยู่ใน `#billSettle` ของใบสรุปยอด, การสอนมือถือไปใบสรุปจาก `#totalBar`
+  แถบ in-app browser `renderInAppBar()` (install.js) · `ui.camera` จาก `detectCamera()` คุมระบบสแกน · ทริปตั้งชื่อตอนเริ่ม `openTripNameSheet()`
+  ห้ามโฟกัสช่องพิมพ์เองในหน้าที่ขึ้นโดยผู้ใช้ไม่ได้กด (หน้าถามชื่อ, หน้าต่างเข้าร่วมกลุ่ม) — แป้นพิมพ์มือถือเด้งบัง
 - v4.2: **ห้ามเก็บเบอร์โทร เลขบัตรประชาชน หรือข้อมูลระบุตัวตนอื่นในข้อมูลบิล** (บิลกลุ่มอยู่บน Supabase และใครมีลิงก์ก็อ่านได้ — PDPA)
   `normalizeBill()` เก็บ members แค่ `{ id, name }`
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย

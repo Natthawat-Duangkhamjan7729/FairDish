@@ -43,6 +43,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "guestName"){ e.preventDefault(); addGuest(); }
   if (e.target.id === "billNameInput"){ e.preventDefault(); saveBillName(); }
   if (e.target.id === "hostNameInput"){ e.preventDefault(); saveHostSheet(); }   // v4.7
+  if (e.target.id === "tripNameInput"){ e.preventDefault(); var go = document.querySelector("[data-trip-go]"); if (go) goTripFromSheet(go.getAttribute("data-trip-go")); }   // v4.12
   if (e.target.id === "joinNameInput"){ e.preventDefault(); joinAsMe(); }         // v4.9
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "mealName"){ e.preventDefault(); e.target.blur(); }
@@ -62,7 +63,7 @@ function wideShortcut(e){
     if (k === "Escape" && ui.wsFocus){ e.preventDefault(); ui.wsFocus = null; renderWorkspace(); return true; }
   }
   if (path === "/" && !ui.showOnb && !e.ctrlKey && !e.metaKey && (k === "m" || k === "M" || k === "t" || k === "T")){
-    e.preventDefault(); startNewBill(k === "t" || k === "T" ? "trip" : "meal"); return true;
+    e.preventDefault(); if (k === "t" || k === "T") openTripNameSheet("trip"); else startNewBill("meal"); return true;
   }
   return false;
 }
@@ -117,10 +118,10 @@ document.addEventListener("click", async function(e){
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-pay],"+
-            "[data-open-kind],[data-new-kind],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
-            "[data-paid],[data-show-done],[data-show-receipt],[data-goto-summary],[data-restore-history],[data-del-history],#inviteBtn,"+
+            "[data-open-kind],[data-new-kind],[data-trip-go],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
+            "[data-paid],[data-show-done],[data-show-receipt],[data-restore-history],[data-del-history],#inviteBtn,"+
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
-            "#installBtn,#installClose,#installNow,#installCopyLink,"+
+            "#installBtn,#installClose,#installNow,#installCopyLink,#inappSkip,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "#shareNative,#shareCopy,#shareSaveQr,"+
             "[data-lang],[data-onb-next],[data-onb-skip],[data-onb-again],"+
@@ -146,7 +147,8 @@ document.addEventListener("click", async function(e){
 
   /* v3.2: เริ่มบิลใหม่ / แผ่นล่างจอ / ประวัติ / ติ๊กโอนแล้ว */
   if (t.getAttribute("data-open-kind")) return openKindSheet();
-  if ((v = t.getAttribute("data-new-kind"))) return startNewBill(v);
+  if ((v = t.getAttribute("data-new-kind"))) return (v === "trip" || v === "trip-group") ? openTripNameSheet(v) : startNewBill(v);   // v4.12
+  if ((v = t.getAttribute("data-trip-go"))) return goTripFromSheet(v);
   if (t.getAttribute("data-start-demo")) return startNewBill("meal", true);
   if (t.getAttribute("data-close-global")) return closeGlobalSheet();
   if ((v = t.getAttribute("data-close-sheet"))){
@@ -171,7 +173,6 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-guest-again")){ ui.guestDone = false; return rerenderGuest(); }
   if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return jumpTo(0); }
   if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return jumpTo(0); }
-  if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; location.hash = splitHref(); return; }
   if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
 
@@ -242,6 +243,7 @@ document.addEventListener("click", async function(e){
   if (t.id==="installClose") return closeInstall();
   if (t.id==="installNow") return installNow();
   if (t.id==="installCopyLink") return copyText(location.href, L("คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย"));
+  if (t.id==="inappSkip") return skipInApp();
 
   /* v2.1: แท็บขั้นตอน, แผงกลุ่ม, ธีม */
   if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");

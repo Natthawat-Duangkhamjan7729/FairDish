@@ -89,12 +89,12 @@ function route(){
   document.body.classList.remove("has-total");
   updateChrome();
   if (path==="/split"){ render(); maybeAskWhoAmI(); }   // เข้ากลุ่มทางหน้าใบสรุปก่อน ก็ยังถาม "คุณคือใคร" ตอนมาหน้าหารบิล
-  if (path==="/") fillHome();
-  if (path==="/" && needName()){ var ni = document.getElementById("nameInput"); if (ni) ni.focus(); }   // v4.6
+  if (path==="/") fillHome();   // v4.12: หน้าถามชื่อไม่โฟกัสช่องเอง — แป้นพิมพ์บนมือถือเด้งบังหน้า ให้ผู้ใช้แตะเอง
   if (path==="/me") document.body.classList.toggle("has-total", !!document.querySelector(".guest-bar"));
   if (path==="/share") fitShareQr();
   if ((path==="/history" || path==="/groups" || path==="/h") && isWide()) renderHistoryWide();
   renderSideNav();
+  renderInAppBar();                    // v4.12: ลิงก์ "เปิดในเบราว์เซอร์" ต้องพาไปหน้าปัจจุบัน
   syncSheetLock();
   jumpTo(0);
 }
