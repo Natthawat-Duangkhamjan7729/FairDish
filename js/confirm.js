@@ -103,6 +103,7 @@ function pageShare(){
   if (ui.groupError) return pageGroupError();
   var bar = appBar({ back:billHref(), title:L("ชวนเพื่อนเข้ากลุ่ม"), sub:ui.loading ? "" : esc(Store.groupName) });
   if (ui.loading) return bar + '<div class="page"><p class="empty">'+L("กำลังโหลดข้อมูลกลุ่ม…")+'</p></div>';
+  if (isWide()) return pageShareWide();                 // v4.4: QR | สถานะ | หน้าที่เพื่อนเห็น (wide.js)
   var link = confirmLink(ui.ctx), q = QR.encode(link);
   var c = confirmSummary();
   var amounts = {};

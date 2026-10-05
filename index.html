@@ -31,14 +31,12 @@
 <main id="view"></main>
 
 <footer class="foot">
-  <span>FairDish v4.3 Developer Beta · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
+  <span>FairDish v4.4 Developer Beta · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
 </footer>
 </div>
 
-<!-- v3.2+: แท็บล่าง หน้าหลัก / หารบิล (เลือกประเภทก่อน) / ประวัติ — ซ่อนในหน้าหารบิลและใบสรุปยอด
-     v4.3: จอคอม (≥1024px) กลายเป็นแถบเมนูซ้าย แสดงทุกหน้า + โลโก้และปุ่มตั้งค่า (.side-only) -->
+<!-- v3.2+: แท็บล่าง หน้าหลัก / หารบิล (เลือกประเภทก่อน) / ประวัติ — มือถือเท่านั้น ซ่อนในหน้าหารบิลและใบสรุปยอด -->
 <nav class="tabbar" id="tabbar" aria-label="เมนูหลัก" data-i18n-label="เมนูหลัก">
-  <a href="#/" class="side-only side-brand"><img src="img/logo.png" alt="" width="36" height="36"><b>FairDish</b></a>
   <a href="#/" data-tab="home">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
     <span data-i18n="หน้าหลัก">หน้าหลัก</span></a>
@@ -48,10 +46,10 @@
   <a href="#/history" data-tab="history">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
     <span data-i18n="ประวัติ">ประวัติ</span></a>
-  <a href="#/more" data-tab="more" class="side-only">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
-    <span data-i18n="ตั้งค่า">ตั้งค่า</span></a>
 </nav>
+
+<!-- v4.4: แถบนำทางซ้ายของจอใหญ่ (≥600px แท็บเล็ต = แถบไอคอน, ≥1280px คอม = แถบเต็ม) — เนื้อหาสร้างโดย renderSideNav() ใน js/wide.js -->
+<nav class="sidenav" id="sidenav" aria-label="เมนูหลัก" data-i18n-label="เมนูหลัก" hidden></nav>
 
 <!-- v3.2+: แผ่นล่างจอนอกหน้าหารบิล (เลือกประเภทบิล, ตั้งชื่อบิล) — เนื้อหาสร้างโดย js/actions.js -->
 <div id="globalSheet"></div>
@@ -82,6 +80,7 @@
 <script src="js/install.js" defer></script>
 <script src="js/share-image.js" defer></script>
 <script src="js/confirm.js" defer></script>
+<script src="js/wide.js" defer></script>
 <script src="js/router.js" defer></script>
 <script src="js/events.js" defer></script>
 <script src="js/main.js" defer></script>

@@ -21,7 +21,6 @@ var routes = {
 function tabOf(path){
   if (path==="/") return "home";
   if (path==="/history" || path==="/groups" || path==="/h") return "history";
-  if (path==="/more" || path==="/how" || path==="/about") return "more";   // v4.3: ปุ่มตั้งค่ามีแค่ในแถบซ้ายบนจอคอม
   return "";
 }
 /** ชี้ลิงก์หารบิล/สรุปไปบิลที่เปิดอยู่ (กลุ่มหรือส่วนตัว) + ป้ายบอกบริบทบน header มือถือ */
@@ -67,7 +66,6 @@ function route(){
   if (path !== "/bill") ui.showDone = false;
   // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน
   document.body.classList.toggle("no-tabbar", needsBill(path) || (path==="/" && ui.showOnb));
-  document.body.classList.toggle("onb", path==="/" && !!ui.showOnb);   // v4.3: จอคอมซ่อนแถบซ้ายเฉพาะตอนแนะนำแอป
   document.body.classList.toggle("show-foot", path==="/more" || path==="/about");
   document.getElementById("view").innerHTML = r.view();
   var tab = tabOf(path);
@@ -78,19 +76,13 @@ function route(){
   });
   document.body.classList.remove("has-total");
   updateChrome();
-  if (path==="/split"){ render(); maybeAskWhoAmI(); focusSettle(); }   // เข้ากลุ่มทางหน้าใบสรุปก่อน ก็ยังถาม "คุณคือใคร" ตอนมาหน้าหารบิล
+  if (path==="/split"){ render(); maybeAskWhoAmI(); }   // เข้ากลุ่มทางหน้าใบสรุปก่อน ก็ยังถาม "คุณคือใคร" ตอนมาหน้าหารบิล
   if (path==="/") fillHome();
   if (path==="/me") document.body.classList.toggle("has-total", !!document.querySelector(".guest-bar"));
   if (path==="/share") fitShareQr();
+  if ((path==="/history" || path==="/groups" || path==="/h") && isWide()) renderHistoryWide();
+  renderSideNav();
   syncSheetLock();
   window.scrollTo(0,0);
-}
-/** v4.3: ปุ่ม "ไปใส่คนจ่าย" จากใบสรุป — จอคอมไม่มีแท็บสรุป จึงเลื่อนแผงขวาไปที่ส่วนใครจ่ายแทน */
-function focusSettle(){
-  var go = ui.gotoSettle; ui.gotoSettle = false;
-  if (!go || !isWide()) return;
-  var side = document.querySelector(".split-side");
-  var el = side && side.querySelector(".settle");
-  if (el) setTimeout(function(){ side.scrollTop += el.getBoundingClientRect().top - side.getBoundingClientRect().top - 8; }, 0);
 }
 window.addEventListener("hashchange", route);

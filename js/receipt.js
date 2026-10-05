@@ -139,7 +139,7 @@ function transfersBlock(s, interactive, headId, paid){
   return '<div class="tf-head"><h3 class="settle-head" id="'+headId+'">'+L("ใครโอนให้ใคร")+'</h3>'+
       (s.transfers.length ? '<span class="tf-count">'+L("โอนแล้ว {done}/{total}", { done:prog.done, total:prog.total })+'</span>' : '')+'</div>'+
     (s.transfers.length
-      ? (interactive ? '<p class="hint">'+L("แตะช่องหน้าชื่อเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p>' : '')+rows+
+      ? (interactive ? '<p class="hint">'+L("แตะช่องหน้าชื่อเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p>' : '')+'<div class="tf-list">'+rows+'</div>'+
         (s.transfers.length > 1 ? '<p class="tf-note">'+L("หักลบให้แล้ว โอนแค่ {n} ครั้งก็จบ", { n:s.transfers.length })+'</p>' : '')
       : '<p class="hint" style="margin:0">'+L("ไม่มีใครต้องโอน ทุกคนจ่ายพอดีกับส่วนของตัวเอง 👍")+'</p>');
 }

@@ -428,6 +428,7 @@ function rerenderBill(){
   ui.noReveal = true;
   document.getElementById("view").innerHTML = pageBill();
   ui.noReveal = false;
+  renderSideNav();                    // v4.4: ป้ายโอนแล้ว x/y ในแถบซ้าย
   window.scrollTo(0, y);
 }
 async function togglePayer(id){
@@ -624,6 +625,12 @@ async function fillHome(){
   var intro = document.getElementById("homeIntro");
   if (!active) return;
   var has = billHasData(saved);
+  if (isWide()){                                        // v4.4: หน้าแรกจอใหญ่ (wide.js)
+    active.innerHTML = has ? activeCardWide(saved) : emptyCardWide();
+    recent.innerHTML = recentCardsWide();
+    intro.innerHTML = "";
+    return updateInstallButton();
+  }
   active.innerHTML = has ? activeBillHTML(saved) : "";
   var items = recentItems();
   recent.innerHTML = items.length

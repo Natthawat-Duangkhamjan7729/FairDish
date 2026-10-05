@@ -13,6 +13,7 @@ document.addEventListener("keydown", function(e){
     if (state.sharedForm){ e.preventDefault(); state.sharedForm=null; return renderShared(); }
     if (state.chargeForm){ e.preventDefault(); state.chargeForm=null; return renderCharges(); }
   }
+  if (wideShortcut(e)) return;
   var stepId = e.target.getAttribute && e.target.getAttribute("data-step");
   if (stepId && e.target.getAttribute("role")==="tab" && /^(ArrowLeft|ArrowRight|Home|End)$/.test(e.key)){
     e.preventDefault();
@@ -28,7 +29,7 @@ document.addEventListener("keydown", function(e){
     if (e.key === "Enter" && ui.suggest.active >= 0){ e.preventDefault(); return pickSuggestion(ui.suggest.active); }
   }
   if (e.key !== "Enter") return;
-  if (e.target.id === "memberInput"){ e.preventDefault(); addMember(); }
+  if (e.target.id === "memberInput"){ e.preventDefault(); if (wsActive()) pushUndo(); addMember(); }
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
   if (e.target.id === "guestName"){ e.preventDefault(); addGuest(); }
@@ -36,7 +37,25 @@ document.addEventListener("keydown", function(e){
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "mealName"){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
+  if (e.target.id === "wsName" || e.target.id === "wsPrice"){ e.preventDefault(); wsAddMenu(); }
 });
+/** v4.4: ปุ่มลัดบนจอใหญ่ — N เพิ่มรายการ, M/T เริ่มบิล, Ctrl/⌘+Z เลิกทำ, Esc เลิกดูเฉพาะคน (ไม่ทำงานตอนพิมพ์อยู่) */
+function wideShortcut(e){
+  if (!isWide() || e.altKey) return false;
+  var tag = e.target.tagName, typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target.isContentEditable;
+  if (typing || ui.sheet || state.menuForm || state.sharedForm || state.chargeForm || document.querySelector("dialog[open]")) return false;
+  var path = currentPath(), k = e.key;
+  if (path === "/split" && wsActive()){
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (k === "z" || k === "Z")){ e.preventDefault(); wsUndo(); return true; }
+    if (e.ctrlKey || e.metaKey) return false;
+    if (k === "n" || k === "N"){ var n = document.getElementById("wsName"); if (n){ e.preventDefault(); n.focus(); return true; } }
+    if (k === "Escape" && ui.wsFocus){ e.preventDefault(); ui.wsFocus = null; renderWorkspace(); return true; }
+  }
+  if (path === "/" && !ui.showOnb && !e.ctrlKey && !e.metaKey && (k === "m" || k === "M" || k === "t" || k === "T")){
+    e.preventDefault(); startNewBill(k === "t" || k === "T" ? "trip" : "meal"); return true;
+  }
+  return false;
+}
 document.addEventListener("input", function(e){
   if (e.target && (e.target.id === "mName" || e.target.id === "mPrice")){
     var key = e.target.id === "mName" ? "name" : "price";
@@ -53,6 +72,7 @@ document.addEventListener("input", function(e){
       renderSuggestions();
     }
   }
+  if (e.target && e.target.id === "histQ"){ ui.histQ = e.target.value; renderHistoryWide(); }   // v4.4: ค้นหาประวัติ (ไม่วาดช่องค้นหาใหม่ จะได้พิมพ์ต่อได้)
   if (e.target && e.target.id === "resetConfirmName"){
     var ok = document.getElementById("confirmReset");
     if (ok) ok.disabled = !resetNameMatches();
@@ -93,19 +113,21 @@ document.addEventListener("click", async function(e){
             "#shareNative,#shareCopy,#shareSaveQr,"+
             "[data-lang],[data-onb-next],[data-onb-skip],[data-onb-again],"+
             "[data-guest-who],[data-guest-add],[data-guest-item],[data-guest-save],[data-guest-change],[data-guest-again],"+
-            "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput";
+            "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
+            "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
+            "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
   var v;
 
   /* ฟีเจอร์ที่ 1 */
-  if (t.id==="memberAdd") return addMember();
+  if (t.id==="memberAdd"){ if (wsActive()) pushUndo(); return addMember(); }
   if (t.id==="retrySave") return retrySave();
   if ((v = t.getAttribute("data-edit-member"))) return startEdit(v);
   if ((v = t.getAttribute("data-save-member"))) return saveEdit(v);
   if (t.getAttribute("data-cancel-edit")){ ui.editingMember=null; ui.editError=""; return renderMembers(); }
   if ((v = t.getAttribute("data-del-member"))){ ui.editingMember=null; ui.editError=""; return askDelete(v); }
-  if ((v = t.getAttribute("data-confirm-del"))) return removeMember(v);
+  if ((v = t.getAttribute("data-confirm-del"))){ if (wsActive()) pushUndo(); return removeMember(v); }
   if (t.getAttribute("data-cancel-del")){ ui.confirmMember=null; return renderMembers(); }
 
   /* v3.2: เริ่มบิลใหม่ / แผ่นล่างจอ / ประวัติ / ติ๊กโอนแล้ว */
@@ -135,9 +157,23 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-guest-again")){ ui.guestDone = false; return rerenderGuest(); }
   if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return window.scrollTo(0,0); }
   if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return window.scrollTo(0,0); }
-  if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; ui.gotoSettle = true; location.hash = splitHref(); return; }   // v4.3: จอคอมเลื่อนแผงขวาไปที่ "ใครจ่าย"
+  if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; location.hash = splitHref(); return; }
   if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
+
+  /* v4.4: จอใหญ่ */
+  if ((v = t.getAttribute("data-ws-focus"))) return wsFocusPerson(v);
+  if ((v = t.getAttribute("data-ws-eat"))){ v = v.split(":"); return wsToggleEater(v[0], v[1]); }
+  if ((v = t.getAttribute("data-ws-all"))) return wsToggleAll(v);
+  if ((v = t.getAttribute("data-ws-pay"))){ v = v.split(":"); return wsSetPayer(v[0], v[1]); }
+  if (t.getAttribute("data-ws-me")) return openMeDialog();
+  if (t.id==="wsUndo") return wsUndo();
+  if (t.id==="wsAdd") return wsAddMenu();
+  if (t.getAttribute("data-side-invite")) return sideInvite();
+  if ((v = t.getAttribute("data-share-pick"))) return pickShareMember(v);
+  if ((v = t.getAttribute("data-hist-sel"))){ ui.histSel = v; return renderHistoryWide(); }
+  if ((v = t.getAttribute("data-hist-filter"))){ ui.histFilter = v; return renderHistoryWide(); }
+  if (t.getAttribute("data-onb-demo")){ await finishOnboard(); return startNewBill("meal", true); }
   if (t.id==="inviteBtn") return inviteFromBill();
 
   /* v2.5: ใครจ่ายให้ร้าน */
@@ -332,3 +368,37 @@ document.addEventListener("change", function(e){
   if (e.target && e.target.id === "mealName") renameMeal(e.target.value);
 });
 
+
+/* v4.4: ลากชื่อคน (จอใหญ่) ไปวางบนการ์ดรายการ = เพิ่มคนนั้นเป็นคนมีส่วน */
+document.addEventListener("dragstart", function(e){
+  var el = e.target.closest ? e.target.closest("[data-ws-drag]") : null;
+  if (!el) return;
+  ui.wsDrag = el.getAttribute("data-ws-drag");
+  e.dataTransfer.effectAllowed = "copy";
+  try { e.dataTransfer.setData("text/plain", ui.wsDrag); } catch(err){}
+  document.body.classList.add("ws-dragging");
+});
+document.addEventListener("dragend", function(){
+  ui.wsDrag = null;
+  document.body.classList.remove("ws-dragging");
+  Array.prototype.forEach.call(document.querySelectorAll(".ws-card.over"), function(c){ c.classList.remove("over"); });
+});
+document.addEventListener("dragover", function(e){
+  if (!ui.wsDrag) return;
+  var card = e.target.closest ? e.target.closest("[data-ws-drop]") : null;
+  Array.prototype.forEach.call(document.querySelectorAll(".ws-card.over"), function(c){ if (c !== card) c.classList.remove("over"); });
+  if (!card) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "copy";
+  card.classList.add("over");
+});
+document.addEventListener("drop", function(e){
+  var card = e.target.closest ? e.target.closest("[data-ws-drop]") : null;
+  var pid = ui.wsDrag;
+  if (!card || !pid) return;
+  e.preventDefault();
+  card.classList.remove("over");
+  ui.wsDrag = null;
+  document.body.classList.remove("ws-dragging");
+  wsToggleEater(card.getAttribute("data-ws-drop"), pid, true);
+});

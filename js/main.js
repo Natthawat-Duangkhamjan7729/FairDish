@@ -61,6 +61,7 @@ function refreshView(){
     maybeAskWhoAmI();
   }
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();
+  renderSideNav();                    // v4.4: ลิงก์บิลที่เปิดอยู่ + ป้ายโอนแล้ว ในแถบซ้าย
   if (path==="/me") rerenderGuest(true);
   if (path==="/share"){ document.getElementById("view").innerHTML = pageShare(); fitShareQr(); }
   // v3.2: เพิ่งย้ายบิลส่วนตัวขึ้นกลุ่ม (เปิดหน้าชวนเพื่อนอยู่แล้ว)

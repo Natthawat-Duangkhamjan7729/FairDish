@@ -4,40 +4,16 @@
 /* =========================================================
    7. แสดงผลหน้าแอป
    ========================================================= */
-/** v4.3: จอคอม (≥1024px) — แถบเมนูซ้าย + แผงสรุปขวาในหน้าหารบิล (ค่าเดียวกับ media query ใน css/style.css) */
-var WIDE_MQ = window.matchMedia ? window.matchMedia("(min-width:1024px)") : null;
+/** v4.4: จอใหญ่ (≥600px — แท็บเล็ตและคอม) ใช้หน้าใน wide.js · ค่าเดียวกับ media query ใน css/style.css
+    เปลี่ยนขนาดข้ามเส้นนี้ → onWideChange() ใน wide.js วาดหน้าใหม่ */
+var WIDE_MQ = window.matchMedia ? window.matchMedia("(min-width:600px)") : null;
 function isWide(){ return !!(WIDE_MQ && WIDE_MQ.matches); }
-/** จอข้ามเส้น 1024px ตอนอยู่หน้าหารบิล → วาดหน้าใหม่ (แท็บสรุปหาย/กลับมา) โดยไม่ออกจากมื้อในทริป */
-function onWideChange(){
-  if (currentPath() !== "/split") return;
-  var view = document.getElementById("view");
-  var y = window.scrollY;
-  // ข้อความที่พิมพ์ค้างอยู่ในช่องกรอก (ยังไม่กดบันทึก) อยู่แค่ใน DOM — จำไว้แล้วใส่คืนหลังวาดใหม่
-  syncMenuForm();
-  var drafts = {};
-  Array.prototype.forEach.call(view.querySelectorAll("input[id],textarea[id]"), function(el){ drafts[el.id] = el.value; });
-  var active = document.activeElement && view.contains(document.activeElement) ? document.activeElement.id : "";
-  view.innerHTML = pageSplit();
-  render();
-  Object.keys(drafts).forEach(function(id){
-    var el = document.getElementById(id);
-    if (el && view.contains(el)) el.value = drafts[id];
-  });
-  var ok = document.getElementById("confirmReset");
-  if (ok && ui.ctx) ok.disabled = !resetNameMatches();
-  var focus = active && document.getElementById(active);
-  if (focus) focus.focus({ preventScroll:true });
-  syncSheetLock();
-  window.scrollTo(0, y);
-}
-if (WIDE_MQ){
-  if (WIDE_MQ.addEventListener) WIDE_MQ.addEventListener("change", onWideChange);
-  else if (WIDE_MQ.addListener) WIDE_MQ.addListener(onWideChange);
-}
 
 function render(){
   renderMealHead(); renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
   renderStepTabs(); renderTotalBar(); renderAppBarSub();
+  if (wsActive()) renderWsHead();
+  renderSideNav();                    // v4.4: ป้ายโอนแล้ว x/y ในแถบซ้าย
 }
 
 /* ---- v3.2: แผ่นล่างจอ (เพิ่ม/แก้เมนู, ค่าส่วนกลาง, ค่าบริการ, เลือกประเภทบิล) ---- */
@@ -59,6 +35,11 @@ function syncSheetLock(){
 }
 /** ชื่อบิลใต้หัวหน้าหารบิล (เปลี่ยนชื่อ/โหลดเสร็จแล้วอัปเดตโดยไม่วาดทั้งหน้า) */
 function renderAppBarSub(){
+  var wsName = document.querySelector(".ws-name");       // v4.4: ชื่อบิลบนหัวพื้นที่ทำงาน (จอใหญ่)
+  if (wsName && !ui.tripStash){
+    wsName.innerHTML = kt("icon")+' '+esc(billName())+' <span class="appbar-edit" aria-hidden="true">✎</span>';
+    wsName.setAttribute("aria-label", L("เปลี่ยนชื่อบิล {name}", { name:billName() }));
+  }
   var sub = document.querySelector(".appbar-sub");
   if (!sub || currentPath() !== "/split" || ui.tripStash) return;
   var html = kt("icon")+' '+esc(billName());
@@ -207,6 +188,7 @@ function myTotalHTML(){
 
 /* ---- ฟีเจอร์ที่ 1: จัดการสมาชิก ---- */
 function renderMembers(){
+  if (wsActive()) return renderWsPeople();
   var box = document.getElementById("memberList");
   var extra = document.getElementById("memberExtra");
   var input = document.getElementById("memberInput");
@@ -253,7 +235,10 @@ function renderMembers(){
     }).join("") + '</div>';
   }
 
-  if (!extra) return;
+  if (extra) extra.innerHTML = memberExtraHTML();
+}
+/** ข้อความผิดพลาด + กล่องยืนยันการลบสมาชิก (ใช้ทั้งหน้ามือถือและพื้นที่ทำงานจอใหญ่) */
+function memberExtraHTML(){
   var html = "";
   if (ui.editError) html += '<div class="notice error"><p>'+esc(ui.editError)+'</p></div>';
   if (ui.save === "error" && ui.saveFailedIn !== "menu") html += saveErrorNotice();
@@ -268,7 +253,7 @@ function renderMembers(){
         '<button class="btn-danger" data-confirm-del="'+m.id+'">'+L("ลบออก")+'</button></div></div>';
     }
   }
-  extra.innerHTML = html;
+  return html;
 }
 
 /** v3.1: แถวมื้ออาหารในรายการทริป — แตะเพื่อเข้าไปแก้เมนูข้างใน */
@@ -293,11 +278,13 @@ function renderMenus(){
   var list = document.getElementById("menuList");
   var slot = document.getElementById("menuFormSlot");
   var meta = document.getElementById("menuMeta");
-  if (!list || !slot) return;
+  var ws = wsActive();                // v4.4: จอใหญ่ — การ์ดรายการวาดใน renderWsMenus() ฟอร์มแก้ยังเป็นแผ่นเดิม
+  if (ws){ renderWsMenus(); list = null; }
+  if (!slot || (!list && !ws)) return;
 
   if (ui.loading){
     if (meta) meta.textContent = "";
-    list.innerHTML = '<div class="skeleton" aria-hidden="true"><i style="width:100%"></i></div>';
+    if (list) list.innerHTML = '<div class="skeleton" aria-hidden="true"><i style="width:100%"></i></div>';
     slot.innerHTML = "";
     return;
   }
@@ -305,7 +292,8 @@ function renderMenus(){
   var total = state.kind === "trip" ? compute().grand : state.menus.reduce(function(a,m){ return a+m.price; },0);
   if (meta) meta.textContent = state.menus.length ? L("รวม {amt} ฿", { amt:baht(total) }) : "";
 
-  if (state.menus.length===0 && !state.menuForm){
+  if (!list){ /* จอใหญ่ */ }
+  else if (state.menus.length===0 && !state.menuForm){
     list.innerHTML = '<p class="empty">'+kt("empty")+'</p>';
   } else {
     list.innerHTML = state.menus.map(function(m){
@@ -329,6 +317,7 @@ function renderMenus(){
   var notice = (ui.save === "error" && ui.saveFailedIn === "menu") ? saveErrorNotice() : "";
 
   if (!state.menuForm){
+    if (ws){ slot.innerHTML = notice; syncSheetLock(); return; }
     slot.innerHTML = (state.kind === "trip"
       ? '<div class="add-row"><button class="add-slot" id="menuOpen">'+kt("addShort")+'</button>'+
         '<button class="add-slot" data-add-meal="1">'+L("+ มื้ออาหาร 🍲")+'</button></div>'
@@ -452,6 +441,7 @@ function renderShared(){
 
 /* ---- v3.2: แท็บสรุป — ยอดรายคน + ใครจ่าย + ใครโอนให้ใคร ---- */
 function renderSummary(){
+  if (wsActive()) return renderWsSum();
   var box = document.getElementById("summary");
   var aside = document.getElementById("summaryAside");
   if (!box) return;

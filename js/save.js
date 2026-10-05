@@ -62,6 +62,7 @@ function normalizeBill(saved){
 function applyBill(saved){
   var b = normalizeBill(saved);
   ui.tripStash = null;                 // ข้อมูลใหม่มา = ออกจากโหมดแก้มื้อในทริป
+  ui.wsPast = [];                      // v4.4: ข้อมูลเปลี่ยนจากที่อื่น — เลิกทำย้อนไปทับไม่ได้
   state.members = b.members;
   state.menus = b.menus;
   state.shared = b.shared;

@@ -54,7 +54,8 @@ function settingsLink(){
 
 /* ---------------- หน้าหลัก: บิลของฉัน ---------------- */
 function pageHome(){
-  if (ui.showOnb) return pageOnboard();
+  if (ui.showOnb) return isWide() ? pageOnboardWide() : pageOnboard();
+  if (isWide()) return pageHomeWide();
   return '<div class="page page-home">'+
     '<div class="home-top">'+
       '<img class="logo-mark" src="img/logo.png" alt="" width="40" height="40">'+
@@ -144,7 +145,7 @@ function steps(){
   if (ui.tripStash) return [ { id:"menus", label:L("เมนู") }, { id:"shared", label:L("ส่วนกลาง") } ];   // v3.1: แก้มื้อในทริป
   var list = [ { id:"members", label:L("คน") }, { id:"menus", label:kt("items") } ];
   if (state.kind !== "trip") list.push({ id:"shared", label:L("ส่วนกลาง") });
-  if (!isWide()) list.push({ id:"summary", label:L("สรุป") });   // v3.2: สรุปยอด + ใครจ่าย + ใครโอนให้ใคร (v4.3: จอคอมอยู่แผงขวาตลอด)
+  list.push({ id:"summary", label:L("สรุป") });          // v3.2: สรุปยอด + ใครจ่าย + ใครโอนให้ใคร
   return list;
 }
 function stepTab(st){
@@ -155,15 +156,15 @@ function stepTab(st){
 function stepPanel(id, title, aside, body){
   var i = 0;
   steps().forEach(function(st, k){ if (st.id === id) i = k + 1; });
-  var side = id === "summary" && !i;   // v4.3: แผงสรุปขวาบนจอคอม — ไม่ใช่แท็บ แสดงตลอด
-  return '<section class="step-card step-panel" '+(side ? '' : 'role="tabpanel" ')+'id="panel-'+id+'" aria-labelledby="h-'+id+'"'+(side || ui.step===id ? '' : ' hidden')+'>'+
-    '<div class="step-head">'+(side ? '' : '<span class="step-num" aria-hidden="true">'+i+'</span>')+'<h2 id="h-'+id+'">'+title+'</h2>'+
+  return '<section class="step-card step-panel" role="tabpanel" id="panel-'+id+'" aria-labelledby="h-'+id+'"'+(ui.step===id?'':' hidden')+'>'+
+    '<div class="step-head"><span class="step-num" aria-hidden="true">'+i+'</span><h2 id="h-'+id+'">'+title+'</h2>'+
       (aside ? '<span class="aside" id="'+aside+'"></span>' : '')+'</div>'+
     body+'</section>';
 }
 
 function pageSplit(){
   if (ui.ctx && ui.groupError) return pageGroupError();
+  if (isWide()) return pageWorkspace();                 // v4.4: จอใหญ่ = พื้นที่ทำงานสามคอลัมน์ (wide.js)
   var inGroup = !!ui.ctx;
   if (!steps().some(function(st){ return st.id === ui.step; })) ui.step = steps()[0].id;
   var inMeal = !!ui.tripStash;
@@ -174,7 +175,6 @@ function pageSplit(){
   return bar+
   '<div class="page page-app">'+
     (inMeal ? '<div id="mealHead"></div>' : '<div id="groupBar"></div>')+
-    '<div class="split-grid"><div class="split-main">'+
     '<div class="step-tabs" role="tablist" aria-label="'+L("ขั้นตอนการหารบิล")+'">'+steps().map(stepTab).join("")+'</div>'+
 
     stepPanel("members", kt("people"), "memberCount",
@@ -200,31 +200,18 @@ function pageSplit(){
       '<p class="sub-head">'+L("หารเท่ากันทุกคน")+'</p>'+
       '<div id="sharedList"></div><div id="sharedFormSlot"></div>'))+
 
-    (inMeal || isWide() ? '' : summaryPanel())+
+    (inMeal ? '' : stepPanel("summary", kt("summary"), "summaryAside",
+      '<div id="summary" aria-live="polite"></div>'))+
 
-    (ui.confirmReset ? '<div class="confirm" role="alertdialog" aria-label="'+L("ยืนยันการล้างข้อมูล")+'">'+
-      '<h3>'+L("ล้างข้อมูลทั้งหมดในบิลนี้?")+'</h3>'+
-      '<p>'+L("รายชื่อและรายการทั้งหมดจะถูกล้างออก")+(inGroup ? " <b>"+L("ทุกคนในกลุ่มจะเห็นบิลว่างด้วย")+"</b>" : "")+'</p>'+
-      (inGroup ? '<label class="confirm-type" for="resetConfirmName">'+L("พิมพ์ชื่อกลุ่ม")+' <b>'+esc(Store.groupName)+'</b> '+L("เพื่อยืนยัน")+'</label>'+
-        '<input type="text" id="resetConfirmName" autocomplete="off" placeholder="'+esc(Store.groupName)+'">' : '')+
-      '<div class="btn-row"><button class="btn-quiet" id="cancelReset">'+L("ยกเลิก")+'</button>'+
-      '<button class="btn-danger" id="confirmReset"'+(inGroup ? ' disabled' : '')+'>'+ICON_DEL+' '+L("ล้างข้อมูล")+'</button></div></div>' : '')+
+    resetConfirmHTML()+
     (inMeal ? '<div class="app-foot"><button data-back-trip="1">'+L("← กลับไปที่ทริป")+'</button>'+
         '<button class="danger-link" data-del-meal="1">'+ICON_DEL+' '+L("ลบมื้อนี้")+'</button></div>' :
     '<div class="app-foot">'+
       (inGroup ? '' : '<button id="demoBtn">'+L("ใส่ข้อมูลตัวอย่าง")+'</button>')+
       '<button id="resetBtn">'+ICON_DEL+' '+L("ล้างข้อมูลทั้งหมด")+'</button>'+
     '</div>')+
-    '</div>'+
-    // v4.3: จอคอม — สรุปยอดสดด้านขวา (มื้อในทริป: ยอดมื้อ + ปุ่มกลับ)
-    (isWide() ? '<aside class="split-side" aria-label="'+L("สรุปยอด")+'">'+(inMeal ? '<div id="sideTotal"></div>' : summaryPanel())+'</aside>' : '')+
-    '</div>'+
   '</div>'+
   '<div class="total-bar" id="totalBar" hidden></div>';
-}
-
-function summaryPanel(){
-  return stepPanel("summary", kt("summary"), "summaryAside", '<div id="summary" aria-live="polite"></div>');
 }
 
 /* ---------------- ใบสรุปยอด ---------------- */
@@ -241,9 +228,9 @@ function pageBill(){
   var prog = s.ok ? paidProgress(s.transfers, state.paid) : { done:0, total:0, all:false };
   if (ui.showDone && prog.all) return bar + pageDone(r, s);
   ui.showDone = false;
+  if (isWide()) return pageBillWide(r, s, prog);         // v4.4: ใบเสร็จซ้าย ใครจ่าย/ใครโอนขวา (wide.js)
   var mine = myShare();
-  // v4.3: .bill-grid — จอคอมวางใบเสร็จซ้าย ที่เหลือขวา (ลำดับใน HTML = ลำดับบนมือถือ)
-  return bar + '<div class="page page-bill"><div class="bill-grid">'+
+  return bar + '<div class="page">'+
       (r.orphan>0 ? '<div class="notice warn" style="margin:0 0 var(--s3)"><p>'+L("มี {n} {what} จึงยังไม่ถูกรวมในบิลนี้", { n:r.orphan, what:kt("orphan") })+'</p></div>' : '')+
       (prog.all ? '<button class="done-banner" type="button" data-show-done="1">🎉 <b>'+L("ทุกคนโอนครบแล้ว")+'</b><span>'+(state.kind === "trip" ? L("ดูหน้าจบทริป ›") : L("ดูหน้าจบมื้อ ›"))+'</span></button>' : '')+
       (mine ? '<div class="my-total my-total-bill"><span class="my-label">'+L("ยอดของคุณ ({name})", { name:esc(nameOf(mine.id)) })+
@@ -258,7 +245,7 @@ function pageBill(){
           : (Cloud.ready() ? '<button class="btn-line btn-block" id="inviteBtn">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม")+'</button>' : ''))+
         '<a class="link-btn center" href="'+splitHref()+'">'+L("แก้ไขรายการ")+'</a>'+
       '</div>'+
-    '</div></div>';
+    '</div>';
 }
 /** ส่วน "ใครโอนให้ใคร" ในหน้าใบสรุป — ติ๊กว่าโอนแล้วได้ ยังไม่รู้คนจ่าย = ปุ่มพาไปแท็บสรุป */
 function billTransfersHTML(r, s){
@@ -294,6 +281,7 @@ function pageDone(r, s){
 
 /* ---------------- ประวัติ ---------------- */
 function pageHistory(){
+  if (isWide()) return pageHistoryWide();               // v4.4: รายการ + รายละเอียดคู่กัน (wide.js)
   var on = Cloud.ready();
   var groups = ui.myGroups.map(function(g){
     return '<div class="list-wrap">'+groupRowHTML(g)+
@@ -319,7 +307,7 @@ function pageHistory(){
   }).join("");
   var empty = !ui.myGroups.length && !ui.history.length;
   return appBar({ title:L("ประวัติบิล"), right:settingsLink() })+
-    '<div class="page page-history">'+
+    '<div class="page">'+
       (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>' : '')+
       (groups ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+groups : '')+
       join+
@@ -330,6 +318,7 @@ function pageHistory(){
 function pagePast(){
   var id = hashPath().replace(/^\/h\//,"");
   var h = ui.history.filter(function(x){ return x.id === id; })[0];
+  if (isWide()) return pageHistoryWide(h ? id : null);  // v4.4: จอใหญ่แสดงในหน้าประวัติ (เลือกบิลนี้ไว้)
   if (!h){
     return appBar({ back:"#/history", title:L("ใบสรุปยอด") })+
       '<div class="page"><p class="empty">'+L("ไม่พบบิลนี้ในประวัติ อาจถูกลบไปแล้ว")+'</p></div>';
