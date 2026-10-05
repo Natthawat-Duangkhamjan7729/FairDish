@@ -17,8 +17,11 @@ test("เลือกเวอร์ชันเล็กสุดที่ใ�
   const QR = loadQR();
   assert.equal(QR.pickVersion(44), 5);       // https://fairdish.vercel.app/#/g/<12>
   assert.equal(QR.pickVersion(119), 10);
-  assert.equal(QR.pickVersion(120), 0);
-  assert.equal(QR.encode("x".repeat(120)), null);
+  assert.equal(QR.pickVersion(120), 11);     // v4.11: ถึงเวอร์ชัน 15 (ลิงก์กลุ่มที่มีกุญแจเข้ารหัส)
+  assert.equal(QR.pickVersion(220), 15);
+  assert.equal(QR.pickVersion(221), 0);
+  assert.equal(QR.encode("x".repeat(221)), null);
+  assert.equal(QR.encode("x".repeat(150)).size, 12 * 4 + 17);
 });
 
 test("ขนาดและ finder pattern ถูกต้อง", () => {

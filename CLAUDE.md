@@ -25,6 +25,7 @@
 | `store.js` | ชั้นเก็บข้อมูล (localStorage หรือบิลกลุ่มผ่าน `Cloud` เมื่อ `Store.groupId` ถูกตั้ง) |
 | `state.js` | `state`, `ui`, ค่าคงที่, `APP_VERSION` |
 | `qr.js` | `QR.encode()` / `QR.svg()` สร้าง QR code เอง (byte, เวอร์ชัน 1–10, ระดับแก้ผิด H) — ไม่แตะ DOM |
+| `seal.js` | v4.11: `Seal` เข้ารหัสบิลกลุ่ม AES-GCM (WebCrypto) — `lock()` / `open()` / `newKey()` ไม่แตะ DOM (tests/seal.test.js) |
 | `cloud.js` | `Cloud` เรียก RPC ของ Supabase ด้วย `fetch`, รหัส/ลิงก์กลุ่ม, "กลุ่มของฉัน" |
 | `menu-library.js` | คลังเมนูแนะนำ |
 | `shared-library.js` | รายการแนะนำค่าส่วนกลาง (แยกจากคลังเมนู) |
@@ -88,9 +89,13 @@
 - v4.8: ชวนเพื่อนต่างกันตามประเภท — มื้ออาหารชวนท้ายบิล (ลิงก์ `/me` ยืนยันเมนู) · ทริปสร้างกลุ่มก่อนได้ (`data-new-kind="trip-group"`,
   ปุ่ม `#inviteBtn` ในขั้นใส่คน) ลิงก์ = บิลกลุ่ม `#/g/<id>` ใช้ `inviteLink()` / `inviteLabel()` ใน confirm.js อย่าเรียก `confirmLink()` ตรง ๆ ในหน้าชวน
 - v4.9: เปิดลิงก์กลุ่มโดยยังไม่เคยตอบชื่อ → `route()` เรียก `askNameForLink()` (หน้าถามชื่อ `ui.nameFor` = ลิงก์ที่รอ) แล้วกลับลิงก์เดิม
-  `maybeAskWhoAmI()` / `openMeDialog()` = ถาม "เข้าร่วมกลุ่มไหม?" (`joinGroup()` เพิ่มชื่อ + ตั้ง `me`) · เข้าร่วมแล้วเปิดซ้ำ = เลือกชื่ออย่างเดียว
+  `maybeAskWhoAmI()` / `openMeDialog()` = ถาม "เข้าร่วมกลุ่มไหม?" (`joinAsMe()` เพิ่มชื่อ + ตั้ง `me`) · เข้าร่วมแล้วเปิดซ้ำ = เลือกชื่ออย่างเดียว
 - v4.10: หน้าหลัก `fillHome()` = การ์ดบิลในเครื่อง + บิลกลุ่ม (`homeGroups()` จาก `g.snap` ที่ `snapGroup()` จำไว้ตอนโหลด/บันทึก/อัปเดตสด,
   `refreshHomeGroups()` ดึงล่าสุดแล้ววาดซ้ำ) · เสร็จแล้ว = `billDone()` โชว์ครั้งเดียว (`DONE_SEEN_KEY` / `g.doneSeen`, `ui.doneShown` กันหายตอนวาดซ้ำ)
+- v4.11: กลุ่มใหม่เข้ารหัสทั้งชื่อและบิล — กุญแจอยู่ในลิงก์ `#/g/<id>.<key>` (`groupLink()` ใส่ให้, `route()` → `rememberKey()`, ถาวรที่ `myGroups[].key`)
+  เรียกเซิร์ฟเวอร์ผ่าน `Cloud.create/get/save` เท่านั้น (เข้ารหัส/ถอดให้เอง) · ไม่มีกุญแจ = `groupError "nokey"` · กลุ่มที่ไม่มีกุญแจ = ข้อมูลแบบเดิม
+  ยุบกลุ่ม: `delete_group(p_id, p_owner)` ใน schema.sql — กุญแจคนสร้าง `myGroups[].owner` · ชวนเพื่อน = `openShareDialog()` (หน้า `/share` ยังเปิดจากลิงก์ได้)
+  QR ถึงเวอร์ชัน 15 (220 ไบต์) · ชื่อฟังก์ชันระดับบนสุดห้ามซ้ำข้ามไฟล์ (tests/syntax.test.js เช็ก)
 - v4.2: **ห้ามเก็บเบอร์โทร เลขบัตรประชาชน หรือข้อมูลระบุตัวตนอื่นในข้อมูลบิล** (บิลกลุ่มอยู่บน Supabase และใครมีลิงก์ก็อ่านได้ — PDPA)
   `normalizeBill()` เก็บ members แค่ `{ id, name }`
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย

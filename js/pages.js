@@ -262,7 +262,7 @@ function pageBill(){
       '<div class="btn-stack">'+
         '<button class="btn-main btn-block" id="copyBtn">'+ICON_COPY+' '+L("คัดลอกสรุปยอด")+'</button>'+
         '<button class="btn-line btn-block" id="shareImgBtn">'+ICON_SHARE+' '+L("แชร์รูปใบเสร็จ")+'</button>'+
-        (ui.ctx ? '<a class="btn-line btn-block" href="'+shareHref()+'">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม · ยืนยันเมนู")+'</a>'
+        (ui.ctx ? '<button class="btn-line btn-block" type="button" id="groupShare">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม · ยืนยันเมนู")+'</button>'
           : (Cloud.ready() ? '<button class="btn-line btn-block" id="inviteBtn">'+ICON_USERS+' '+inviteLabel()+'</button>' : ''))+
         '<a class="link-btn center" href="'+splitHref()+'">'+L("แก้ไขรายการ")+'</a>'+
       '</div>'+
@@ -362,7 +362,8 @@ function pageGroupError(){
   var msg = ({
     notfound:[L("ไม่พบกลุ่มนี้"),L("ลิงก์อาจพิมพ์ผิดหรือคัดลอกมาไม่ครบ ลองขอลิงก์จากเพื่อนอีกครั้ง")],
     disabled:[L("ระบบกลุ่มยังไม่เปิดใช้"),L("เว็บนี้ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์สำหรับกลุ่ม ยังหารบิลในเครื่องตัวเองได้ตามปกติ")],
-    load:[L("โหลดกลุ่มไม่สำเร็จ"),L("ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง")]
+    load:[L("โหลดกลุ่มไม่สำเร็จ"),L("ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง")],
+    nokey:[L("ลิงก์นี้ไม่ครบ"),L("บิลกลุ่มนี้เข้ารหัสไว้ ต้องเปิดจากลิงก์หรือ QR เต็ม ๆ ที่เพื่อนส่งมา ลองขอลิงก์ใหม่อีกครั้ง")]
   })[ui.groupError] || [L("โหลดกลุ่มไม่สำเร็จ"),""];
   return appBar({ back:"#/history", title:L("กลุ่ม") })+
     '<div class="page">'+

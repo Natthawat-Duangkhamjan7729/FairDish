@@ -45,10 +45,7 @@ function sideNavHTML(){
       '<span class="sn-text">'+label+'</span>'+(extra || '')+'</a>';
   };
   var paid = openBillPaidText();
-  var share = ui.ctx
-    ? item("share", shareHref(), ICON_USERS, L("ชวนเพื่อน"))
-    : (Cloud.ready() && ui.ctx === null && state.kind === "trip"   // v4.8: มื้ออาหารชวนเพื่อนท้ายใบสรุปยอด ไม่ใช่ตอนเริ่ม
-      ? '<button class="sn-item" type="button" data-side-invite="1">'+ICON_USERS+'<span class="sn-text">'+L("ชวนเพื่อน")+'</span></button>' : '');
+  var share = "";   // v4.11: ชวนเพื่อนอยู่ที่ปุ่มขวาบนของหน้าหารบิล/ท้ายใบสรุปยอดอย่างเดียว (เปิดเป็นหน้าต่าง)
   return '<a class="sn-brand" href="#/"><img src="img/logo.png" alt="" width="36" height="36"><b>FairDish</b></a>'+
     '<button class="sn-new" type="button" data-open-kind="1" aria-haspopup="dialog" aria-label="'+L("เริ่มบิลใหม่")+'">'+ICON_PLUS+'<span class="sn-text">'+L("เริ่มบิลใหม่")+'</span></button>'+
     item("home", "#/", ICON_HOME, L("หน้าหลัก"))+
@@ -77,7 +74,7 @@ function renderSideNav(){
 async function sideInvite(){
   if (ui.tour) return inviteFromBill();                 // แจ้งว่าตอนฝึกยังชวนไม่ได้
   if (!Cloud.ready()) return toast(L("ระบบกลุ่มยังไม่เปิดใช้ในเว็บนี้ (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์) ยังหารบิลในเครื่องได้ตามปกติ"),"error");
-  if (ui.ctx){ location.hash = shareHref(); return; }
+  if (ui.ctx) return openShareDialog();   // v4.11: หน้าต่างชวนเพื่อน ไม่เปลี่ยนหน้า
   if (ui.ctx === null && !ui.loading) return inviteFromBill();
   ui.inviteAfterLoad = true;                            // ยังไม่ได้โหลดบิลส่วนตัว → โหลดก่อนแล้วสร้างกลุ่มต่อ (refreshView)
   if (currentPath() === "/split" || currentPath() === "/bill") return;
@@ -606,7 +603,7 @@ function pageBillWide(r, s, prog){
         '<div class="w-actions">'+
           '<button class="btn-main" id="copyBtn">'+ICON_COPY+' '+L("คัดลอกสรุปยอด")+'</button>'+
           '<button class="btn-line" id="shareImgBtn">'+ICON_SHARE+' '+L("แชร์รูปใบเสร็จ")+'</button>'+
-          (ui.ctx ? '<a class="btn-line" href="'+shareHref()+'">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม · ยืนยันเมนู")+'</a>'
+          (ui.ctx ? '<button class="btn-line" type="button" id="groupShare">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม · ยืนยันเมนู")+'</button>'
             : (Cloud.ready() ? '<button class="btn-line" id="inviteBtn">'+ICON_USERS+' '+inviteLabel()+'</button>' : ''))+
         '</div>'+
       '</div>'+

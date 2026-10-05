@@ -18,10 +18,10 @@ const plain = x => JSON.parse(JSON.stringify(x));
 
 test("แยกเส้นทางหน้ากลุ่ม", () => {
   const app = loadApp();
-  assert.deepEqual(plain(app.parseGroupPath("/g/0123456789ab")), { id: "0123456789ab", bill: false, me: false, share: false });
-  assert.deepEqual(plain(app.parseGroupPath("/g/0123456789ab/bill")), { id: "0123456789ab", bill: true, me: false, share: false });
-  assert.deepEqual(plain(app.parseGroupPath("/g/0123456789ab/me")), { id: "0123456789ab", bill: false, me: true, share: false });
-  assert.deepEqual(plain(app.parseGroupPath("/g/0123456789ab/share")), { id: "0123456789ab", bill: false, me: false, share: true });
+  assert.deepEqual(plain(app.parseGroupPath("/g/0123456789ab")), { id: "0123456789ab", key: "", bill: false, me: false, share: false });
+  assert.deepEqual(plain(app.parseGroupPath("/g/0123456789ab/bill")), { id: "0123456789ab", key: "", bill: true, me: false, share: false });
+  assert.deepEqual(plain(app.parseGroupPath("/g/0123456789ab/me")), { id: "0123456789ab", key: "", bill: false, me: true, share: false });
+  assert.deepEqual(plain(app.parseGroupPath("/g/0123456789ab/share")), { id: "0123456789ab", key: "", bill: false, me: false, share: true });
   assert.equal(app.parseGroupPath("/split"), null);
   assert.equal(app.parseGroupPath("/g/"), null);
   assert.equal(app.parseGroupPath("/g/abc/other"), null);

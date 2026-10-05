@@ -493,12 +493,13 @@ function setFieldMsg(id, text, isError){
 function joinGroup(){
   var input = document.getElementById("groupJoinInput");
   if (!input) return;
-  var id = groupIdFromInput(input.value);
-  if (!id){
+  var hash = groupHashFromInput(input.value);
+  if (!hash){
     setFieldMsg("groupJoinMsg",L("ไม่ใช่ลิงก์กลุ่มของ FairDish ลองคัดลอกลิงก์จากเพื่อนมาใหม่ทั้งหมด"),true);
     return input.focus();
   }
-  location.hash = "#/g/" + id;
+  closeGlobalSheet();
+  location.hash = hash;
 }
 
 async function forgetGroup(id){
@@ -556,8 +557,8 @@ function openMeDialog(){
   var input = document.getElementById("joinNameInput");
   if (input) input.focus();
 }
-/** v4.9: เข้าร่วมกลุ่ม = เพิ่มชื่อตัวเองเป็นสมาชิก + จำว่า "ฉันคือคนนี้" (ชื่อซ้ำกับที่มีอยู่ = เลือกคนนั้นแทน) */
-async function joinGroup(){
+/** v4.9: เข้าร่วมกลุ่ม (ชื่อเดิม joinGroup ชนกับฟังก์ชันวางลิงก์เข้ากลุ่ม — แก้ใน v4.11) = เพิ่มชื่อตัวเองเป็นสมาชิก + จำว่า "ฉันคือคนนี้" (ชื่อซ้ำกับที่มีอยู่ = เลือกคนนั้นแทน) */
+async function joinAsMe(){
   var name = ui.myName;
   if (!name){
     var input = document.getElementById("joinNameInput");
@@ -633,7 +634,7 @@ function fitQr(box, q){
 }
 /** QR + โลโก้เป็นรูป PNG (สีจากตัวแปร --qr-ink / --paper) */
 async function qrImageBlob(){
-  var link = confirmLink(ui.ctx), q = QR.encode(link);
+  var link = inviteLink(ui.ctx), q = QR.encode(link);   // v4.11: ตรงกับ QR บนจอ (ทริป = ลิงก์บิลกลุ่ม ไม่ใช่ /me)
   if (!q) throw new Error("link too long");
   var cs = getComputedStyle(document.documentElement);
   var ink = cs.getPropertyValue("--qr-ink").trim(), paper = cs.getPropertyValue("--qr-paper").trim();
@@ -881,13 +882,106 @@ async function openKindSheet(){
       '<span class="kind-text"><b>'+ktOf(kind,"name")+'</b><span>'+ktOf(kind,"kindSub")+'</span></span></button>';
   }
   ui.sheet = "kind";
-  renderGlobalSheet('<h2 class="sheet-title" id="kindTitle">'+L("วันนี้หารอะไร")+'</h2>'+
+  renderGlobalSheet('<div class="sheet-head-row"><h2 class="sheet-title" id="kindTitle">'+L("วันนี้หารอะไร")+'</h2>'+
+      // v4.11: เข้ากลุ่มของเพื่อนด้วย QR / ลิงก์ (ข้างหัวข้อ)
+      (Cloud.ready() ? '<button class="link-btn scan-link" type="button" data-open-join="1">'+ICON_SCAN+' '+L("สแกนเข้ากลุ่ม")+'</button>' : '')+'</div>'+
     '<p class="sheet-sub">'+L("เลือกครั้งเดียวตอนเริ่ม")+'</p>'+
     '<div class="kind-grid">'+card("meal","meal")+card("trip","trip")+tripGroupCard()+'</div>'+
     '<p class="sheet-note">'+note+'</p>', "kindTitle");
   var first = document.querySelector("[data-new-kind]");
   if (first) first.focus({ preventScroll:true });
 }
+/* ---- v4.11: ยุบกลุ่ม (คนสร้างเท่านั้น) — เก็บสำเนาไว้ในประวัติของเราก่อน แล้วลบบนเซิร์ฟเวอร์ ---- */
+function canDissolve(){ var g = ui.ctx && myGroup(ui.ctx); return !!(g && g.owner && Cloud.ready() && !ui.loading); }
+function openDissolveSheet(){
+  if (!canDissolve()) return;
+  closeShareDialog();
+  ui.sheet = "dissolve";
+  renderGlobalSheet('<h2 class="sheet-title" id="dissolveTitle">'+L("ยุบกลุ่ม {name}?", { name:esc(Store.groupName) })+'</h2>'+
+    '<p class="sheet-sub">'+L("บิลกลุ่มจะถูกลบออกจากเซิร์ฟเวอร์ถาวร เพื่อนที่มีลิงก์จะเปิดไม่ได้อีก — เราเก็บสำเนาไว้ในประวัติของคุณให้")+'</p>'+
+    '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
+    '<button class="btn-danger" type="button" data-dissolve-ok="1">'+L("ยุบกลุ่ม")+'</button></div>', "dissolveTitle");
+}
+async function dissolveGroup(){
+  var id = ui.ctx, g = myGroup(id);
+  if (!canDissolve() || ui.dissolving) return;
+  ui.dissolving = true;
+  try {
+    var res = await Cloud.remove(id, g.owner);
+    if (!res || !res.ok){ toast(L("ยุบกลุ่มไม่สำเร็จ (กลุ่มอาจถูกลบไปแล้ว)"),"error"); return; }
+    var data = serialize(); data.name = Store.groupName;
+    try { await archiveBill(data); } catch(e){}
+    ui.myGroups = ui.myGroups.filter(function(x){ return x.id !== id; });
+    await saveMyGroups();
+    closeGlobalSheet();
+    ui.ctx = undefined; Store.groupId = null;
+    location.hash = "#/";
+    toast(L("ยุบกลุ่มแล้ว เก็บสำเนาไว้ในประวัติของคุณ"),"ok");
+  } catch(e){
+    toast(L("ยุบกลุ่มไม่ได้ — ตรวจอินเทอร์เน็ต หรือเซิร์ฟเวอร์ยังไม่รองรับ"),"error");
+  } finally {
+    ui.dissolving = false;
+  }
+}
+
+/* ---- v4.11: เข้ากลุ่มของเพื่อน — สแกน QR ในแอป (เบราว์เซอร์ที่มี BarcodeDetector) หรือวางลิงก์/รหัส ---- */
+var ICON_SCAN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>';
+var scanStream = null, scanTimer = null;
+function canScanQr(){
+  return typeof window.BarcodeDetector === "function" && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+}
+function openJoinSheet(){
+  stopScan();
+  ui.sheet = "join";
+  var cam = canScanQr();
+  renderGlobalSheet('<h2 class="sheet-title" id="joinTitle">'+L("เข้ากลุ่มของเพื่อน")+'</h2>'+
+    '<p class="sheet-sub">'+L("สแกน QR จากเครื่องเพื่อน หรือวางลิงก์ที่เพื่อนส่งมา")+'</p>'+
+    (cam ? '<div class="scan-box"><video id="scanVideo" playsinline muted aria-label="'+L("กล้องสแกน QR")+'"></video></div>'+
+           '<p class="field-msg muted" id="scanMsg" aria-live="polite">'+L("กำลังเปิดกล้อง…")+'</p>'
+         : '<p class="hint">'+L("เปิดแอปกล้องของมือถือแล้วสแกน QR ของเพื่อนได้เลย ลิงก์จะเปิด FairDish ให้เอง")+'</p>')+
+    '<div class="form-box">'+
+      '<label class="sr-only" for="groupJoinInput">'+L("ลิงก์หรือรหัสกลุ่ม")+'</label>'+
+      '<input type="text" id="groupJoinInput" placeholder="'+L("วางลิงก์หรือรหัสกลุ่ม")+'" autocomplete="off" aria-describedby="groupJoinMsg">'+
+      '<p class="field-msg muted" id="groupJoinMsg" aria-live="polite"></p>'+
+      '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
+      '<button class="btn-sm" type="button" id="groupJoin">'+L("เข้ากลุ่ม")+'</button></div>'+
+    '</div>', "joinTitle");
+  if (cam) startScan();
+}
+async function startScan(){
+  var msg = function(t){ var el = document.getElementById("scanMsg"); if (el) el.textContent = t; };
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }, audio:false });
+    var v = document.getElementById("scanVideo");
+    if (!v || ui.sheet !== "join"){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }   // ปิดแผ่นไปก่อนกล้องเปิดเสร็จ
+    scanStream = stream;
+    v.srcObject = stream;
+    await v.play();
+    var det = new window.BarcodeDetector({ formats:["qr_code"] });
+    msg(L("ส่องกล้องไปที่ QR ของเพื่อน"));
+    var tick = async function(){
+      if (!scanStream || !document.getElementById("scanVideo")) return stopScan();
+      try {
+        var codes = await det.detect(v);
+        for (var i = 0; i < codes.length; i++){
+          var hash = groupHashFromInput(codes[i].rawValue);
+          if (hash){ closeGlobalSheet(); location.hash = hash; return; }
+        }
+        if (codes.length) msg(L("QR นี้ไม่ใช่ลิงก์กลุ่มของ FairDish"));
+      } catch(e){}
+      scanTimer = setTimeout(tick, 250);
+    };
+    tick();
+  } catch(e){
+    stopScan();
+    msg(L("เปิดกล้องไม่ได้ — วางลิงก์ด้านล่างแทน หรือใช้แอปกล้องของมือถือสแกน"));
+  }
+}
+function stopScan(){
+  clearTimeout(scanTimer); scanTimer = null;
+  if (scanStream){ scanStream.getTracks().forEach(function(t){ t.stop(); }); scanStream = null; }
+}
+
 /** v4.8: ทริปแบบกลุ่ม — สร้างกลุ่มก่อน ชวนเพื่อนเข้ามา แล้วทุกคนใส่ค่าใช้จ่ายเองได้ตลอดทริป */
 function tripGroupCard(){
   if (!Cloud.ready()) return "";
@@ -915,6 +1009,7 @@ function renderGlobalSheet(body, labelId){
   syncSheetLock();
 }
 function closeGlobalSheet(){
+  stopScan();
   ui.sheet = null;
   var slot = document.getElementById("globalSheet");
   if (slot) slot.innerHTML = "";
@@ -975,12 +1070,13 @@ async function inviteFromBill(hostName){
   try {
     var g = await Cloud.create(name, data);
     await rememberGroup(g.id, g.name, data.kind);
-    var mg = meId && myGroup(g.id);
-    if (mg){ mg.me = meId; mg.asked = true; await saveMyGroups(); }
+    var mg = myGroup(g.id);                          // คนสร้างไม่ต้องถูกถาม "เข้าร่วมกลุ่มไหม?" (ไม่งั้นซ้อนกับหน้าต่างชวนเพื่อน)
+    if (mg){ if (meId) mg.me = meId; mg.asked = true; if (g.owner) mg.owner = g.owner; await saveMyGroups(); }   // owner = กุญแจยุบกลุ่ม (v4.11)
     // บิลอยู่บนกลุ่มแล้ว บิลส่วนตัวในเครื่องเริ่มใหม่ว่าง ๆ (ไม่ให้มีสองที่ที่ต้องแก้)
     try { await Store.saveLocalBill(emptyBill(data.kind)); } catch(e){}
     ui.shareAfterLoad = true;
-    location.hash = "#/g/" + g.id + "/share";
+    // v4.11: อยู่หน้าเดิม (หารบิล / ใบสรุปยอด) ของกลุ่มใหม่ แล้วเปิดหน้าต่างชวนเพื่อน (refreshView)
+    location.hash = "#/g/" + g.id + (currentPath() === "/bill" ? "/bill" : "");
   } catch(err){
     toast(L("สร้างกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"),"error");
     var again = document.getElementById("inviteBtn");

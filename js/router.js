@@ -57,6 +57,8 @@ function route(){
   if (ui.tripStash) exitMeal();          // v3.1: เปลี่ยนหน้า = ออกจากมื้อกลับไปที่ทริป (ข้อมูล commit ไปแล้ว)
   var path = currentPath();
   var groupId = currentGroupId();
+  var gp = parseGroupPath(hashPath());
+  if (gp && gp.key && isGroupId(gp.id)) rememberKey(gp.id, gp.key);   // v4.11: กุญแจเข้ารหัสจากลิงก์ที่เพื่อนส่งมา
   var r = routes[path];
   // v4.4.1: เปิดเว็บครั้งแรกจากลิงก์หน้าอื่น → แสดงหน้าแนะนำก่อน แล้วพากลับมาหน้านั้น (ลิงก์กลุ่มที่เพื่อนส่งมาไม่ต้องผ่านหน้าแนะนำ)
   if (ui.showOnb && path !== "/" && !groupId){ ui.onbNext = location.hash; location.hash = "#/"; return; }
@@ -71,7 +73,7 @@ function route(){
   else if ((path==="/share" || path==="/bill") && groupId) refreshGroup(false);   // สถานะยืนยัน/ติ๊กโอนของเพื่อนต้องเป็นล่าสุด
   if (path !== "/me"){ ui.guestFor = null; ui.guestSel = null; ui.guestDone = false; }
   document.title = groupId && Store.groupName ? Store.groupName + " · FairDish" : L(r.title);
-  closeMeDialog(); closeInstall();     // เปลี่ยนหน้าแล้วหน้าต่างที่ค้างอยู่ต้องปิดตาม
+  closeMeDialog(); closeInstall(); closeShareDialog();   // เปลี่ยนหน้าแล้วหน้าต่างที่ค้างอยู่ต้องปิดตาม
   closeGlobalSheet();
   if (path !== "/bill") ui.showDone = false;
   // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน

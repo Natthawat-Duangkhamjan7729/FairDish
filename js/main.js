@@ -40,7 +40,7 @@ async function loadContext(groupId){
   } catch(err){
     if (token !== loadToken) return;
     ui.loading = false;
-    if (groupId) ui.groupError = "load";
+    if (groupId) ui.groupError = err && err.nokey ? "nokey" : "load";   // v4.11: ลิงก์ไม่มีกุญแจ/กุญแจผิด
     else {
       setSave("error");
       toast(L("โหลดข้อมูลเดิมไม่สำเร็จ เริ่มบิลใหม่ได้เลย"),"error");
@@ -63,13 +63,17 @@ function refreshView(){
   }
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();
   renderSideNav();                    // v4.4: ลิงก์บิลที่เปิดอยู่ + ป้ายโอนแล้ว ในแถบซ้าย
+  refreshShareDialog();               // v4.11
   if (path==="/me") rerenderGuest(true);
   if (path==="/share"){ document.getElementById("view").innerHTML = pageShare(); fitShareQr(); }
   if (ui.inviteAfterLoad && ui.ctx === null && !ui.loading){ ui.inviteAfterLoad = false; inviteFromBill(); }   // v4.5.3: กดชวนเพื่อนตอนยังไม่ได้โหลดบิล
   // v3.2: เพิ่งย้ายบิลส่วนตัวขึ้นกลุ่ม (เปิดหน้าชวนเพื่อนอยู่แล้ว)
   if (ui.shareAfterLoad && ui.ctx && !ui.loading){
     ui.shareAfterLoad = false;
-    if (!ui.groupError) toast(hasData() ? L("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย") : L("สร้างกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย"),"ok");
+    if (!ui.groupError){
+      toast(hasData() ? L("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย") : L("สร้างกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย"),"ok");
+      openShareDialog();
+    }
   }
 }
 

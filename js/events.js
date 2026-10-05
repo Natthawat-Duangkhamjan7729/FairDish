@@ -43,7 +43,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "guestName"){ e.preventDefault(); addGuest(); }
   if (e.target.id === "billNameInput"){ e.preventDefault(); saveBillName(); }
   if (e.target.id === "hostNameInput"){ e.preventDefault(); saveHostSheet(); }   // v4.7
-  if (e.target.id === "joinNameInput"){ e.preventDefault(); joinGroup(); }        // v4.9
+  if (e.target.id === "joinNameInput"){ e.preventDefault(); joinAsMe(); }         // v4.9
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "mealName"){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
@@ -128,7 +128,7 @@ document.addEventListener("click", async function(e){
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
             "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
-            "[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
+            "[data-dissolve],[data-dissolve-ok],[data-open-join],[data-share-close],[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
             "[data-onb-start],[data-tour-start],[data-tour-next],[data-tour-skip],[data-tour-done],[data-tour-back],[data-tour-install]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -212,7 +212,11 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-myname-save")) return saveMyNameFromSettings();
   if (t.getAttribute("data-myname-clear")) return clearMyName();
   if (t.getAttribute("data-add-self")) return addSelf();
-  if (t.getAttribute("data-me-join")) return joinGroup();               // v4.9: เข้าร่วมกลุ่ม
+  if (t.getAttribute("data-share-close")) return closeShareDialog();
+  if (t.getAttribute("data-open-join")) return openJoinSheet();
+  if (t.getAttribute("data-dissolve")) return openDissolveSheet();       // v4.11: ยุบกลุ่ม
+  if (t.getAttribute("data-dissolve-ok")) return dissolveGroup();          // v4.11: สแกน/วางลิงก์เข้ากลุ่ม
+  if (t.getAttribute("data-me-join")) return joinAsMe();                // v4.9: เข้าร่วมกลุ่ม
   if (t.getAttribute("data-guest-join")) return guestJoin();
   if ((v = t.getAttribute("data-me-pick"))) return chooseMe(v);
   if (t.getAttribute("data-me-close")) return closeMeDialog();
@@ -247,7 +251,7 @@ document.addEventListener("click", async function(e){
   /* v2.0: กลุ่ม */
   if (t.id==="groupJoin") return joinGroup();
   if (t.id==="groupCopy") return copyText(groupLink(ui.ctx), L("คัดลอกลิงก์กลุ่มแล้ว ส่งเข้าแชตได้เลย"));
-  if (t.id==="groupShare"){ location.hash = shareHref(); return; }
+  if (t.id==="groupShare") return openShareDialog();   // v4.11: หน้าต่างชวนเพื่อน
   if (t.id==="shareNative") return shareGroupLink();
   if (t.id==="shareCopy") return copyText(inviteText(), L("คัดลอกลิงก์พร้อมคำชวนแล้ว วางในแชตได้เลย"));
   if (t.id==="shareSaveQr") return saveQrImage();
@@ -388,6 +392,9 @@ document.getElementById("installDialog").addEventListener("click", function(e){
 });
 document.getElementById("meDialog").addEventListener("click", function(e){
   if (e.target === this) closeMeDialog();
+});
+document.getElementById("shareDialog").addEventListener("click", function(e){
+  if (e.target === this) closeShareDialog();
 });
 
 /* v2.5: ยอดที่หัวจ่ายแต่ละคนจ่าย — บันทึกตอนพิมพ์เสร็จ (ออกจากช่อง / กด Enter) */

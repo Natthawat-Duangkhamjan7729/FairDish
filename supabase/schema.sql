@@ -15,11 +15,13 @@ create table if not exists public.groups (
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+-- v4.11: กุญแจของคนสร้างกลุ่ม (สุ่มตอนสร้าง ส่งกลับไปเก็บในเครื่องคนสร้างเท่านั้น) ใช้ยุบกลุ่มได้คนเดียว
+alter table public.groups add column if not exists owner_key text;
 
 alter table public.groups enable row level security;
 revoke all on table public.groups from anon, authenticated;
 
--- สร้างกลุ่มใหม่ → { id, name, version }
+-- สร้างกลุ่มใหม่ → { id, name, version, owner } (owner = กุญแจยุบกลุ่ม v4.11)
 create or replace function public.create_group(p_name text, p_data jsonb)
 returns json
 language plpgsql
@@ -29,6 +31,7 @@ as $$
 declare
   v_id   text;
   v_name text := btrim(coalesce(p_name, ''));
+  v_owner text := replace(gen_random_uuid()::text, '-', '');
 begin
   if char_length(v_name) = 0 or char_length(v_name) > 40 then
     raise exception 'invalid group name';
@@ -36,13 +39,13 @@ begin
   loop
     v_id := substr(replace(gen_random_uuid()::text, '-', ''), 1, 12);
     begin
-      insert into groups (id, name, data) values (v_id, v_name, coalesce(p_data, '{}'::jsonb));
+      insert into groups (id, name, data, owner_key) values (v_id, v_name, coalesce(p_data, '{}'::jsonb), v_owner);
       exit;
     exception when unique_violation then
       -- รหัสซ้ำ (แทบไม่เกิด) สุ่มใหม่
     end;
   end loop;
-  return json_build_object('id', v_id, 'name', v_name, 'version', 1);
+  return json_build_object('id', v_id, 'name', v_name, 'version', 1, 'owner', v_owner);
 end;
 $$;
 
@@ -85,9 +88,29 @@ begin
 end;
 $$;
 
+-- v4.11: ยุบกลุ่ม — ลบได้เฉพาะคนที่ถือกุญแจของคนสร้าง (กลุ่มที่สร้างก่อน v4.11 ไม่มีกุญแจ ยุบไม่ได้)
+create or replace function public.delete_group(p_id text, p_owner text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from groups
+   where id = p_id and owner_key is not null and owner_key = p_owner;
+  return json_build_object('ok', found);
+end;
+$$;
+
+-- (ไม่บังคับ) ลบกลุ่มที่ไม่มีใครแก้นานเกิน 90 วันอัตโนมัติ — เปิด extension pg_cron ใน Supabase ก่อน แล้วรัน:
+--   select cron.schedule('fairdish-cleanup', '0 3 * * *',
+--     $$delete from public.groups where updated_at < now() - interval '90 days'$$);
+
 revoke all on function public.create_group(text, jsonb) from public;
 revoke all on function public.get_group(text) from public;
 revoke all on function public.save_group(text, jsonb, integer) from public;
 grant execute on function public.create_group(text, jsonb) to anon, authenticated;
 grant execute on function public.get_group(text) to anon, authenticated;
 grant execute on function public.save_group(text, jsonb, integer) to anon, authenticated;
+revoke all on function public.delete_group(text, text) from public;
+grant execute on function public.delete_group(text, text) to anon, authenticated;

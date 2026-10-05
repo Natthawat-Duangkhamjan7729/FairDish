@@ -163,6 +163,7 @@ function renderGroupBar(){
       '<div class="group-actions">'+
         '<button class="btn-quiet btn-xs" id="groupRefresh">'+L("โหลดข้อมูลล่าสุด")+'</button>'+
         '<a class="group-leave" href="#/split">'+L("← กลับไปบิลส่วนตัว")+'</a>'+
+        (canDissolve() ? '<button class="link-btn danger" type="button" data-dissolve="1">'+L("ยุบกลุ่ม")+'</button>' : '')+
       '</div>'+
     '</div>';
   box.innerHTML =

@@ -152,6 +152,53 @@ function shareIntro(){
     ? L("ส่งลิงก์นี้ให้เพื่อนในทริป เปิดแล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) ทุกคนใส่ค่าใช้จ่ายที่ตัวเองจ่ายในบิลเดียวกันได้ตลอดทริป")
     : L("ส่งลิงก์นี้เข้ากลุ่ม เพื่อนสแกนหรือเปิดลิงก์ได้เลย ไม่ต้องสมัคร แต่ละคนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดในบิลอัปเดตให้ทันที");
 }
+/* ---- v4.11: หน้าต่างชวนเพื่อน — ใช้แทนการเปิดหน้า #/g/<id>/share (หน้านั้นยังเปิดจากลิงก์ได้) ---- */
+function shareDialogHTML(){
+  var link = inviteLink(ui.ctx), q = QR.encode(link), trip = state.kind === "trip";
+  var c = confirmSummary(), me = myMemberId(), amounts = {};
+  if (hasData()) compute().list.forEach(function(p){ amounts[p.id] = p.rounded; });
+  return '<div class="install-head"><div><h2 id="shareTitle">'+(trip ? L("ชวนเพื่อนเข้ากลุ่มทริป") : L("ชวนเพื่อนเข้ากลุ่ม"))+'</h2>'+
+      '<p>'+shareIntro()+'</p></div>'+
+      '<button class="icon-btn" type="button" data-share-close="1" aria-label="'+L("ปิด")+'">'+ICON_X+'</button></div>'+
+    '<section class="share-card" aria-label="'+L("QR และลิงก์ของกลุ่ม")+'">'+
+      (q ? '<div class="qr-card share-qr"><div class="qr-code">'+QR.svg(link, L("QR code ลิงก์กลุ่ม {name}", { name:esc(Store.groupName) }))+
+        (q.version >= 4 ? '<span class="qr-logo"><img src="img/icon-192.png" alt=""></span>' : '')+'</div></div>' : '')+
+      '<div class="share-info"><span class="share-name">'+esc(Store.groupName)+'</span>'+
+        '<span class="share-url mono">'+esc(link.replace(/^https?:\/\//,""))+'</span>'+
+        '<button class="btn-sm btn-xs" type="button" id="shareCopy">'+ICON_COPY+' '+L("คัดลอกลิงก์")+'</button></div>'+
+    '</section>'+
+    '<div class="btn-pair">'+
+      '<button class="btn-line" type="button" id="shareNative">'+ICON_SHARE+' '+L("แชร์ทางอื่น")+'</button>'+
+      '<button class="btn-line" type="button" id="shareSaveQr">'+ICON_SAVE_IMG+' '+L("บันทึกรูป QR")+'</button>'+
+    '</div>'+
+    (!c.total ? '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>'
+      : trip ? tripPeopleHTML(amounts, me)
+      : '<div class="list-title"><h2>'+L("ยืนยันแล้ว {done} จาก {total} คน", { done:c.done, total:c.total })+'</h2></div>'+
+        c.rows.map(function(x){
+          var b = CONFIRM_BADGE[x.status];
+          return '<div class="status-row'+(x.id === me ? ' me' : '')+'"><b>'+esc(x.name)+'</b>'+
+            '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+L(b[1])+'</span></div>';
+        }).join(""))+
+    (trip ? '' : '<div class="btn-stack"><a class="btn-line btn-block" href="'+confirmHref()+'">'+L("ยืนยันเมนูของฉัน · ดูหน้าที่เพื่อนเห็น")+'</a></div>')+
+    (canDissolve() ? '<button class="link-btn danger center dissolve-btn" type="button" data-dissolve="1">'+ICON_DEL+' '+L("ยุบกลุ่ม (คุณเป็นคนสร้าง)")+'</button>' : '');
+}
+function openShareDialog(){
+  var box = document.getElementById("shareDialog");
+  if (!box || !ui.ctx || ui.loading) return;
+  box.innerHTML = shareDialogHTML();
+  if (!box.open){ if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open",""); }
+  fitShareQr();
+}
+function closeShareDialog(){
+  var box = document.getElementById("shareDialog");
+  if (!box || !box.open) return;
+  if (typeof box.close === "function") box.close(); else box.removeAttribute("open");
+}
+/** อัปเดตสด: เปิดหน้าต่างชวนเพื่อนค้างไว้ → รายชื่อ/สถานะเปลี่ยนตาม */
+function refreshShareDialog(){
+  var box = document.getElementById("shareDialog");
+  if (box && box.open && ui.ctx) openShareDialog();
+}
 /** v4.8: ทริปไม่มีการยืนยันเมนู — แสดงคนในทริปกับยอดของแต่ละคนแทน */
 function tripPeopleHTML(amounts, me){
   return '<div class="list-title"><h2>'+L("คนในทริป {n} คน", { n:state.members.length })+'</h2></div>'+
