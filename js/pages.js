@@ -225,7 +225,8 @@ function pageBill(){
     return bar + '<div class="page"><p class="empty">'+L("ยังไม่มีข้อมูลบิล เริ่มจากใส่ชื่อคนและรายการในหน้าหารบิลก่อน")+'</p>'+
       '<a class="btn-main btn-block" style="margin-top:var(--s4)" href="'+splitHref()+'">'+L("ไปหน้าหารบิล")+'</a>'+
       // v4.5.3: ชวนเพื่อนได้ตั้งแต่บิลยังว่าง (เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์)
-      (!ui.ctx && Cloud.ready() ? '<button class="btn-line btn-block" style="margin-top:var(--s3)" id="inviteBtn">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม")+'</button>' : '')+'</div>';
+      // v4.8: บิลว่าง ชวนได้เฉพาะทริป (สร้างกลุ่มก่อน แล้วทุกคนใส่ค่าใช้จ่ายเอง) — มื้ออาหารชวนท้ายบิลตอนมียอดแล้ว
+      (!ui.ctx && Cloud.ready() && state.kind === "trip" ? '<button class="btn-line btn-block" style="margin-top:var(--s3)" id="inviteBtn">'+ICON_USERS+' '+inviteLabel()+'</button>' : '')+'</div>';
   }
   var r = compute();
   var s = settleBill(r);
@@ -246,7 +247,7 @@ function pageBill(){
         '<button class="btn-main btn-block" id="copyBtn">'+ICON_COPY+' '+L("คัดลอกสรุปยอด")+'</button>'+
         '<button class="btn-line btn-block" id="shareImgBtn">'+ICON_SHARE+' '+L("แชร์รูปใบเสร็จ")+'</button>'+
         (ui.ctx ? '<a class="btn-line btn-block" href="'+shareHref()+'">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม · ยืนยันเมนู")+'</a>'
-          : (Cloud.ready() ? '<button class="btn-line btn-block" id="inviteBtn">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม")+'</button>' : ''))+
+          : (Cloud.ready() ? '<button class="btn-line btn-block" id="inviteBtn">'+ICON_USERS+' '+inviteLabel()+'</button>' : ''))+
         '<a class="link-btn center" href="'+splitHref()+'">'+L("แก้ไขรายการ")+'</a>'+
       '</div>'+
     '</div>';

@@ -69,7 +69,7 @@ function refreshView(){
   // v3.2: เพิ่งย้ายบิลส่วนตัวขึ้นกลุ่ม (เปิดหน้าชวนเพื่อนอยู่แล้ว)
   if (ui.shareAfterLoad && ui.ctx && !ui.loading){
     ui.shareAfterLoad = false;
-    if (!ui.groupError) toast(L("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย"),"ok");
+    if (!ui.groupError) toast(hasData() ? L("ย้ายบิลขึ้นกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย") : L("สร้างกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย"),"ok");
   }
 }
 

@@ -525,7 +525,7 @@ function openMeDialog(){
   var box = document.getElementById("meDialog");
   if (!box || !ui.ctx) return;
   box.innerHTML =
-    '<div class="install-head"><div><h2 id="meTitle">'+L("คุณคือใครในโต๊ะนี้?")+'</h2>'+
+    '<div class="install-head"><div><h2 id="meTitle">'+(state.kind === "trip" ? L("คุณคือใครในทริปนี้?") : L("คุณคือใครในโต๊ะนี้?"))+'</h2>'+
       '<p>'+L("เลือกชื่อตัวเอง แล้วยอดที่คุณต้องจ่ายจะแสดงตัวใหญ่ให้เห็นทันที (จำไว้ในเครื่องนี้)")+'</p></div>'+
       '<button class="icon-btn" data-me-close="1" aria-label="'+L("ปิด")+'">'+ICON_X+'</button></div>'+
     '<div class="pick me-pick">'+state.members.map(function(p){
@@ -721,10 +721,15 @@ async function replaceLocalBill(next, step){
 async function startNewBill(kind, demo){
   closeGlobalSheet();
   if (ui.tour) tourEnd(false);         // v4.5: เริ่มบิลจริงระหว่างสอน = จบการสอน (บิลฝึกทิ้งไป)
-  kind = kind === "trip" ? "trip" : "meal";
+  var group = kind === "trip-group";    // v4.8: ทริปแบบกลุ่ม = เริ่มทริปว่างแล้วสร้างกลุ่มทันที
+  kind = (kind === "trip" || group) ? "trip" : "meal";
   try {
     var archived = await replaceLocalBill(emptyBill(kind), "members");
     if (demo) return loadDemo();
+    if (group){
+      if (ui.ctx === null && !ui.loading) inviteFromBill(); else ui.inviteAfterLoad = true;   // ยังโหลดอยู่ → refreshView สร้างต่อ
+      return;
+    }
     toast(archived ? L("เก็บ {name} เข้าประวัติแล้ว เริ่ม{kind}ใหม่", { name:archived.name, kind:ktOf(kind,"name") }) : L("เริ่ม{kind}ใหม่แล้ว", { kind:ktOf(kind,"name") }),"ok");
   } catch(err){
     toast(L("เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ"),"error");
@@ -773,10 +778,17 @@ async function openKindSheet(){
   ui.sheet = "kind";
   renderGlobalSheet('<h2 class="sheet-title" id="kindTitle">'+L("วันนี้หารอะไร")+'</h2>'+
     '<p class="sheet-sub">'+L("เลือกครั้งเดียวตอนเริ่ม")+'</p>'+
-    '<div class="kind-grid">'+card("meal","meal")+card("trip","trip")+'</div>'+
+    '<div class="kind-grid">'+card("meal","meal")+card("trip","trip")+tripGroupCard()+'</div>'+
     '<p class="sheet-note">'+note+'</p>', "kindTitle");
   var first = document.querySelector("[data-new-kind]");
   if (first) first.focus({ preventScroll:true });
+}
+/** v4.8: ทริปแบบกลุ่ม — สร้างกลุ่มก่อน ชวนเพื่อนเข้ามา แล้วทุกคนใส่ค่าใช้จ่ายเองได้ตลอดทริป */
+function tripGroupCard(){
+  if (!Cloud.ready()) return "";
+  return '<button class="kind-card trip trip-group" type="button" data-new-kind="trip-group">'+
+    '<span class="kind-ico" aria-hidden="true">👥</span>'+
+    '<span class="kind-text"><b>'+L("ทริปแบบกลุ่ม")+'</b><span>'+L("สร้างกลุ่มก่อน ส่ง QR ให้เพื่อนเข้ามา ทุกคนใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้ตลอดทริป")+'</span></span></button>';
 }
 function openRenameSheet(){
   if (ui.ctx || ui.loading) return;
@@ -844,6 +856,7 @@ async function inviteFromBill(hostName){
     hostName = ui.myName;
   }
   var btn = document.getElementById("inviteBtn");
+  var label = btn ? btn.innerHTML : "";
   var data = serialize();
   var meId = null;
   if (hostName){
@@ -866,7 +879,7 @@ async function inviteFromBill(hostName){
   } catch(err){
     toast(L("สร้างกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"),"error");
     var again = document.getElementById("inviteBtn");
-    if (again){ again.disabled = false; again.innerHTML = ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม"); }
+    if (again){ again.disabled = false; again.innerHTML = label || ICON_USERS+' '+inviteLabel(); }
   } finally {
     ui.creatingGroup = false;
   }

@@ -542,5 +542,23 @@ EN = {
   "ชื่อของคุณ":"Your name",
   "ไม่ใส่ชื่อฉัน":"Leave me out",
   "{name} เข้ากลุ่มแล้ว":"{name} joined the group",
-  "{name} ยืนยันเมนูแล้ว":"{name} confirmed their dishes"
+  "{name} ยืนยันเมนูแล้ว":"{name} confirmed their dishes",
+  /* v4.8: มื้ออาหารชวนท้ายบิล · ทริปแบบกลุ่ม */
+  "ทริปแบบกลุ่ม":"Group trip",
+  "สร้างกลุ่มแล้ว ส่ง QR หรือลิงก์ให้เพื่อนได้เลย":"Group created. Share the QR or link with your friends",
+  "คุณคือใครในทริปนี้?":"Who are you on this trip?",
+  "สร้างกลุ่มก่อน ส่ง QR ให้เพื่อนเข้ามา ทุกคนใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้ตลอดทริป":"Make the group first, share the QR, and everyone adds what they paid throughout the trip",
+  "สร้างกลุ่มทริป · ชวนเพื่อน":"Create trip group · invite friends",
+  "ชวนเพื่อนตรวจยอด · ยืนยันเมนู":"Invite friends to check · confirm dishes",
+  "ไปใส่ค่าใช้จ่าย":"Add expenses",
+  "ส่งลิงก์นี้ให้เพื่อนในทริป เปิดแล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) ทุกคนใส่ค่าใช้จ่ายที่ตัวเองจ่ายในบิลเดียวกันได้ตลอดทริป":"Send this link to your trip mates. They pick (or add) their name, and everyone adds what they paid to the same bill throughout the trip",
+  "คนในทริป {n} คน":"{n} people on this trip",
+  "มาเข้ากลุ่มทริป \"{name}\" ใน FairDish กัน ✈️":"Join the trip \"{name}\" on FairDish ✈️",
+  "กดลิงก์ เลือกชื่อตัวเอง แล้วใส่ค่าใช้จ่ายที่คุณจ่ายได้เลย ไม่ต้องสมัคร":"Open the link, pick your name, and add what you paid. No sign-up",
+  "สร้างกลุ่มทริป · ชวนเพื่อนมาใส่ค่าใช้จ่ายด้วยกัน":"Create a trip group · everyone adds expenses together",
+  "ชวนเพื่อนเข้ากลุ่มทริป":"Invite friends to the trip",
+  "คนในทริป":"On this trip",
+  "เพื่อนจะเห็นอะไร":"What friends will see",
+  "บิลทริปเดียวกับคุณ":"The same trip bill as you",
+  "เปิดลิงก์แล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) จากนั้นใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้เลย ทุกคนเห็นยอดล่าสุดตรงกัน":"They open the link, pick (or add) their name, then add what they paid. Everyone sees the same latest totals"
 };

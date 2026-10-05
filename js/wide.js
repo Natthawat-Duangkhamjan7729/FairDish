@@ -47,7 +47,8 @@ function sideNavHTML(){
   var paid = openBillPaidText();
   var share = ui.ctx
     ? item("share", shareHref(), ICON_USERS, L("ชวนเพื่อน"))
-    : (Cloud.ready() ? '<button class="sn-item" type="button" data-side-invite="1">'+ICON_USERS+'<span class="sn-text">'+L("ชวนเพื่อน")+'</span></button>' : '');
+    : (Cloud.ready() && ui.ctx === null && state.kind === "trip"   // v4.8: มื้ออาหารชวนเพื่อนท้ายใบสรุปยอด ไม่ใช่ตอนเริ่ม
+      ? '<button class="sn-item" type="button" data-side-invite="1">'+ICON_USERS+'<span class="sn-text">'+L("ชวนเพื่อน")+'</span></button>' : '');
   return '<a class="sn-brand" href="#/"><img src="img/logo.png" alt="" width="36" height="36"><b>FairDish</b></a>'+
     '<button class="sn-new" type="button" data-open-kind="1" aria-haspopup="dialog" aria-label="'+L("เริ่มบิลใหม่")+'">'+ICON_PLUS+'<span class="sn-text">'+L("เริ่มบิลใหม่")+'</span></button>'+
     item("home", "#/", ICON_HOME, L("หน้าหลัก"))+
@@ -138,6 +139,7 @@ function pageHomeWide(){
           '<span class="kind-text"><b>'+L("มื้ออาหาร")+'</b><span>'+L("หารตามเมนูที่กิน มีค่าบริการ/VAT")+'</span></span>'+kbd("M")+'</button>'+
         '<button class="kind-card trip" type="button" data-new-kind="trip"><span class="kind-ico" aria-hidden="true">✈️</span>'+
           '<span class="kind-text"><b>'+L("ทริป")+'</b><span>'+L("ระบุคนจ่ายแต่ละรายการ แล้วสรุปว่าใครโอนให้ใคร")+'</span></span>'+kbd("T")+'</button>'+
+        tripGroupCard()+
       '</section>'+
     '</div>'+
     '<div id="homeRecent"></div>'+
@@ -225,7 +227,8 @@ function pageWorkspace(){
       '<div class="ws-title"><div class="ws-title-row"><h1>'+title+'</h1><span class="ws-badge" id="wsBadge"></span></div>'+
         '<div class="ws-sub" id="wsSub"></div></div>'+
       '<button class="ws-btn" type="button" id="wsUndo" aria-keyshortcuts="Control+Z">'+ICON_UNDO+'<span>'+L("เลิกทำ")+'</span></button>'+
-      (inMeal ? '' : '<button class="ws-btn strong" type="button" data-side-invite="1">'+ICON_USERS+'<span>'+L("ชวนเพื่อน")+'</span></button>')+
+      // v4.8: บิลมื้ออาหารส่วนตัวชวนเพื่อนท้ายใบสรุปยอด — ปุ่มบนพื้นที่ทำงานมีเฉพาะบิลกลุ่มกับทริป
+      (inMeal || (!ui.ctx && state.kind !== "trip") ? '' : '<button class="ws-btn strong" type="button" data-side-invite="1">'+ICON_USERS+'<span>'+L("ชวนเพื่อน")+'</span></button>')+
     '</header>'+
     '<div class="ws-grid'+(inMeal ? ' in-meal' : '')+'" id="wsGrid">'+
       '<section class="ws-col ws-ppl" aria-labelledby="h-ws-ppl">'+
@@ -603,7 +606,7 @@ function pageBillWide(r, s, prog){
           '<button class="btn-main" id="copyBtn">'+ICON_COPY+' '+L("คัดลอกสรุปยอด")+'</button>'+
           '<button class="btn-line" id="shareImgBtn">'+ICON_SHARE+' '+L("แชร์รูปใบเสร็จ")+'</button>'+
           (ui.ctx ? '<a class="btn-line" href="'+shareHref()+'">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม · ยืนยันเมนู")+'</a>'
-            : (Cloud.ready() ? '<button class="btn-line" id="inviteBtn">'+ICON_USERS+' '+L("ชวนเพื่อนเข้ากลุ่ม")+'</button>' : ''))+
+            : (Cloud.ready() ? '<button class="btn-line" id="inviteBtn">'+ICON_USERS+' '+inviteLabel()+'</button>' : ''))+
         '</div>'+
       '</div>'+
     '</div>'+
@@ -614,7 +617,8 @@ function pageBillWide(r, s, prog){
    ชวนเพื่อน (จอใหญ่): QR | สถานะของทุกคน | หน้าที่เพื่อนเห็น
    ========================================================= */
 function pageShareWide(){
-  var link = confirmLink(ui.ctx), q = QR.encode(link);
+  var link = inviteLink(ui.ctx), q = QR.encode(link);
+  var trip = state.kind === "trip";
   var c = confirmSummary();
   var amounts = {};
   if (hasData()) compute().list.forEach(function(p){ amounts[p.id] = p.rounded; });
@@ -623,8 +627,8 @@ function pageShareWide(){
   var pick = ui.sharePick;
   return '<div class="wpage w-share">'+
     '<div class="w-head-block"><p class="eyebrow">'+L("ชวนเพื่อนเข้ากลุ่ม")+' · '+esc(Store.groupName)+'</p>'+
-      '<h1>'+L("ส่งลิงก์ให้เพื่อนกดยืนยันเมนูเอง")+'</h1>'+
-      '<p class="muted">'+L("ส่งลิงก์นี้เข้ากลุ่ม เพื่อนสแกนหรือเปิดลิงก์ได้เลย ไม่ต้องสมัคร แต่ละคนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดในบิลอัปเดตให้ทันที")+'</p></div>'+
+      '<h1>'+(trip ? L("ชวนเพื่อนเข้ากลุ่มทริป") : L("ส่งลิงก์ให้เพื่อนกดยืนยันเมนูเอง"))+'</h1>'+
+      '<p class="muted">'+shareIntro()+'</p></div>'+
     '<div class="w-share-grid">'+
       '<section class="w-card w-qr" aria-label="'+L("QR และลิงก์ของกลุ่ม")+'">'+
         (q ? '<div class="qr-card share-qr"><div class="qr-code">'+QR.svg(link, L("QR code ลิงก์กลุ่ม {name}", { name:esc(Store.groupName) }))+
@@ -636,9 +640,14 @@ function pageShareWide(){
         '<button class="link-btn center" type="button" id="shareNative">'+ICON_SHARE+' '+L("แชร์ทางอื่น")+'</button>'+
       '</section>'+
       '<section class="w-card w-status" aria-labelledby="h-w-status">'+
-        '<div class="w-card-head"><h2 id="h-w-status">'+L("สถานะของทุกคน")+'</h2>'+
-          (c.total ? '<span class="tf-count">'+L("ยืนยันแล้ว {done}/{total}", { done:c.done, total:c.total })+'</span>' : '')+'</div>'+
-        (c.total
+        '<div class="w-card-head"><h2 id="h-w-status">'+(trip ? L("คนในทริป") : L("สถานะของทุกคน"))+'</h2>'+
+          (c.total ? '<span class="tf-count">'+(trip ? L("{n} คน", { n:c.total }) : L("ยืนยันแล้ว {done}/{total}", { done:c.done, total:c.total }))+'</span>' : '')+'</div>'+
+        (c.total && trip
+          ? state.members.map(function(p){
+              return '<div class="status-row w-status-row'+(p.id === me ? ' me' : '')+'">'+avatarHTML(p.name, memberIndex(p.id))+
+                '<b>'+esc(p.name)+(p.id === me ? ' <span class="me-tag">'+L("ฉัน")+'</span>' : '')+'</b><span class="mono">'+baht(amounts[p.id] || 0)+'</span></div>';
+            }).join("")
+          : c.total
           ? '<div class="progress share-progress" role="progressbar" aria-valuemin="0" aria-valuemax="'+c.total+'" aria-valuenow="'+c.done+'"><i style="width:'+Math.round(c.done * 100 / c.total)+'%"></i></div>'+
             c.rows.map(function(x){
               var b = CONFIRM_BADGE[x.status];
@@ -648,9 +657,16 @@ function pageShareWide(){
             }).join("")
           : '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
       '</section>'+
-      '<section class="w-preview" aria-labelledby="h-w-prev">'+sharePreviewHTML(pick)+'</section>'+
+      '<section class="w-preview" aria-labelledby="h-w-prev">'+(trip ? tripSharePreviewHTML() : sharePreviewHTML(pick))+'</section>'+
     '</div>'+
   '</div>';
+}
+/** v4.8: ทริปแบบกลุ่ม — เพื่อนเปิดบิลทริปเดียวกัน ไม่มีหน้าติ๊กเมนู */
+function tripSharePreviewHTML(){
+  return '<p class="w-prev-label" id="h-w-prev">'+L("เพื่อนจะเห็นอะไร")+'</p>'+
+    '<div class="w-card"><h2>'+L("บิลทริปเดียวกับคุณ")+'</h2>'+
+      '<p class="muted">'+L("เปิดลิงก์แล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) จากนั้นใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้เลย ทุกคนเห็นยอดล่าสุดตรงกัน")+'</p></div>'+
+    '<a class="btn-main btn-block" href="'+splitHref()+'">'+L("ไปใส่ค่าใช้จ่าย")+'</a>';
 }
 /** ตัวอย่างหน้าที่เพื่อนคนนี้จะเห็น (ติ๊กตามข้อมูลตอนนี้) */
 function sharePreviewHTML(id){

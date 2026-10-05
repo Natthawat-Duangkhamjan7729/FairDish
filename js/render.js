@@ -240,6 +240,9 @@ function renderMembers(){
 /** ข้อความผิดพลาด + กล่องยืนยันการลบสมาชิก (ใช้ทั้งหน้ามือถือและพื้นที่ทำงานจอใหญ่) */
 function memberExtraHTML(){
   var html = addSelfHTML();   // v4.6
+  // v4.8: ทริปในเครื่อง → สร้างกลุ่มได้ตั้งแต่ตอนใส่คน (ทุกคนใส่ค่าใช้จ่ายเองตลอดทริป)
+  if (state.kind === "trip" && ui.ctx === null && !ui.loading && !ui.tour && !ui.tripStash && Cloud.ready())
+    html += '<button class="add-slot add-self" type="button" id="inviteBtn">'+ICON_USERS+' '+L("สร้างกลุ่มทริป · ชวนเพื่อนมาใส่ค่าใช้จ่ายด้วยกัน")+'</button>';
   if (ui.editError) html += '<div class="notice error"><p>'+esc(ui.editError)+'</p></div>';
   if (ui.save === "error" && ui.saveFailedIn !== "menu") html += saveErrorNotice();
   if (ui.confirmMember){

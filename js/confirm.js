@@ -88,6 +88,10 @@ async function saveConfirm(memberId, selected){
    ลิงก์ที่ส่งให้เพื่อน = หน้ายืนยันเมนู #/g/<id>/me
    ========================================================= */
 function confirmLink(id){ return groupLink(id) + "/me"; }
+/** v4.8: ลิงก์ที่ส่งให้เพื่อน — มื้ออาหาร = หน้ายืนยันเมนู · ทริป = บิลทริปเดียวกัน (ทุกคนใส่ค่าใช้จ่ายเองได้) */
+function inviteLink(id){ return state.kind === "trip" ? groupLink(id) : confirmLink(id); }
+/** v4.8: ปุ่มชวนเพื่อนในบิลส่วนตัว — มื้ออาหารอยู่ท้ายบิล (ชวนมาตรวจยอด) · ทริปสร้างกลุ่มก่อนได้ */
+function inviteLabel(){ return state.kind === "trip" ? L("สร้างกลุ่มทริป · ชวนเพื่อน") : L("ชวนเพื่อนตรวจยอด · ยืนยันเมนู"); }
 function confirmHref(){ return ui.ctx ? "#/g/"+ui.ctx+"/me" : "#/split"; }
 function shareHref(){ return ui.ctx ? "#/g/"+ui.ctx+"/share" : billHref(); }
 
@@ -104,13 +108,14 @@ function pageShare(){
   var bar = appBar({ back:billHref(), title:L("ชวนเพื่อนเข้ากลุ่ม"), sub:ui.loading ? "" : esc(Store.groupName) });
   if (ui.loading) return bar + '<div class="page"><p class="empty">'+L("กำลังโหลดข้อมูลกลุ่ม…")+'</p></div>';
   if (isWide()) return pageShareWide();                 // v4.4: QR | สถานะ | หน้าที่เพื่อนเห็น (wide.js)
-  var link = confirmLink(ui.ctx), q = QR.encode(link);
+  var link = inviteLink(ui.ctx), q = QR.encode(link);
   var c = confirmSummary();
   var amounts = {};
   if (hasData()) compute().list.forEach(function(p){ amounts[p.id] = p.rounded; });
   var me = myMemberId();
+  var trip = state.kind === "trip";
   return bar + '<div class="page">'+
-    '<p class="share-intro">'+L("ส่งลิงก์นี้เข้ากลุ่ม เพื่อนสแกนหรือเปิดลิงก์ได้เลย ไม่ต้องสมัคร แต่ละคนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดในบิลอัปเดตให้ทันที")+'</p>'+
+    '<p class="share-intro">'+shareIntro()+'</p>'+
     '<section class="share-card" aria-label="'+L("QR และลิงก์ของกลุ่ม")+'">'+
       (q ? '<div class="qr-card share-qr"><div class="qr-code">'+QR.svg(link, L("QR code ลิงก์กลุ่ม {name}", { name:esc(Store.groupName) }))+
         (q.version >= 4 ? '<span class="qr-logo"><img src="img/icon-192.png" alt=""></span>' : '')+'</div></div>' : '')+
@@ -122,7 +127,7 @@ function pageShare(){
       '<button class="btn-line" type="button" id="shareNative">'+ICON_SHARE+' '+L("แชร์ทางอื่น")+'</button>'+
       '<button class="btn-line" type="button" id="shareSaveQr">'+ICON_SAVE_IMG+' '+L("บันทึกรูป QR")+'</button>'+
     '</div>'+
-    (c.total
+    (c.total && trip ? tripPeopleHTML(amounts, me) : c.total
       ? '<div class="list-title"><h2>'+L("ยืนยันแล้ว {done} จาก {total} คน", { done:c.done, total:c.total })+'</h2></div>'+
         '<div class="progress share-progress" role="progressbar" aria-valuemin="0" aria-valuemax="'+c.total+'" aria-valuenow="'+c.done+'"><i style="width:'+Math.round(c.done * 100 / c.total)+'%"></i></div>'+
         c.rows.map(function(x){
@@ -131,12 +136,30 @@ function pageShare(){
             '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+L(b[1])+'</span></div>';
         }).join("")
       : '<p class="empty" style="margin-top:var(--s5)">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
-    '<div class="btn-stack"><a class="btn-line btn-block" href="'+confirmHref()+'">'+L("ยืนยันเมนูของฉัน · ดูหน้าที่เพื่อนเห็น")+'</a></div>'+
+    '<div class="btn-stack">'+(trip
+      ? '<a class="btn-main btn-block" href="'+splitHref()+'">'+L("ไปใส่ค่าใช้จ่าย")+'</a>'
+      : '<a class="btn-line btn-block" href="'+confirmHref()+'">'+L("ยืนยันเมนูของฉัน · ดูหน้าที่เพื่อนเห็น")+'</a>')+'</div>'+
   '</div>';
 }
+function shareIntro(){
+  return state.kind === "trip"
+    ? L("ส่งลิงก์นี้ให้เพื่อนในทริป เปิดแล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) ทุกคนใส่ค่าใช้จ่ายที่ตัวเองจ่ายในบิลเดียวกันได้ตลอดทริป")
+    : L("ส่งลิงก์นี้เข้ากลุ่ม เพื่อนสแกนหรือเปิดลิงก์ได้เลย ไม่ต้องสมัคร แต่ละคนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดในบิลอัปเดตให้ทันที");
+}
+/** v4.8: ทริปไม่มีการยืนยันเมนู — แสดงคนในทริปกับยอดของแต่ละคนแทน */
+function tripPeopleHTML(amounts, me){
+  return '<div class="list-title"><h2>'+L("คนในทริป {n} คน", { n:state.members.length })+'</h2></div>'+
+    state.members.map(function(p){
+      return '<div class="status-row'+(p.id === me ? ' me' : '')+'"><b>'+esc(p.name)+(p.id === me ? ' <span class="me-tag">'+L("ฉัน")+'</span>' : '')+'</b>'+
+        '<span class="mono">'+baht(amounts[p.id] || 0)+'</span></div>';
+    }).join("");
+}
 function inviteText(){
+  if (state.kind === "trip")
+    return L("มาเข้ากลุ่มทริป \"{name}\" ใน FairDish กัน ✈️", { name:Store.groupName })+"\n"+
+      L("กดลิงก์ เลือกชื่อตัวเอง แล้วใส่ค่าใช้จ่ายที่คุณจ่ายได้เลย ไม่ต้องสมัคร")+"\n"+inviteLink(ui.ctx);
   return L("มาช่วยกันหารบิล \"{name}\" ใน FairDish กัน 🍲", { name:Store.groupName })+"\n"+
-    L("กดลิงก์ เลือกชื่อตัวเอง แล้วติ๊กเมนูที่กิน ไม่ต้องสมัคร")+"\n"+confirmLink(ui.ctx);
+    L("กดลิงก์ เลือกชื่อตัวเอง แล้วติ๊กเมนูที่กิน ไม่ต้องสมัคร")+"\n"+inviteLink(ui.ctx);
 }
 function shareGroupLink(){
   if (!ui.ctx) return;
@@ -145,7 +168,7 @@ function shareGroupLink(){
 }
 function fitShareQr(){
   var card = document.querySelector(".share-qr");
-  if (card) fitQr(card.parentNode, QR.encode(confirmLink(ui.ctx)));
+  if (card) fitQr(card.parentNode, QR.encode(inviteLink(ui.ctx)));
 }
 
 /* =========================================================

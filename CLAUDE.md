@@ -84,6 +84,8 @@
 - เลื่อนจอจากโค้ดใช้ `jumpTo(y)` (utils.js) ไม่ใช้ `window.scrollTo(0,y)` — html มี scroll-behavior:smooth ทำให้กลายเป็นแอนิเมชันที่แย่งกับการเลื่อนครั้งถัดไป
 - v4.7: บิลกลุ่มอัปเดตสดด้วยการดึง `get_group` ทุก `LIVE_MS` (main.js) ตอนแท็บอยู่หน้าจอ — `refreshGroup(false, true)` ข้ามเมื่อกำลังกรอก/พิมพ์ (`typingInView()`, `ui.sheet`)
   แจ้งเฉพาะข่าวที่บอกได้ (`groupNews()`: ใครเข้ากลุ่ม/ยืนยันเมนู) · สร้างกลุ่มด้วย `inviteFromBill(hostName)` ใส่ชื่อคนสร้างเป็นสมาชิกแรก + ตั้ง `me`
+- v4.8: ชวนเพื่อนต่างกันตามประเภท — มื้ออาหารชวนท้ายบิล (ลิงก์ `/me` ยืนยันเมนู) · ทริปสร้างกลุ่มก่อนได้ (`data-new-kind="trip-group"`,
+  ปุ่ม `#inviteBtn` ในขั้นใส่คน) ลิงก์ = บิลกลุ่ม `#/g/<id>` ใช้ `inviteLink()` / `inviteLabel()` ใน confirm.js อย่าเรียก `confirmLink()` ตรง ๆ ในหน้าชวน
 - v4.2: **ห้ามเก็บเบอร์โทร เลขบัตรประชาชน หรือข้อมูลระบุตัวตนอื่นในข้อมูลบิล** (บิลกลุ่มอยู่บน Supabase และใครมีลิงก์ก็อ่านได้ — PDPA)
   `normalizeBill()` เก็บ members แค่ `{ id, name }`
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย
