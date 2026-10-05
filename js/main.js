@@ -73,12 +73,29 @@ function refreshView(){
   }
 }
 
-/** ดึงบิลกลุ่มล่าสุด — manual = ผู้ใช้กดปุ่มเอง (ไม่ใช่ตอนกลับมาที่แท็บ) */
-async function refreshGroup(manual){
+/** v4.7: กำลังพิมพ์อะไรค้างอยู่ — อัปเดตอัตโนมัติต้องไม่วาดทับ */
+function typingInView(){
+  var a = document.activeElement;
+  if (a && (a.tagName === "TEXTAREA" || (a.tagName === "INPUT" && /^(text|number|search)$/.test(a.type)))) return true;
+  return Array.prototype.some.call(document.querySelectorAll("#view input[type=text], #view input[type=number], #view textarea"), function(el){ return !!el.value; });
+}
+/** v4.7: ใครเพิ่งเข้ากลุ่ม / ยืนยันเมนู — เทียบก่อนกับหลังอัปเดต */
+function groupSnapshot(){
+  return { ids:state.members.map(function(p){ return p.id; }), confirmed:Object.keys(state.confirms || {}) };
+}
+function groupNews(before){
+  var joined = state.members.filter(function(p){ return before.ids.indexOf(p.id) < 0; }).map(function(p){ return p.name; });
+  if (joined.length) return L("{name} เข้ากลุ่มแล้ว", { name:joined.join(", ") });
+  var done = Object.keys(state.confirms || {}).filter(function(id){ return before.confirmed.indexOf(id) < 0 && nameOf(id); }).map(nameOf);
+  if (done.length) return L("{name} ยืนยันเมนูแล้ว", { name:done.join(", ") });
+  return "";
+}
+/** ดึงบิลกลุ่มล่าสุด — manual = ผู้ใช้กดปุ่มเอง · live = ดึงอัตโนมัติทุก LIVE_MS (ไม่มีอะไรใหม่ที่บอกได้ = เงียบ) */
+async function refreshGroup(manual, live){
   var id = ui.ctx;
   if (!id || ui.loading || ui.groupError || ui.syncing || ui.save==="saving") return;
   var busy = ui.tripStash || state.menuForm || state.sharedForm || state.chargeForm || ui.editingMember ||
-             ui.savingMember || ui.savingMenu || ui.confirmMember || ui.confirmReset;
+             ui.savingMember || ui.savingMenu || ui.confirmMember || ui.confirmReset || ui.sheet || typingInView();
   if (currentPath() === "/me" && ui.guestFor && !ui.guestDone) busy = true;   // กำลังติ๊กเมนูอยู่ อย่าล้างที่ติ๊กไว้
   if (!manual && busy) return;   // กำลังกรอกอะไรอยู่ อย่าวาดทับ
   ui.syncing = true;
@@ -87,11 +104,16 @@ async function refreshGroup(manual){
     if (ui.ctx !== id) return;
     if (!g){ ui.groupError = "notfound"; return refreshView(); }
     if (g.version !== Store.version){
+      var before = groupSnapshot();
       applyBill(g.data);
       Store.version = g.version;
       Store.groupName = g.name;
+      ui.noReveal = !manual;            // อัปเดตอัตโนมัติไม่เล่นแอนิเมชันใบเสร็จซ้ำ
       refreshView();
-      toast(L("อัปเดตบิลล่าสุดจากกลุ่มแล้ว"),"ok");
+      ui.noReveal = false;
+      var news = groupNews(before);
+      if (news) toast(news,"ok");
+      else if (!live) toast(L("อัปเดตบิลล่าสุดจากกลุ่มแล้ว"),"ok");
     } else if (manual) toast(L("บิลนี้เป็นข้อมูลล่าสุดแล้ว"),"ok");
   } catch(err){
     if (manual) toast(L("โหลดข้อมูลล่าสุดไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"),"error");
@@ -99,6 +121,13 @@ async function refreshGroup(manual){
     ui.syncing = false;
   }
 }
+
+/* v4.7: เปิดบิลกลุ่มอยู่และแท็บอยู่หน้าจอ → ดึงข้อมูลล่าสุดทุก 3 วิ เพื่อนเข้ากลุ่ม/ยืนยันเมนูแล้วขึ้นเกือบทันที
+   (ใช้ RPC get_group เดิมผ่าน fetch — ไม่ต้องเปิด Realtime ใน Supabase หรือเพิ่มไลบรารี) */
+var LIVE_MS = 3000;
+setInterval(function(){
+  if (ui.ctx && document.visibilityState === "visible" && !ui.tour) refreshGroup(false, true);
+}, LIVE_MS);
 
 async function boot(){
   MENU_LIBRARY = buildMenuLibrary();

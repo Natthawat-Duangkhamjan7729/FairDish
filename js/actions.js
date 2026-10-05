@@ -834,17 +834,31 @@ async function togglePaid(key){
 }
 
 /* ---- v3.2: ชวนเพื่อนเข้ากลุ่มจากบิลส่วนตัว = ย้ายบิลนี้ขึ้นกลุ่ม ---- */
-async function inviteFromBill(){
+/** hostName: ชื่อคนสร้างกลุ่ม ("" = ไม่ใส่) · ไม่ส่งมา = ใช้ชื่อที่ให้เราเรียก ยังไม่มีชื่อ = ถามก่อนสร้าง */
+async function inviteFromBill(hostName){
   if (ui.tour) return toast(L("ตอนฝึกยังชวนเพื่อนไม่ได้ — จบการสอนแล้วลองกับบิลจริงได้เลย"),"error");
   if (ui.ctx || !Cloud.ready() || ui.creatingGroup) return;
+  // v4.7: คนสร้างกลุ่ม = คนเปิด QR ให้เพื่อนสแกน → ใส่ชื่อตัวเองในบิลกลุ่มให้เลย และจำว่า "ฉันคือคนนี้"
+  if (typeof hostName !== "string"){
+    if (!ui.myName) return openHostSheet();
+    hostName = ui.myName;
+  }
   var btn = document.getElementById("inviteBtn");
   var data = serialize();
+  var meId = null;
+  if (hostName){
+    var mine = data.members.filter(function(p){ return normText(p.name) === normText(hostName); })[0];
+    if (mine) meId = mine.id;
+    else { meId = nid(); data.members = [{ id:meId, name:hostName }].concat(data.members); }   // ไม่แตะ state จนกว่าจะสร้างกลุ่มสำเร็จ
+  }
   var name = billName().slice(0, MAX_GROUP_NAME);
   ui.creatingGroup = true;
   if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>'+L("กำลังสร้างกลุ่ม"); }
   try {
     var g = await Cloud.create(name, data);
     await rememberGroup(g.id, g.name, data.kind);
+    var mg = meId && myGroup(g.id);
+    if (mg){ mg.me = meId; mg.asked = true; await saveMyGroups(); }
     // บิลอยู่บนกลุ่มแล้ว บิลส่วนตัวในเครื่องเริ่มใหม่ว่าง ๆ (ไม่ให้มีสองที่ที่ต้องแก้)
     try { await Store.saveLocalBill(emptyBill(data.kind)); } catch(e){}
     ui.shareAfterLoad = true;
@@ -856,6 +870,40 @@ async function inviteFromBill(){
   } finally {
     ui.creatingGroup = false;
   }
+}
+
+/** v4.7: ยังไม่มีชื่อที่ให้เราเรียก → ถามชื่อคนสร้างกลุ่มก่อน (ปุ่ม "สร้างกลุ่ม" อยู่ในแผ่นนี้) */
+function openHostSheet(){
+  ui.sheet = "host";
+  renderGlobalSheet('<h2 class="sheet-title" id="hostTitle">'+L("คุณชื่ออะไรในกลุ่มนี้?")+'</h2>'+
+    '<p class="hint">'+L("คนสร้างกลุ่มคือคนเปิด QR ให้เพื่อนสแกน เราจะใส่ชื่อคุณในบิลให้เลย และจำชื่อนี้ไว้ใช้ครั้งต่อไป")+'</p>'+
+    '<div class="form-box">'+
+      '<label class="sr-only" for="hostNameInput">'+L("ชื่อของคุณ")+'</label>'+
+      '<input type="text" id="hostNameInput" maxlength="'+MAX_NAME+'" autocomplete="nickname" placeholder="'+L("เช่น มาร์ค")+'" aria-describedby="hostNameMsg">'+
+      '<p class="field-msg muted" id="hostNameMsg" aria-live="polite"></p>'+
+      '<div class="form-actions"><button class="btn-quiet" type="button" data-host-skip="1">'+L("ไม่ใส่ชื่อฉัน")+'</button>'+
+      '<button class="btn-sm" type="button" data-host-save="1">'+L("สร้างกลุ่ม")+'</button></div>'+
+    '</div>', "hostTitle");
+  var input = document.getElementById("hostNameInput");
+  if (input) input.focus();
+}
+async function saveHostSheet(){
+  var input = document.getElementById("hostNameInput");
+  if (!input) return;
+  var name = cleanMyName(input.value), problem = myNameProblem(name);
+  if (problem){
+    var msg = document.getElementById("hostNameMsg");
+    msg.className = "field-msg error"; msg.textContent = problem;
+    input.setAttribute("aria-invalid","true"); input.focus();
+    return;
+  }
+  closeGlobalSheet();
+  await storeMyName(name);
+  inviteFromBill(name);
+}
+function skipHostSheet(){
+  closeGlobalSheet();
+  inviteFromBill("");
 }
 
 /* ---- v3.1: มื้ออาหารข้างในทริป ----

@@ -535,5 +535,12 @@ EN = {
   "ลบชื่อ":"Remove name",
   "ต่อไปเราจะเรียกคุณว่า {name}":"From now on we'll call you {name}",
   "ลบชื่อแล้ว":"Name removed",
-  "+ เพิ่มตัวเอง ({name})":"+ Add myself ({name})"
+  "+ เพิ่มตัวเอง ({name})":"+ Add myself ({name})",
+  /* v4.7: กลุ่มอัปเดตสด + ชื่อคนสร้างกลุ่ม */
+  "คุณชื่ออะไรในกลุ่มนี้?":"What's your name in this group?",
+  "คนสร้างกลุ่มคือคนเปิด QR ให้เพื่อนสแกน เราจะใส่ชื่อคุณในบิลให้เลย และจำชื่อนี้ไว้ใช้ครั้งต่อไป":"You're the one showing the QR code, so we'll add your name to the bill and remember it for next time",
+  "ชื่อของคุณ":"Your name",
+  "ไม่ใส่ชื่อฉัน":"Leave me out",
+  "{name} เข้ากลุ่มแล้ว":"{name} joined the group",
+  "{name} ยืนยันเมนูแล้ว":"{name} confirmed their dishes"
 };

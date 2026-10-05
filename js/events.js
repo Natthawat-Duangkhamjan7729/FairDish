@@ -42,6 +42,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "mName" || e.target.id === "mPrice"){ e.preventDefault(); saveMenuForm(); }
   if (e.target.id === "guestName"){ e.preventDefault(); addGuest(); }
   if (e.target.id === "billNameInput"){ e.preventDefault(); saveBillName(); }
+  if (e.target.id === "hostNameInput"){ e.preventDefault(); saveHostSheet(); }   // v4.7
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "mealName"){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
@@ -126,7 +127,7 @@ document.addEventListener("click", async function(e){
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
             "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
-            "[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
+            "[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
             "[data-onb-start],[data-tour-start],[data-tour-next],[data-tour-skip],[data-tour-done],[data-tour-back],[data-tour-install]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -203,6 +204,8 @@ document.addEventListener("click", async function(e){
   if (t.id==="nudgeClose") return dismissInstallNudge();
 
   /* v2.4: ถามคุณคือใคร */
+  if (t.getAttribute("data-host-save")) return saveHostSheet();         // v4.7: ชื่อคนสร้างกลุ่ม
+  if (t.getAttribute("data-host-skip")) return skipHostSheet();
   if (t.getAttribute("data-name-save")) return saveNameFromPage();     // v4.6: ชื่อที่ให้เราเรียก
   if (t.getAttribute("data-name-skip")) return skipNameFromPage();
   if (t.getAttribute("data-myname-save")) return saveMyNameFromSettings();
