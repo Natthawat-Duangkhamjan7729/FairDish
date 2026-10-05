@@ -254,7 +254,7 @@ function rerenderGuest(keepScroll){
   if (currentPath() !== "/me") return;
   var y = window.scrollY;
   document.getElementById("view").innerHTML = pageGuest();
-  window.scrollTo(0, keepScroll ? y : 0);
+  jumpTo(keepScroll ? y : 0);
   document.body.classList.toggle("has-total", !!document.querySelector(".guest-bar"));
 }
 function pickGuest(id){

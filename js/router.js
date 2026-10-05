@@ -68,7 +68,7 @@ function route(){
   closeGlobalSheet();
   if (path !== "/bill") ui.showDone = false;
   // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน
-  document.body.classList.toggle("no-tabbar", needsBill(path) || (path==="/" && ui.showOnb));
+  document.body.classList.toggle("no-tabbar", needsBill(path) || (path==="/" && (ui.showOnb || needName())));
   document.body.classList.toggle("show-foot", path==="/more" || path==="/about");
   document.getElementById("view").innerHTML = r.view();
   var tab = tabOf(path);
@@ -80,12 +80,13 @@ function route(){
   document.body.classList.remove("has-total");
   updateChrome();
   if (path==="/split"){ render(); maybeAskWhoAmI(); }   // เข้ากลุ่มทางหน้าใบสรุปก่อน ก็ยังถาม "คุณคือใคร" ตอนมาหน้าหารบิล
-  if (path==="/"){ fillHome(); maybeAskName(); }   // v4.6: ถามชื่อครั้งแรก (หลังหน้าแนะนำ)
+  if (path==="/") fillHome();
+  if (path==="/" && needName()){ var ni = document.getElementById("nameInput"); if (ni) ni.focus(); }   // v4.6
   if (path==="/me") document.body.classList.toggle("has-total", !!document.querySelector(".guest-bar"));
   if (path==="/share") fitShareQr();
   if ((path==="/history" || path==="/groups" || path==="/h") && isWide()) renderHistoryWide();
   renderSideNav();
   syncSheetLock();
-  window.scrollTo(0,0);
+  jumpTo(0);
 }
 window.addEventListener("hashchange", route);

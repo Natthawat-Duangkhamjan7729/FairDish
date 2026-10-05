@@ -2,7 +2,7 @@
    เก็บในเครื่องเท่านั้น (Store.profileKey) ไม่ไปกับข้อมูลบิล/กลุ่ม */
 "use strict";
 
-var nameThen = null;   // ทำต่อหลังปิดหน้าต่างถามชื่อ (เช่น ไปการสอนต่อจากหน้าแนะนำ)
+var nameThen = null;   // ทำต่อหลังตอบหน้าถามชื่อ (เช่น ไปการสอนต่อจากหน้าแนะนำ)
 
 function cleanMyName(raw){ return String(raw || "").trim().replace(/\s+/g, " "); }
 function myNameProblem(name){
@@ -17,45 +17,37 @@ async function storeMyName(name){
   catch(e){ toast(L("บันทึกชื่อลงเครื่องไม่สำเร็จ ใช้ได้เฉพาะรอบนี้"),"error"); return false; }
 }
 
-/* ---- หน้าต่างถามชื่อ ---- */
-/** เปิดหน้าหลักครั้งแรกหลังผ่านหน้าแนะนำ (คนที่เคยใช้ก่อน v4.6 ก็ถามหนึ่งครั้ง) */
-function maybeAskName(){
-  if (ui.nameAsked || ui.showOnb || ui.tour) return;
-  openNameDialog(null);
-}
-function openNameDialog(then){
-  var box = document.getElementById("nameDialog");
-  if (!box || box.open){ if (then) then(); return; }
-  nameThen = then || null;
-  box.innerHTML =
-    '<div class="install-head"><img src="img/logo.png" alt="" width="48" height="48"><div>'+
-      '<h2 id="nameTitle">'+L("อยากให้เราเรียกคุณว่าอะไรดี?")+'</h2>'+
-      '<p>'+L("ชื่อเล่นสั้น ๆ ก็ได้ เราจะใช้ทักทาย และช่วยใส่ชื่อคุณเข้าโต๊ะได้ในแตะเดียว เปลี่ยนได้ทุกเมื่อในหน้าตั้งค่า")+'</p></div></div>'+
+/* ---- หน้าถามชื่อ (หน้าเต็ม ต่อจากหน้าแนะนำ — ไม่เด้งทับหน้าอื่น) ---- */
+/** หน้าหลักแสดงหน้าถามชื่อแทน: ผ่านหน้าแนะนำแล้ว ยังไม่เคยถาม และไม่ได้อยู่ในการสอน (คนที่เคยใช้ก่อน v4.6 ก็ถามหนึ่งครั้ง) */
+function needName(){ return !ui.showOnb && !ui.nameAsked && !ui.tour; }
+function pageAskName(){
+  return '<div class="'+(isWide() ? 'w-name ' : '')+'page page-onb page-name">'+
+    '<div class="onb-top"><span class="onb-brand"><img class="logo-mark" src="img/logo.png" alt="" width="32" height="32"><b>FairDish</b></span>'+
+      '<button class="link-btn" type="button" data-name-skip="1">'+L("ไว้ทีหลัง")+'</button></div>'+
+    '<div class="onb-art"><span class="onb-circle sun" aria-hidden="true"></span>'+
+      '<img class="name-mascot" src="img/mascot.png" alt="" width="220" height="220"></div>'+
+    '<p class="eyebrow">'+L("ยินดีต้อนรับสู่ FairDish")+'</p>'+
+    '<h1 class="onb-title" id="nameTitle">'+L("อยากให้เราเรียกคุณว่าอะไรดี?")+'</h1>'+
+    '<p class="onb-body">'+L("ชื่อเล่นสั้น ๆ ก็ได้ เราจะใช้ทักทาย และช่วยใส่ชื่อคุณเข้าโต๊ะได้ในแตะเดียว เปลี่ยนได้ทุกเมื่อในหน้าตั้งค่า")+'</p>'+
     '<label class="sr-only" for="nameInput">'+L("ชื่อที่ให้เราเรียก")+'</label>'+
     '<input type="text" id="nameInput" placeholder="'+L("เช่น มาร์ค")+'" autocomplete="nickname" maxlength="'+MAX_NAME+'" aria-describedby="nameMsg">'+
     '<p class="field-msg muted" id="nameMsg" aria-live="polite"></p>'+
     '<button class="btn-main btn-block" type="button" data-name-save="1">'+L("ตกลง")+'</button>'+
-    '<div class="me-other name-skip"><button class="me-skip" type="button" data-name-skip="1">'+L("ไว้ทีหลัง")+'</button></div>';
-  if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
-  var input = document.getElementById("nameInput");
-  if (input) input.focus();
+    '<p class="intro-note">'+L("ชื่อนี้เก็บไว้ในเครื่องนี้เท่านั้น")+'</p>'+
+  '</div>';
 }
-function closeNameDialog(){
-  var box = document.getElementById("nameDialog");
-  if (!box) return;
-  if (typeof box.close === "function") box.close();
-  else { box.removeAttribute("open"); onNameDialogClosed(); }
+/** ต่อจากหน้าแนะนำ: แสดงหน้าถามชื่อ แล้วค่อยทำ then (ไปการสอน / บิลตัวอย่าง / หน้าที่ตั้งใจเปิด) */
+function askNameThen(then){
+  nameThen = then || null;
+  if (location.hash !== "#/" && location.hash !== "") location.hash = "#/"; else route();
 }
-/** ปิดด้วยวิธีไหนก็ตาม (ไว้ทีหลัง / Esc / แตะพื้นหลัง) = ถามแล้ว ไม่ถามซ้ำ แล้วทำสิ่งที่ค้างไว้ต่อ */
-function onNameDialogClosed(){
-  if (!ui.nameAsked){
-    storeMyName("");
-    toast(L("ตั้งชื่อได้ทุกเมื่อในหน้าตั้งค่า"),"ok");
-  }
+/** ตอบแล้ว (ใส่ชื่อหรือไว้ทีหลัง) → ทำสิ่งที่ค้างไว้ต่อ ไม่มี = วาดหน้าหลักจริง */
+function nameDone(){
   var then = nameThen; nameThen = null;
+  route();                 // หน้าหลักจริงแทนหน้าถามชื่อก่อน แล้วค่อยไปต่อ (การสอนเปลี่ยนหน้าเอง)
   if (then) then();
 }
-async function saveNameFromDialog(){
+async function saveNameFromPage(){
   var input = document.getElementById("nameInput");
   if (!input) return;
   var name = cleanMyName(input.value), problem = myNameProblem(name);
@@ -68,9 +60,12 @@ async function saveNameFromDialog(){
     return;
   }
   await storeMyName(name);
-  toast(L("ยินดีที่ได้รู้จัก {name} 👋", { name:name }),"ok");
-  closeNameDialog();
-  if (!nameThen && currentPath() === "/") route();   // ทักทายในหน้าหลักทันที
+  // ไปการสอน/บิลตัวอย่างต่อ = ไม่ขึ้น toast ทับ (หน้าหลักทักทายด้วยชื่ออยู่แล้ว)
+  nameDone();
+}
+async function skipNameFromPage(){
+  await storeMyName("");
+  nameDone();
 }
 
 /* ---- หน้าตั้งค่า ---- */

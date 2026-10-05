@@ -435,7 +435,7 @@ function rerenderBill(){
   document.getElementById("view").innerHTML = pageBill();
   ui.noReveal = false;
   renderSideNav();                    // v4.4: ป้ายโอนแล้ว x/y ในแถบซ้าย
-  window.scrollTo(0, y);
+  jumpTo(y);
 }
 async function togglePayer(id){
   if (!nameOf(id)) return;
@@ -657,7 +657,7 @@ async function setLang(lang){
   applyStaticText();
   var y = window.scrollY;
   route();
-  window.scrollTo(0, y);
+  jumpTo(y);
 }
 
 /* ---- v4.1: หน้าแนะนำ ---- */
@@ -666,7 +666,7 @@ async function finishOnboard(tour){
   ui.showOnb = false; ui.onbStep = 0;
   try { await Store.writeRaw(ONBOARD_KEY, "done"); } catch(e){}
   // v4.6: ถามชื่อก่อน แล้วค่อยไปการสอน/หน้าที่ตั้งใจเปิด
-  if (!ui.nameAsked) return openNameDialog(function(){ afterOnboard(tour); });
+  if (!ui.nameAsked) return askNameThen(function(){ afterOnboard(tour); });
   afterOnboard(tour);
 }
 /** tour: true = ไปการสอน, "demo" = เปิดบิลตัวอย่าง, อื่น ๆ = กลับหน้าที่ตั้งใจเปิด */
@@ -828,7 +828,7 @@ async function togglePaid(key){
   if (prog.all && next[key]){
     ui.showDone = true;
     if (currentPath() !== "/bill") location.hash = billHref();
-    else { document.getElementById("view").innerHTML = pageBill(); window.scrollTo(0,0); }
+    else { document.getElementById("view").innerHTML = pageBill(); jumpTo(0); }
   } else rerenderBill();
   await commit();
 }
@@ -884,7 +884,7 @@ function enterMeal(id){
   ui.step = "menus";
   document.getElementById("view").innerHTML = pageSplit();
   render();
-  window.scrollTo(0, 0);
+  jumpTo(0);
 }
 /** เก็บมื้อที่แก้อยู่กลับเข้าทริป (ไม่บันทึกเอง — ทุกการแก้ในมื้อ commit ไปแล้ว) */
 function exitMeal(){
@@ -902,7 +902,7 @@ function backToTrip(){
   exitMeal();
   document.getElementById("view").innerHTML = pageSplit();
   render();
-  window.scrollTo(0, 0);
+  jumpTo(0);
 }
 async function addMeal(){
   var n = state.menus.filter(function(m){ return m.type === "meal"; }).length + 1;

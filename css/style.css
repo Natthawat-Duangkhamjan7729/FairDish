@@ -484,8 +484,11 @@ body.show-foot .foot{display:block}
 .me-other .btn-quiet{font-size:var(--fs-small);padding:var(--s2) var(--s4)}
 .me-skip{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);min-height:var(--tap);padding:0 var(--s2)}
 /* v4.6: ชื่อที่ให้เราเรียก */
-#nameDialog .btn-main{margin-top:var(--s2)}
-.name-skip{justify-content:center;margin-top:var(--s2)}
+.page-name .onb-art{min-height:240px}
+.name-mascot{position:relative;z-index:1;width:200px;height:200px;object-fit:cover;border-radius:50%;box-shadow:var(--shadow)}
+.page-name #nameInput{margin-top:var(--s4)}
+.page-name .btn-main{margin-top:var(--s2)}
+.w-name{max-width:480px;margin:0 auto}
 .home-hello{margin:var(--s4) 0 0}
 .home-hello+.home-title{margin-top:0}
 .add-self{margin-top:var(--s3)}

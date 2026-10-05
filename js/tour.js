@@ -110,6 +110,7 @@ var TOUR_STEPS = [
 var TOUR_ROUTES = ["/split", "/bill"];
 function tourStart(){
   closeGlobalSheet();
+  hideToast();                            // ข้อความที่ค้างจากหน้าก่อนอย่าทับกล่องสอน
   ui.tour = { i:-1, t:{} };
   ui.tourNext = ui.onbNext || null;      // เปิดครั้งแรกจากลิงก์หน้าอื่น → จบแล้วไปหน้านั้น
   ui.onbNext = null;
@@ -147,17 +148,20 @@ function tourGo(i){
   if (st && st.enter) st.enter(t.t);
   renderTour();
 }
+function tourStepForScreen(st){
+  return !!st && !(st.mode === "mobile" && isWide()) && !(st.mode === "wide" && !isWide());
+}
 function tourStepOk(st){
-  if (!st) return false;
-  if (st.mode === "mobile" && isWide()) return false;
-  if (st.mode === "wide" && !isWide()) return false;
-  return !(st.skip && st.skip());
+  return tourStepForScreen(st) && !(st.skip && st.skip());
 }
 function tourPath(st){ return typeof st.path === "function" ? st.path() : st.path; }
 /** ไปขั้นถัดไปที่ใช้กับจอนี้ได้ (ขั้นที่ทำสำเร็จไปแล้วจะถูกข้ามเองตอน tourTick) — เลยขั้นสุดท้าย = หน้าจบ */
 function tourAdvance(){
   var t = ui.tour, i = t.i + 1;
-  while (i < TOUR_STEPS.length && !tourStepOk(TOUR_STEPS[i])) i++;
+  while (i < TOUR_STEPS.length && !tourStepOk(TOUR_STEPS[i])){
+    if (tourStepForScreen(TOUR_STEPS[i])) t.skipped = (t.skipped || 0) + 1;   // ข้ามจริงเพราะ skip() — หักออกจากตัวนับ
+    i++;
+  }
   tourGo(Math.min(i, TOUR_STEPS.length));
 }
 
@@ -198,8 +202,10 @@ function renderTour(){
   document.body.classList.toggle("touring", !!ui.tour);
   if (!ui.tour){ box.hidden = true; box.innerHTML = ""; return; }
   var t = ui.tour, st = TOUR_STEPS[t.i];
-  var total = TOUR_STEPS.filter(tourStepOk).length || TOUR_STEPS.length;
-  var n = TOUR_STEPS.slice(0, t.i + 1).filter(tourStepOk).length;
+  // นับขั้นตามจอ ไม่ใช่ตาม skip() ตอนนี้ — เดิมขั้น "ติ๊กโอนแล้ว" ถูกข้ามตอนยังไม่มียอดโอน ตัวนับจึงขึ้น "1 จาก 9" แล้วกลายเป็น "10 จาก 10"
+  var skipped = t.skipped || 0;
+  var total = (TOUR_STEPS.filter(tourStepForScreen).length - skipped) || TOUR_STEPS.length;
+  var n = TOUR_STEPS.slice(0, t.i + 1).filter(tourStepForScreen).length - skipped;
   box.hidden = false;
   var tip;
   if (!st){
@@ -297,6 +303,11 @@ function tourClick(t){
   if (t.getAttribute("data-tour-skip")){ tourEnd(); return true; }
   if (t.getAttribute("data-tour-done")){ tourEnd(); return true; }
   if (t.getAttribute("data-tour-back")){ var st = TOUR_STEPS[ui.tour.i]; if (st) location.hash = tourPath(st) === "/bill" ? billHref() : splitHref(); return true; }
-  if (t.getAttribute("data-tour-install")){ tourEnd(); setTimeout(openInstall, 60); return true; }
+  if (t.getAttribute("data-tour-install")){
+    tourEnd();
+    // v4.6: ยังไม่ได้ตอบชื่อ = หน้าหลักเป็นหน้าถามชื่อ → เปิดหน้าต่างติดตั้งหลังตอบ ไม่เด้งทับกัน
+    setTimeout(function(){ if (needName()) nameThen = openInstall; else openInstall(); }, 60);
+    return true;
+  }
   return false;
 }

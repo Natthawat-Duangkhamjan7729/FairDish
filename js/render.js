@@ -108,7 +108,7 @@ function setStep(step, focusTab){
   renderStepTabs();
   var tab = document.getElementById("tab-"+step);
   if (focusTab && tab) tab.focus();
-  window.scrollTo(0, 0);
+  jumpTo(0);
 }
 function renderTotalBar(){
   var bar = document.getElementById("totalBar");

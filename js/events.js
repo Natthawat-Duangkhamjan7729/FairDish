@@ -35,7 +35,7 @@ document.addEventListener("keydown", function(e){
     if (e.key === "Enter" && ui.wsSuggest.active >= 0){ e.preventDefault(); return pickWsSuggest(ui.wsSuggest.active); }
   }
   if (e.key !== "Enter") return;
-  if (e.target.id === "nameInput"){ e.preventDefault(); return saveNameFromDialog(); }
+  if (e.target.id === "nameInput"){ e.preventDefault(); return saveNameFromPage(); }
   if (e.target.id === "myNameInput"){ e.preventDefault(); return saveMyNameFromSettings(); }
   if (e.target.id === "memberInput"){ e.preventDefault(); if (wsActive()) pushUndo(); addMember(); }
   if (e.target.id === "editMemberInput"){ e.preventDefault(); saveEdit(ui.editingMember); }
@@ -167,8 +167,8 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-guest-save")) return submitGuest();
   if (t.getAttribute("data-guest-change")){ ui.guestFor = null; ui.guestSel = null; ui.guestDone = false; var gg = myGroup(ui.ctx); if (gg){ gg.me = null; saveMyGroups(); } return rerenderGuest(); }
   if (t.getAttribute("data-guest-again")){ ui.guestDone = false; return rerenderGuest(); }
-  if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return window.scrollTo(0,0); }
-  if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return window.scrollTo(0,0); }
+  if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return jumpTo(0); }
+  if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return jumpTo(0); }
   if (t.getAttribute("data-goto-summary")){ ui.step = "summary"; location.hash = splitHref(); return; }
   if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
@@ -203,8 +203,8 @@ document.addEventListener("click", async function(e){
   if (t.id==="nudgeClose") return dismissInstallNudge();
 
   /* v2.4: ถามคุณคือใคร */
-  if (t.getAttribute("data-name-save")) return saveNameFromDialog();     // v4.6: ชื่อที่ให้เราเรียก
-  if (t.getAttribute("data-name-skip")) return closeNameDialog();
+  if (t.getAttribute("data-name-save")) return saveNameFromPage();     // v4.6: ชื่อที่ให้เราเรียก
+  if (t.getAttribute("data-name-skip")) return skipNameFromPage();
   if (t.getAttribute("data-myname-save")) return saveMyNameFromSettings();
   if (t.getAttribute("data-myname-clear")) return clearMyName();
   if (t.getAttribute("data-add-self")) return addSelf();
@@ -383,11 +383,6 @@ document.getElementById("installDialog").addEventListener("click", function(e){
 document.getElementById("meDialog").addEventListener("click", function(e){
   if (e.target === this) closeMeDialog();
 });
-/* v4.6: หน้าต่างถามชื่อ — แตะพื้นหลัง/Esc/ไว้ทีหลัง ปิดได้ทุกทาง แล้วทำต่อใน onNameDialogClosed() */
-document.getElementById("nameDialog").addEventListener("click", function(e){
-  if (e.target === this) closeNameDialog();
-});
-document.getElementById("nameDialog").addEventListener("close", onNameDialogClosed);
 
 /* v2.5: ยอดที่หัวจ่ายแต่ละคนจ่าย — บันทึกตอนพิมพ์เสร็จ (ออกจากช่อง / กด Enter) */
 document.addEventListener("change", function(e){

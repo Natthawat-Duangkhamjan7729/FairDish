@@ -66,7 +66,7 @@ function sideNavHTML(){
 function renderSideNav(){
   var nav = document.getElementById("sidenav");
   if (!nav) return;
-  var show = isWide() && !(currentPath() === "/" && ui.showOnb) && currentPath() !== "/me";
+  var show = isWide() && !(currentPath() === "/" && (ui.showOnb || needName())) && currentPath() !== "/me";
   document.body.classList.toggle("has-side", show);
   nav.hidden = !show;
   nav.innerHTML = show ? sideNavHTML() : "";
@@ -677,7 +677,7 @@ function pickShareMember(id){
   var y = window.scrollY;
   document.getElementById("view").innerHTML = pageShare();
   fitShareQr();
-  window.scrollTo(0, y);
+  jumpTo(y);
 }
 
 /* =========================================================
@@ -765,7 +765,7 @@ function renderHistoryWide(){
    ========================================================= */
 function onWideChange(){
   var path = currentPath();
-  if (path !== "/split"){ var y0 = window.scrollY; route(); window.scrollTo(0, y0); return; }
+  if (path !== "/split"){ var y0 = window.scrollY; route(); jumpTo(y0); return; }
   var view = document.getElementById("view");
   var y = window.scrollY;
   // ข้อความที่พิมพ์ค้างอยู่ในช่องกรอก (ยังไม่กดบันทึก) อยู่แค่ใน DOM — จำไว้แล้วใส่คืนหลังวาดใหม่
@@ -785,7 +785,7 @@ function onWideChange(){
   if (focus) focus.focus({ preventScroll:true });
   renderSideNav();
   syncSheetLock();
-  window.scrollTo(0, y);
+  jumpTo(y);
 }
 if (WIDE_MQ){
   if (WIDE_MQ.addEventListener) WIDE_MQ.addEventListener("change", onWideChange);
