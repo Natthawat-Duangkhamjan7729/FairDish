@@ -54,7 +54,9 @@ function refreshView(){
   if (ui.ctx && Store.groupName) document.title = Store.groupName + " · FairDish";
   updateChrome();
   if (path==="/split"){
-    if (ui.ctx) document.getElementById("view").innerHTML = pageSplit();
+    // โครงหน้า (หัว, แท็บ, แผง) ถูกวาดตอนกำลังโหลดด้วยประเภทบิลเดิม — บิลที่โหลดมาอาจเป็นทริป จึงต้องวาดใหม่เสมอ
+    // (บิลส่วนตัวเรียกที่นี่แค่ตอนโหลดเสร็จใน loadContext ไม่มีฟอร์มค้างให้ทับ)
+    document.getElementById("view").innerHTML = pageSplit();
     render();
     maybeAskWhoAmI();
   }
