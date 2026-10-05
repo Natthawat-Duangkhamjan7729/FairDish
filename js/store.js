@@ -15,6 +15,7 @@ var Store = {
   groupId: null,                        // null = บิลส่วนตัวในเครื่อง
   groupName: "",
   version: 0,                           // version ของบิลกลุ่มที่โหลดมาล่าสุด ใช้กันเขียนทับกัน
+  base: null,                           // v4.13.1: บิลกลุ่มตอน version นี้ ใช้รวมข้อมูลตอนบันทึกชน (save.js mergeBills)
   mode: "memory",
   mem: null,
   memStore: {},
@@ -56,6 +57,7 @@ var Store = {
       if (this.groupId !== id) throw new Error("group changed");
       if (!g) return null;
       this.version = g.version;
+      this.base = g.data ? JSON.parse(JSON.stringify(g.data)) : null;
       this.groupName = g.name;
       return g.data || {};
     }
@@ -67,7 +69,7 @@ var Store = {
       var id = this.groupId;
       var res = await Cloud.save(id, data, this.version);
       if (this.groupId !== id) return;
-      if (res && res.ok){ this.version = res.version; return; }
+      if (res && res.ok){ this.version = res.version; this.base = JSON.parse(JSON.stringify(data)); return; }
       var err = new Error(res && res.missing ? "group missing" : "group conflict");
       err.conflict = !(res && res.missing);
       err.latest = res;

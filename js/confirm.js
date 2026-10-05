@@ -74,6 +74,7 @@ async function saveConfirm(memberId, selected){
     if (ui.ctx !== id) return false;
     if (res && res.ok){
       Store.version = res.version;
+      Store.base = copyBill(data);
       applyBill(data);
       return true;
     }

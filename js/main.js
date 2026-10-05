@@ -17,7 +17,7 @@ async function loadContext(groupId){
   state.menuForm = null; state.sharedForm = null; state.chargeForm = null;
   ui.confirmMember = null; ui.editingMember = null; ui.memberError = ""; ui.undo = null;
   Store.groupId = groupId;
-  Store.version = 0;
+  Store.version = 0; Store.base = null;
   Store.groupName = "";
   applyBill(null);
   setSave("loading");
@@ -111,6 +111,7 @@ async function refreshGroup(manual, live){
       var before = groupSnapshot(), wasDone = billDone(serialize());
       applyBill(g.data);
       Store.version = g.version;
+      Store.base = copyBill(g.data);
       Store.groupName = g.name;
       snapGroup(id, g.data);
       // v4.12: เพื่อนติ๊กโอนคนสุดท้าย → ทุกเครื่องในกลุ่มขึ้นหน้า "จบทริป/จบมื้อ" เอง (ไม่รบกวนคนที่กำลังยืนยันเมนูในหน้า /me)

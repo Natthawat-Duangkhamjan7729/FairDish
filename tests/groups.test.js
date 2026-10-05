@@ -62,7 +62,7 @@ test("applyBill: ตั้งตัวนับ id ต่อจากของ�
     charges: [{ id: "i9", label: "ค่าเปิดขวด", rate: 5, on: true, fixed: false }]
   });
   assert.equal(app.state.menus[0].price, 80);
-  assert.equal(app.nid(), "i10");
+  assert.match(app.nid(), /^i10_[a-z0-9]+$/);   // v4.13.1: มีส่วนสุ่มต่อท้าย
 });
 
 test("v4.2: ไม่เก็บข้อมูลอื่นของคน — เบอร์พร้อมเพย์ (pp) ที่บันทึกไว้จาก v4.1 ถูกทิ้ง", () => {

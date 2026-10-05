@@ -107,16 +107,21 @@ async function commit(successMessage, source){
     return true;
   } catch(err){
     if (err && err.conflict){
-      // เพื่อนในกลุ่มบันทึกไปก่อน — ใช้ข้อมูลล่าสุดของกลุ่ม แล้วให้ผู้ใช้ทำรายการนี้ใหม่
-      applyBill(err.latest.data);
-      Store.version = err.latest.version;
-      if (currentPath() === "/split") document.getElementById("view").innerHTML = pageSplit();
-      setSave("saved");
-      ui.saveFailedIn = null;
-      toast(L("มีเพื่อนแก้บิลนี้ไปก่อน โหลดข้อมูลล่าสุดแล้ว ลองทำรายการเมื่อกี้อีกครั้ง"),"error");
-      render();
-      rerenderBill();
-      return false;
+      // v4.13.1: เพื่อนในกลุ่มบันทึกไปก่อน — รวมสิ่งที่เราเพิ่งแก้เข้ากับข้อมูลล่าสุดของกลุ่มแล้วบันทึกใหม่ (เดิมทิ้งของเราไป)
+      var res = await saveMerged(err.latest);
+      if (res.data) applyMerged(res.data);             // ไม่ว่าจะบันทึกได้ไหม หน้าจอเป็นบิลที่รวมแล้ว (ลองอีกครั้ง = บันทึกตัวที่รวมแล้ว)
+      if (res.ok){
+        setSave("saved");
+        ui.saveFailedIn = null;
+        if (successMessage) toast(successMessage,"ok");
+        return true;
+      }
+      if (!res.net){
+        setSave("saved");
+        ui.saveFailedIn = null;
+        toast(L("มีเพื่อนแก้บิลนี้ไปก่อน โหลดข้อมูลล่าสุดแล้ว ลองทำรายการเมื่อกี้อีกครั้ง"),"error");
+        return false;
+      }
     }
     setSave("error");
     ui.saveFailedIn = source || "member";
@@ -133,4 +138,102 @@ async function retrySave(){
   var ok = await commit();
   if (ok) toast(L("บันทึกเรียบร้อยแล้ว"),"ok");
   render();
+}
+
+/* =========================================================
+   v4.13.1: รวมข้อมูลตอนบันทึกชนกับเพื่อน (three-way merge) — ไม่แตะ DOM ทดสอบใน tests/merge.test.js
+   base = บิลกลุ่มตอนที่เราโหลด/บันทึกล่าสุด, mine = บิลบนเครื่องเรา, theirs = บิลล่าสุดบนเซิร์ฟเวอร์
+   ของที่เราไม่ได้แตะ = ใช้ของเพื่อน · ของที่เราแก้ = ใช้ของเรา · เพิ่มทั้งสองฝั่ง = ได้ทั้งคู่ (รหัสรายการไม่ซ้ำข้ามเครื่องจาก nid())
+   ========================================================= */
+function copyBill(d){ return d ? JSON.parse(JSON.stringify(d)) : null; }
+function sameJSON(a, b){ return JSON.stringify(a) === JSON.stringify(b); }
+function mergeList(base, mine, theirs){
+  function byId(list){ var o = {}; (list || []).forEach(function(x){ if (x && x.id != null) o[x.id] = x; }); return o; }
+  var b = byId(base), m = byId(mine), out = [], seen = {};
+  (theirs || []).forEach(function(t){
+    var id = t.id; seen[id] = true;
+    if (!(id in m)){
+      if (id in b && sameJSON(t, b[id])) return;      // เราลบไป และเพื่อนไม่ได้แก้ = ลบ
+      out.push(t); return;                             // ของเพื่อนเพิ่มใหม่ หรือเพื่อนแก้ของที่เราลบ = เก็บไว้
+    }
+    out.push(mergeItem(b[id], m[id], t));
+  });
+  (mine || []).forEach(function(x){
+    if (seen[x.id]) return;
+    if (x.id in b) return;                             // เพื่อนลบไปแล้ว (เราไม่ได้เพิ่มใหม่)
+    out.push(x);                                       // ของที่เราเพิ่มใหม่
+  });
+  return out;
+}
+function mergeItem(base, mine, theirs){
+  if (!base) return mine;
+  var mineChanged = !sameJSON(mine, base), theirsChanged = !sameJSON(theirs, base);
+  if (!mineChanged) return theirs;
+  if (!theirsChanged) return mine;
+  if (mine.type === "meal" && theirs.type === "meal" && base.type === "meal"){   // มื้อในทริป: รวมข้างในมื้อด้วย
+    var out = mergeItem(Object.assign({}, base, { meal:null }), Object.assign({}, mine, { meal:null }), Object.assign({}, theirs, { meal:null }));
+    out = Object.assign({}, out);
+    out.meal = mergeParts(base.meal || {}, mine.meal || {}, theirs.meal || {});
+    return out;
+  }
+  return mine;
+}
+function mergeParts(b, m, t){
+  return { menus:mergeList(b.menus, m.menus, t.menus), shared:mergeList(b.shared, m.shared, t.shared), charges:mergeList(b.charges, m.charges, t.charges) };
+}
+function mergeKeys(base, mine, theirs){
+  base = base || {}; mine = mine || {}; theirs = theirs || {};
+  var out = {}, keys = {};
+  [base, mine, theirs].forEach(function(o){ Object.keys(o).forEach(function(k){ keys[k] = true; }); });
+  Object.keys(keys).forEach(function(k){
+    var v = sameJSON(mine[k], base[k]) ? theirs[k] : mine[k];
+    if (v !== undefined) out[k] = v;
+  });
+  return out;
+}
+function mergeBills(base, mine, theirs){
+  var b = normalizeBill(base || {}), m = normalizeBill(mine), t = normalizeBill(theirs);
+  if (!base) b = { members:[], menus:[], shared:[], charges:[], payers:[], paid:{}, confirms:{} };
+  var out = mergeParts(b, m, t);
+  out.members = mergeList(b.members, m.members, t.members);
+  out.payers = mergeList(b.payers, m.payers, t.payers);
+  ["kind", "name"].forEach(function(k){ out[k] = (base && sameJSON(m[k], b[k])) ? t[k] : m[k]; });
+  out.paid = mergeKeys(b.paid, m.paid, t.paid);
+  out.confirms = mergeKeys(b.confirms, m.confirms, t.confirms);
+  if (!out.charges.length) out.charges = defaultCharges();
+  out.savedAt = new Date().toISOString();
+  return out;
+}
+/** รวมกับข้อมูลล่าสุดแล้วบันทึก (ชนซ้ำก็รวมใหม่ ไม่เกิน 3 รอบ) → { ok, data: บิลที่รวมแล้ว, net: บันทึกไม่ได้เพราะเน็ต } */
+async function saveMerged(latest){
+  var mine = copyBill(serialize()), merged = null;
+  for (var tries = 0; tries < 3 && latest && latest.data; tries++){
+    merged = mergeBills(Store.base, mine, latest.data);
+    Store.version = latest.version;
+    Store.base = copyBill(latest.data);
+    if (latest.name) Store.groupName = latest.name;
+    try { await Store.save(merged); return { ok:true, data:merged }; }
+    catch(e){ if (!(e && e.conflict)) return { ok:false, data:merged, net:true }; latest = e.latest; }
+  }
+  if (!latest || !latest.data) return { ok:false, data:merged };
+  Store.version = latest.version; Store.base = copyBill(latest.data);   // ชนเกิน 3 รอบ — ใช้ข้อมูลล่าสุดของกลุ่ม
+  return { ok:false, data:latest.data };
+}
+/** ใส่บิลที่รวมแล้วลงหน้าจอ — ถ้ากำลังแก้มื้อในทริปอยู่ ให้อยู่ในมื้อเดิมต่อ */
+function applyMerged(data){
+  var mealId = ui.tripStash && ui.tripStash.mealId, step = ui.step;
+  applyBill(data);
+  var item = mealId && state.menus.filter(function(m){ return m.id === mealId && m.type === "meal"; })[0];
+  if (item){
+    var md = mealOf(item);
+    ui.tripStash = { mealId:mealId, menus:state.menus, shared:state.shared, charges:state.charges, payers:state.payers };
+    state.kind = "meal";
+    state.menus = md.menus; state.shared = md.shared; state.charges = md.charges.length ? md.charges : defaultCharges();
+    state.payers = [];
+  }
+  ui.step = (mealId && !item) ? "menus" : step;
+  if (Store.groupId) snapGroup(Store.groupId, data);
+  if (currentPath() === "/split") document.getElementById("view").innerHTML = pageSplit();
+  render();
+  rerenderBill();
 }

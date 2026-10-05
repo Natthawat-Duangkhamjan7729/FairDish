@@ -5,7 +5,8 @@
    2. ข้อมูลของบิล
    ========================================================= */
 var uid = 0;
-function nid(){ uid += 1; return "i" + uid; }
+// v4.13.1: ต่อท้ายส่วนสุ่ม — สองเครื่องในกลุ่มเพิ่มรายการพร้อมกันจะได้รหัสไม่ซ้ำ รวมข้อมูลกันได้ (parseInt ใน applyBill ยังอ่านเลขหน้าได้)
+function nid(){ uid += 1; return "i" + uid + "_" + Math.random().toString(36).slice(2, 6); }
 
 function defaultCharges(){
   return [
@@ -76,7 +77,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.13";
+var APP_VERSION = "4.13.1";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */
