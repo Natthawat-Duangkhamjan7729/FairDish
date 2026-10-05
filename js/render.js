@@ -10,9 +10,23 @@ function isWide(){ return !!(WIDE_MQ && WIDE_MQ.matches); }
 /** จอข้ามเส้น 1024px ตอนอยู่หน้าหารบิล → วาดหน้าใหม่ (แท็บสรุปหาย/กลับมา) โดยไม่ออกจากมื้อในทริป */
 function onWideChange(){
   if (currentPath() !== "/split") return;
+  var view = document.getElementById("view");
   var y = window.scrollY;
-  document.getElementById("view").innerHTML = pageSplit();
+  // ข้อความที่พิมพ์ค้างอยู่ในช่องกรอก (ยังไม่กดบันทึก) อยู่แค่ใน DOM — จำไว้แล้วใส่คืนหลังวาดใหม่
+  syncMenuForm();
+  var drafts = {};
+  Array.prototype.forEach.call(view.querySelectorAll("input[id],textarea[id]"), function(el){ drafts[el.id] = el.value; });
+  var active = document.activeElement && view.contains(document.activeElement) ? document.activeElement.id : "";
+  view.innerHTML = pageSplit();
   render();
+  Object.keys(drafts).forEach(function(id){
+    var el = document.getElementById(id);
+    if (el && view.contains(el)) el.value = drafts[id];
+  });
+  var ok = document.getElementById("confirmReset");
+  if (ok && ui.ctx) ok.disabled = !resetNameMatches();
+  var focus = active && document.getElementById(active);
+  if (focus) focus.focus({ preventScroll:true });
   syncSheetLock();
   window.scrollTo(0, y);
 }
