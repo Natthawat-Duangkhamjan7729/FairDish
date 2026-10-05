@@ -64,6 +64,7 @@ var ui = {
   histQ:"", histFilter:"all", histSel:null, sharePick:null,   // v4.4: ประวัติ (ค้นหา/กรอง/ที่เลือก), คนที่ดูตัวอย่างในหน้าชวนเพื่อน
   guestFor:null, guestSel:null, guestDone:false, guestSaving:false,   // v4.1: หน้าที่เพื่อนเห็น #/g/<id>/me
   myName:"", nameAsked:false,   // v4.6: ชื่อที่ให้เราเรียก + เคยถามแล้วหรือยัง (js/profile.js)
+  nameFor:null,                 // v4.9: ลิงก์กลุ่มที่รอไปต่อหลังตอบชื่อ
   shareBack:null,               // v4.8.1: หน้าที่กดเข้าหน้าชวนเพื่อนมา "/split" | "/bill"
   shareAfterLoad:false  // v3.2: เพิ่งสร้างกลุ่มจากบิลส่วนตัว → เปิดหน้าต่างชวนเพื่อนเมื่อโหลดกลุ่มเสร็จ
 };
@@ -72,7 +73,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.8.2";
+var APP_VERSION = "4.9";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */

@@ -233,6 +233,9 @@ function pageGuest(){
     var d = serialize();
     return html + '<section class="guest-card" aria-labelledby="h-guest-who">'+
       '<h2 id="h-guest-who">'+L("คุณคือใคร")+'</h2><p>'+L("เลือกชื่อของคุณในโต๊ะนี้")+'</p>'+
+      // v4.9: มีชื่อที่ให้เราเรียกแล้ว → ปุ่มเดียวจบ (ชื่อตรงกับในบิล = เลือกคนนั้น ไม่ตรง = เพิ่มชื่อตัวเอง)
+      (ui.myName ? '<button class="btn-main btn-block guest-join" type="button" data-guest-join="1">'+
+        (myNameMemberId() ? L("ฉันคือ {name}", { name:esc(ui.myName) }) : L("เข้าร่วมในชื่อ {name}", { name:esc(ui.myName) }))+'</button>' : '')+
       (state.members.length
         ? '<div class="guest-who">'+state.members.map(function(p){
             var ok = confirmStatusOf(d, p.id) === "confirmed";
@@ -304,6 +307,14 @@ async function addGuest(){
   var ok = await commit(L("เพิ่ม {name} แล้ว", { name:name }));
   if (!ok) return rerenderGuest();
   pickGuest(id);
+}
+function guestJoin(){
+  var id = myNameMemberId();
+  if (id) return pickGuest(id);
+  var input = document.getElementById("guestName");
+  if (!input || !ui.myName) return;
+  input.value = ui.myName;
+  addGuest();
 }
 function toggleGuestItem(key){
   var me = guestMember();

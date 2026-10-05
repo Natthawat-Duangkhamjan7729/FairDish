@@ -43,6 +43,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "guestName"){ e.preventDefault(); addGuest(); }
   if (e.target.id === "billNameInput"){ e.preventDefault(); saveBillName(); }
   if (e.target.id === "hostNameInput"){ e.preventDefault(); saveHostSheet(); }   // v4.7
+  if (e.target.id === "joinNameInput"){ e.preventDefault(); joinGroup(); }        // v4.9
   if (e.target.getAttribute && e.target.getAttribute("data-payer-amt") !== null){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "mealName"){ e.preventDefault(); e.target.blur(); }
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
@@ -127,7 +128,7 @@ document.addEventListener("click", async function(e){
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
             "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
-            "[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
+            "[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
             "[data-onb-start],[data-tour-start],[data-tour-next],[data-tour-skip],[data-tour-done],[data-tour-back],[data-tour-install]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -211,6 +212,8 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-myname-save")) return saveMyNameFromSettings();
   if (t.getAttribute("data-myname-clear")) return clearMyName();
   if (t.getAttribute("data-add-self")) return addSelf();
+  if (t.getAttribute("data-me-join")) return joinGroup();               // v4.9: เข้าร่วมกลุ่ม
+  if (t.getAttribute("data-guest-join")) return guestJoin();
   if ((v = t.getAttribute("data-me-pick"))) return chooseMe(v);
   if (t.getAttribute("data-me-close")) return closeMeDialog();
   if (t.getAttribute("data-me-add")) return addMyselfFromDialog();

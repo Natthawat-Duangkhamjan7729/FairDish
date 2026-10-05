@@ -19,20 +19,27 @@ async function storeMyName(name){
 
 /* ---- หน้าถามชื่อ (หน้าเต็ม ต่อจากหน้าแนะนำ — ไม่เด้งทับหน้าอื่น) ---- */
 /** หน้าหลักแสดงหน้าถามชื่อแทน: ผ่านหน้าแนะนำแล้ว ยังไม่เคยถาม และไม่ได้อยู่ในการสอน (คนที่เคยใช้ก่อน v4.6 ก็ถามหนึ่งครั้ง) */
-function needName(){ return !ui.showOnb && !ui.nameAsked && !ui.tour; }
+function needName(){ return !ui.nameAsked && !ui.tour && (!ui.showOnb || !!ui.nameFor); }
+/** v4.9: เปิดลิงก์กลุ่มครั้งแรกโดยยังไม่เคยตอบชื่อ → ถามชื่อก่อน (ไม่ผ่านหน้าแนะนำ) แล้วพากลับลิงก์เดิม
+    หน้ากลุ่มจะถามต่อว่า "เข้าร่วมกลุ่มไหม?" ด้วยชื่อที่เพิ่งใส่ */
+function askNameForLink(hash){
+  ui.nameFor = hash;
+  nameThen = function(){ var h = ui.nameFor; ui.nameFor = null; if (location.hash === h) route(); else location.hash = h; };
+  if (location.hash !== "#/") location.hash = "#/"; else route();
+}
 function pageAskName(){
   return '<div class="'+(isWide() ? 'w-name ' : '')+'page page-onb page-name">'+
     '<div class="onb-top"><span class="onb-brand"><img class="logo-mark" src="img/logo.png" alt="" width="32" height="32"><b>FairDish</b></span>'+
       '<button class="link-btn" type="button" data-name-skip="1">'+L("ไว้ทีหลัง")+'</button></div>'+
     '<div class="onb-art"><span class="onb-circle sun" aria-hidden="true"></span>'+
       '<img class="name-mascot" src="img/mascot.png" alt="" width="220" height="220"></div>'+
-    '<p class="eyebrow">'+L("ยินดีต้อนรับสู่ FairDish")+'</p>'+
+    '<p class="eyebrow">'+(ui.nameFor ? L("เพื่อนชวนคุณเข้ากลุ่ม 👋") : L("ยินดีต้อนรับสู่ FairDish"))+'</p>'+
     '<h1 class="onb-title" id="nameTitle">'+L("อยากให้เราเรียกคุณว่าอะไรดี?")+'</h1>'+
     '<p class="onb-body">'+L("ชื่อเล่นสั้น ๆ ก็ได้ เราจะใช้ทักทาย และช่วยใส่ชื่อคุณเข้าโต๊ะได้ในแตะเดียว เปลี่ยนได้ทุกเมื่อในหน้าตั้งค่า")+'</p>'+
     '<label class="sr-only" for="nameInput">'+L("ชื่อที่ให้เราเรียก")+'</label>'+
     '<input type="text" id="nameInput" placeholder="'+L("เช่น มาร์ค")+'" autocomplete="nickname" maxlength="'+MAX_NAME+'" aria-describedby="nameMsg">'+
     '<p class="field-msg muted" id="nameMsg" aria-live="polite"></p>'+
-    '<button class="btn-main btn-block" type="button" data-name-save="1">'+L("ตกลง")+'</button>'+
+    '<button class="btn-main btn-block" type="button" data-name-save="1">'+(ui.nameFor ? L("ตกลง ไปที่กลุ่ม") : L("ตกลง"))+'</button>'+
     '<p class="intro-note">'+L("ชื่อนี้เก็บไว้ในเครื่องนี้เท่านั้น")+'</p>'+
   '</div>';
 }
@@ -44,8 +51,7 @@ function askNameThen(then){
 /** ตอบแล้ว (ใส่ชื่อหรือไว้ทีหลัง) → ทำสิ่งที่ค้างไว้ต่อ ไม่มี = วาดหน้าหลักจริง */
 function nameDone(){
   var then = nameThen; nameThen = null;
-  route();                 // หน้าหลักจริงแทนหน้าถามชื่อก่อน แล้วค่อยไปต่อ (การสอนเปลี่ยนหน้าเอง)
-  if (then) then();
+  if (then) then(); else route();   // then เปลี่ยนหน้าเอง (การสอน / บิลตัวอย่าง / ลิงก์กลุ่ม)
 }
 async function saveNameFromPage(){
   var input = document.getElementById("nameInput");

@@ -306,7 +306,7 @@ function tourClick(t){
   if (t.getAttribute("data-tour-install")){
     tourEnd();
     // v4.6: ยังไม่ได้ตอบชื่อ = หน้าหลักเป็นหน้าถามชื่อ → เปิดหน้าต่างติดตั้งหลังตอบ ไม่เด้งทับกัน
-    setTimeout(function(){ if (needName()) nameThen = openInstall; else openInstall(); }, 60);
+    setTimeout(function(){ if (needName()) nameThen = function(){ route(); openInstall(); }; else openInstall(); }, 60);
     return true;
   }
   return false;

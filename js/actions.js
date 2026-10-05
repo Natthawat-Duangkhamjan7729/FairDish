@@ -512,30 +512,75 @@ async function forgetGroup(id){
 
 /* ---- v2.4: ถาม "คุณคือใคร" ครั้งแรกที่เปิดกลุ่ม ---- */
 function maybeAskWhoAmI(){
-  if (!ui.ctx || ui.loading || ui.groupError || !state.members.length) return;
+  if (!ui.ctx || ui.loading || ui.groupError) return;   // v4.9: กลุ่มว่างก็ถามเข้าร่วมได้
   var g = myGroup(ui.ctx);
   if (!g || g.me || g.asked) return;
   g.asked = true;            // ถามครั้งเดียวต่อกลุ่มต่อเครื่อง กดข้ามก็ไม่ถามซ้ำ
   saveMyGroups();
-  var mine = myNameMemberId();   // v4.6: มีชื่อตรงกับชื่อที่ให้เราเรียก = เลือกให้เลย ไม่ต้องถาม
-  if (mine) return chooseMe(mine);
-  openMeDialog();
+  openMeDialog();             // v4.9: ชื่อตรงกับคนในกลุ่มก็ถามก่อน (ชื่อเล่นซ้ำกันได้) — ปุ่มหลักเป็น "ฉันคือ …"
 }
 function openMeDialog(){
   var box = document.getElementById("meDialog");
   if (!box || !ui.ctx) return;
+  // v4.9: ถาม "เข้าร่วมกลุ่มไหม?" — ปุ่มหลักคือเข้าร่วมด้วยชื่อที่ให้เราเรียก (ยังไม่มีชื่อ = พิมพ์ตรงนี้) ชื่อที่มีอยู่แล้วเป็นทางเลือกรอง
+  var trip = state.kind === "trip";
+  if (myMemberId()){                   // เข้าร่วมแล้ว (กดเปลี่ยน "ฉันคือใคร" เอง) → เลือกชื่ออย่างเดียว
+    box.innerHTML =
+      '<div class="install-head"><div><h2 id="meTitle">'+(trip ? L("คุณคือใครในทริปนี้?") : L("คุณคือใครในโต๊ะนี้?"))+'</h2>'+
+        '<p>'+L("เลือกชื่อตัวเอง แล้วยอดที่คุณต้องจ่ายจะแสดงตัวใหญ่ให้เห็นทันที (จำไว้ในเครื่องนี้)")+'</p></div>'+
+        '<button class="icon-btn" data-me-close="1" aria-label="'+L("ปิด")+'">'+ICON_X+'</button></div>'+
+      '<div class="pick me-pick">'+state.members.map(function(p){ return '<button data-me-pick="'+p.id+'">'+esc(p.name)+'</button>'; }).join("")+'</div>';
+    if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
+    return;
+  }
   box.innerHTML =
-    '<div class="install-head"><div><h2 id="meTitle">'+(state.kind === "trip" ? L("คุณคือใครในทริปนี้?") : L("คุณคือใครในโต๊ะนี้?"))+'</h2>'+
-      '<p>'+L("เลือกชื่อตัวเอง แล้วยอดที่คุณต้องจ่ายจะแสดงตัวใหญ่ให้เห็นทันที (จำไว้ในเครื่องนี้)")+'</p></div>'+
+    '<div class="install-head"><div><h2 id="meTitle">'+L("เข้าร่วมกลุ่ม {name} ไหม?", { name:esc(Store.groupName || L("กลุ่ม")) })+'</h2>'+
+      '<p>'+(trip ? L("เข้าร่วมแล้วใส่ค่าใช้จ่ายที่คุณจ่ายได้เลย และเห็นยอดของคุณตัวใหญ่ (จำไว้ในเครื่องนี้)")
+                  : L("เข้าร่วมแล้วยอดที่คุณต้องจ่ายจะแสดงตัวใหญ่ให้เห็นทันที (จำไว้ในเครื่องนี้)"))+'</p></div>'+
       '<button class="icon-btn" data-me-close="1" aria-label="'+L("ปิด")+'">'+ICON_X+'</button></div>'+
-    '<div class="pick me-pick">'+state.members.map(function(p){
-      return '<button data-me-pick="'+p.id+'">'+esc(p.name)+'</button>';
-    }).join("")+'</div>'+
-    '<div class="me-other">'+
-      '<button class="btn-quiet" data-me-add="1">'+L("ยังไม่มีชื่อฉัน — เพิ่มชื่อตัวเอง")+'</button>'+
-      '<button class="me-skip" data-me-close="1">'+L("ข้ามไปก่อน")+'</button>'+
-    '</div>';
+    (ui.myName
+      ? '<button class="btn-main btn-block" type="button" data-me-join="1">'+
+          (myNameMemberId() ? L("ฉันคือ {name}", { name:esc(ui.myName) }) : L("เข้าร่วมในชื่อ {name}", { name:esc(ui.myName) }))+'</button>'
+      : '<div class="form-box"><label class="sr-only" for="joinNameInput">'+L("ชื่อของคุณ")+'</label>'+
+          '<input type="text" id="joinNameInput" maxlength="'+MAX_NAME+'" autocomplete="nickname" placeholder="'+L("เช่น มาร์ค")+'" aria-describedby="joinMsg">'+
+          '<p class="field-msg muted" id="joinMsg" aria-live="polite"></p>'+
+          '<button class="btn-main btn-block" type="button" data-me-join="1">'+L("เข้าร่วม")+'</button></div>')+
+    (state.members.length
+      ? '<p class="me-or">'+L("หรือคุณมีชื่ออยู่ในกลุ่มแล้ว")+'</p>'+
+        '<div class="pick me-pick">'+state.members.map(function(p){
+          return '<button data-me-pick="'+p.id+'">'+esc(p.name)+'</button>';
+        }).join("")+'</div>'
+      : '')+
+    '<div class="me-other name-skip"><button class="me-skip" data-me-close="1">'+L("ไม่ใช่ตอนนี้")+'</button></div>';
   if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
+  var input = document.getElementById("joinNameInput");
+  if (input) input.focus();
+}
+/** v4.9: เข้าร่วมกลุ่ม = เพิ่มชื่อตัวเองเป็นสมาชิก + จำว่า "ฉันคือคนนี้" (ชื่อซ้ำกับที่มีอยู่ = เลือกคนนั้นแทน) */
+async function joinGroup(){
+  var name = ui.myName;
+  if (!name){
+    var input = document.getElementById("joinNameInput");
+    name = cleanMyName(input && input.value);
+    var problem = myNameProblem(name);
+    if (problem){
+      var msg = document.getElementById("joinMsg");
+      if (msg){ msg.className = "field-msg error"; msg.textContent = problem; }
+      if (input){ input.setAttribute("aria-invalid","true"); input.focus(); }
+      return;
+    }
+    await storeMyName(name);
+  }
+  var same = state.members.filter(function(p){ return normText(p.name) === normText(name); })[0];
+  if (same) return chooseMe(same.id);
+  closeMeDialog();
+  var id = nid();
+  state.members.push({ id:id, name:name });
+  var g = myGroup(ui.ctx);
+  if (g){ g.me = id; g.asked = true; saveMyGroups(); }
+  render();
+  await commit(L("เข้าร่วมกลุ่มแล้ว สวัสดี {name} 👋", { name:name }));
+  render();
 }
 function closeMeDialog(){
   var box = document.getElementById("meDialog");

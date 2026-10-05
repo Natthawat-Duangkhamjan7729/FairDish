@@ -170,6 +170,7 @@ body::after{content:"";position:fixed;right:-90px;bottom:-80px;width:280px;heigh
   background:var(--surface);color:var(--ink-2);font-size:var(--fs-small);font-weight:600;
 }
 .add-slot:hover{color:var(--link);border-color:var(--link)}
+.add-slot svg{width:18px;height:18px;flex:0 0 auto}   /* v4.9: ไอคอนในปุ่มเส้นประเท่าตัวอักษร (เดิมไม่มีขนาด ขยายเต็มปุ่ม) */
 
 /* ---------------- โครงหน้า ---------------- */
 .page{padding:var(--s2) var(--s4) var(--s6)}
@@ -492,6 +493,9 @@ body.show-foot .foot{display:block}
 .home-hello{margin:var(--s4) 0 0}
 .home-hello+.home-title{margin-top:0}
 .add-self{margin-top:var(--s3)}
+.me-or{font-size:var(--fs-small);color:var(--ink-2);margin:var(--s4) 0 var(--s2)}
+#meDialog .form-box{margin-top:var(--s2)}
+.guest-join{margin:var(--s3) 0 var(--s4)}
 #myNameMsg+.link-btn{margin-top:var(--s2)}
 
 /* ---- v2.4: จบมื้อ + ชวนติดตั้ง ---- */
