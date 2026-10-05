@@ -44,9 +44,10 @@ function savedBillName(saved){
   var b = saved || {};
   return b.name || defaultBillName(b.kind, b.savedAt ? new Date(b.savedAt) : null);
 }
+/** บิลที่เริ่มทำแล้ว (มีชื่อคนหรือรายการอย่างใดอย่างหนึ่ง) — ขึ้นการ์ด "กำลังหาร" และถูกเก็บเข้าประวัติก่อนเริ่มบิลใหม่
+    v4.8.2: เดิมต้องมีทั้งคนและรายการ ใส่แค่ชื่อแล้วกดกลับ = ไม่มีการ์ดให้ทำต่อ และเริ่มบิลใหม่ทับทิ้งโดยไม่เก็บประวัติ */
 function billHasData(saved){
-  return !!(saved && Array.isArray(saved.members) && saved.members.length &&
-            ((saved.menus || []).length + (saved.shared || []).length) > 0);
+  return !!(saved && ((saved.members || []).length + (saved.menus || []).length + (saved.shared || []).length) > 0);
 }
 function settingsLink(){
   return '<a class="icon-btn appbar-icon" href="#/more" aria-label="'+L("ตั้งค่าและเกี่ยวกับ")+'">'+ICON_SETTINGS+'</a>';
