@@ -25,26 +25,55 @@ function tourTransfers(){
   return s.ok ? s.transfers.length : 0;
 }
 
-/* ---- ขั้นตอน (mode: "mobile" | "wide" | ไม่ใส่ = ทั้งคู่) ---- */
+/* ---- v4.5.1: "ถัดไป" โดยไม่ได้ทำเอง = ระบบทำให้ดูด้วยข้อมูลตัวอย่าง (ขั้นหลังจะได้มีข้อมูลให้ดูต่อ) ---- */
+function tourAddPeople(){
+  var want = [L("มาร์ค"), L("ไอซ์"), L("ยูกะ")];      // 3 คน: ติ๊กโอนหนึ่งรายการแล้วยังไม่ "โอนครบ"
+  want.forEach(function(name){
+    if (state.members.length >= 3) return;
+    if (state.members.some(function(p){ return normText(p.name) === normText(name); })) return;
+    state.members.push({ id:nid(), name:name });
+  });
+  render();
+}
+function tourAddMenus(){
+  state.menuForm = null; ui.menuErr = {};
+  if (typeof closeSuggestions === "function") closeSuggestions();
+  var ids = state.members.map(function(p){ return p.id; });
+  if (!ids.length){ tourAddPeople(); ids = state.members.map(function(p){ return p.id; }); }
+  if (!state.menus.length){
+    state.menus.push({ id:nid(), name:L("ส้มตำ"), price:90, eaters:ids.slice() });
+    state.menus.push({ id:nid(), name:L("ลาบหมู"), price:80, eaters:ids.slice(0, Math.max(1, ids.length - 1)) });
+  }
+  render();
+}
+function tourGoBill(){ location.hash = billHref(); }
+
+/* ---- ขั้นตอน (mode: "mobile" | "wide" | ไม่ใส่ = ทั้งคู่) · auto = สิ่งที่ระบบทำให้เมื่อกด "ถัดไป" ---- */
 var TOUR_STEPS = [
   { id:"people", path:"/split", target:[".field-row"],
     title:"ใส่ชื่อคนในบิล", body:"พิมพ์ชื่อแล้วกด \"เพิ่ม\" ใส่อย่างน้อย 2 คน เช่น มาร์ค กับ ไอซ์",
+    auto:tourAddPeople,
     done:function(){ return state.members.length >= 2; } },
   { id:"tabMenus", mode:"mobile", path:"/split", target:["#tab-menus"],
     title:"ไปที่แท็บเมนู", body:"แตะแท็บ \"เมนู\" เพื่อใส่รายการอาหาร",
+    auto:function(){ setStep("menus"); },
     done:function(){ return ui.step === "menus" || state.menus.length > 0; } },
   { id:"menuMobile", mode:"mobile", path:"/split", target:[".sheet", "#menuOpen"],
     title:"เพิ่มเมนูแรก", body:"แตะ \"+ เพิ่มเมนู\" พิมพ์ชื่อและราคา (เลือกจากเมนูแนะนำได้) แตะชื่อคนที่กินจานนี้ แล้วกดเพิ่ม",
+    auto:tourAddMenus,
     done:function(){ return state.menus.length >= 1 && !state.menuForm; } },
   { id:"menuWide", mode:"wide", path:"/split", target:[".ws-add"],
     title:"เพิ่มเมนูแรก", body:"พิมพ์ชื่อเมนูและราคา แล้วกด \"+ เพิ่ม\" หรือ Enter — เลือกจากเมนูแนะนำได้ ครั้งหน้ากด N เพื่อมาที่ช่องนี้ได้ทันที",
+    auto:tourAddMenus,
     done:function(){ return state.menus.length >= 1; } },
   { id:"eaters", mode:"wide", path:"/split", target:[".ws-card .ws-picks"],
     title:"เลือกว่าใครกินจานนี้", body:"เมนูใหม่หารทุกคนไว้ก่อน แตะชื่อคนที่ไม่ได้กินให้เป็นสีขาว (สีม่วง = กิน) หรือลากชื่อจากคอลัมน์ซ้ายมาวางบนการ์ดก็ได้",
     enter:function(t){ var m = firstMenu(); t.snap = m ? m.eaters.slice().sort().join() : ""; },
+    auto:function(){ var m = firstMenu(); if (m && state.members.length > 1) wsToggleEater(m.id, state.members[state.members.length - 1].id); },
     done:function(t){ var m = firstMenu(); return !!m && m.eaters.slice().sort().join() !== t.snap; } },
   { id:"tabShared", mode:"mobile", path:"/split", target:["#tab-shared"],
     title:"ค่าส่วนกลาง", body:"แตะแท็บ \"ส่วนกลาง\" — ที่นี่ใส่ค่าบริการ VAT และของที่หารเท่ากันทุกคน",
+    auto:function(){ setStep("shared"); },
     done:function(){ return ui.step === "shared"; } },
   { id:"charges", path:"/split", target:["#chargeList"], next:true,
     title:"ค่าบริการ / VAT", body:"ถ้าร้านคิดค่าบริการหรือ VAT แตะเพื่อเปิด ระบบคิดเป็น % จากยอดของแต่ละคนให้เอง (ร้านไม่คิดก็กดถัดไปได้เลย)",
@@ -54,19 +83,24 @@ var TOUR_STEPS = [
     title:"สรุปยอดสด", body:"ยอดของแต่ละคนอัปเดตทันทีที่แก้ แตะชื่อเพื่อดูเฉพาะรายการของคนนั้น (เมนูที่ไม่ได้กินจะจางลง)" },
   { id:"tabSummary", mode:"mobile", path:"/split", target:["#tab-summary"],
     title:"ดูสรุป", body:"แตะแท็บ \"สรุป\" เพื่อดูยอดของแต่ละคน",
+    auto:function(){ setStep("summary"); },
     done:function(){ return ui.step === "summary"; } },
   { id:"toBillWide", mode:"wide", path:"/split", target:[".ws-sum .btn-main"],
     title:"ไปใบสรุปยอด", body:"กด \"ดูใบสรุปยอด\" เพื่อเลือกคนจ่ายและดูว่าใครต้องโอนให้ใคร",
+    auto:tourGoBill,
     done:function(){ return currentPath() === "/bill"; } },
   { id:"payer", path:function(){ return isWide() ? "/bill" : "/split"; }, target:["#summary .settle .pick", ".w-settle .pick"],
     title:"ใครจ่ายให้ร้าน", body:"แตะชื่อคนที่จ่ายเงินให้ร้านไปก่อน ระบบจะคิดให้ว่าคนอื่นต้องโอนให้ใครเท่าไร",
+    auto:function(){ if (state.members[0]) togglePayer(state.members[0].id); },
     done:function(){ return state.payers.length >= 1; } },
   { id:"paid", path:function(){ return isWide() ? "/bill" : "/split"; }, target:["#summary .tf-tick", ".w-settle .tf-tick"],
     title:"ติ๊กเมื่อโอนแล้ว", body:"พอเพื่อนโอนมาแล้ว แตะช่องหน้าชื่อ ไม่ต้องจำเองว่าใครโอนแล้วบ้าง",
     skip:function(){ return tourTransfers() === 0; },
+    auto:function(){ var s = hasData() ? settleBill(compute()) : null; if (s && s.ok && s.transfers[0]) togglePaid(transferKey(s.transfers[0])); },
     done:function(){ return Object.keys(state.paid).length >= 1; } },
   { id:"toBillMobile", mode:"mobile", path:"/split", target:["#summary .btn-main"],
     title:"ไปใบสรุปยอด", body:"กด \"ดูใบสรุปยอด\" เพื่อดูใบเสร็จที่ส่งเข้ากลุ่มได้",
+    auto:tourGoBill,
     done:function(){ return currentPath() === "/bill"; } },
   { id:"share", path:"/bill", target:[".w-actions", ".page .btn-stack"], next:true,
     title:"ส่งเข้ากลุ่มแชต", body:"คัดลอกสรุปยอด หรือแชร์รูปใบเสร็จส่งเข้ากลุ่มได้เลย ส่วน \"ชวนเพื่อน\" จะสร้างลิงก์ให้เพื่อนติ๊กเมนูเอง (ตอนฝึกยังกดไม่ได้)" }
@@ -184,7 +218,8 @@ function renderTour(){
     '<h2 id="tourTitle">'+L(st.title)+'</h2>'+
     '<p class="tour-body">'+L(st.body)+'</p>'+
     '<p class="tour-away" hidden>'+L("กลับไปทำต่อที่หน้านี้")+' <button class="btn-sm btn-xs" type="button" data-tour-back="1">'+L("ไปต่อ")+'</button></p>'+
-    (st.next ? '<div class="tour-btns"><button class="btn-sm" type="button" data-tour-next="1">'+L("ถัดไป")+'</button></div>' : '')+
+    '<div class="tour-btns">'+(st.auto ? '<span class="tour-hint">'+L("ไม่อยากกรอก? กดถัดไป ระบบใส่ตัวอย่างให้ดู")+'</span>' : '')+
+      '<button class="btn-sm" type="button" data-tour-next="1">'+L("ถัดไป")+'</button></div>'+
   '</div>';
   box.innerHTML = '<i class="tour-block" data-b="t"></i><i class="tour-block" data-b="l"></i><i class="tour-block" data-b="r"></i><i class="tour-block" data-b="b"></i>'+
     '<i class="tour-ring" aria-hidden="true"></i>'+tip;
@@ -238,8 +273,20 @@ function tourTipPos(tip, x, y, w, h, W, H){
 }
 
 /* ---- ปุ่มในชั้นสอน ---- */
+/** "ถัดไป": ขั้นที่ยังไม่ได้ทำ → ระบบทำให้ (auto) แล้วรอให้หน้าวาดผลเสร็จก่อนไปขั้นต่อไป */
+function tourNextClick(){
+  var t = ui.tour, st = t && TOUR_STEPS[t.i];
+  if (!st) return;
+  var i = t.i;
+  if (st.auto && !(st.done && st.done(t.t))){
+    try { st.auto(); } catch(e){}
+    setTimeout(function(){ if (ui.tour && ui.tour.i === i) tourAdvance(); }, 350);
+    return;
+  }
+  tourAdvance();
+}
 function tourClick(t){
-  if (t.getAttribute("data-tour-next")){ tourAdvance(); return true; }
+  if (t.getAttribute("data-tour-next")){ tourNextClick(); return true; }
   if (t.getAttribute("data-tour-skip")){ tourEnd(); return true; }
   if (t.getAttribute("data-tour-done")){ tourEnd(); return true; }
   if (t.getAttribute("data-tour-back")){ var st = TOUR_STEPS[ui.tour.i]; if (st) location.hash = tourPath(st) === "/bill" ? billHref() : splitHref(); return true; }

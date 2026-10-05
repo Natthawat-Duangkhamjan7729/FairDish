@@ -511,5 +511,8 @@ EN = {
   "พอเพื่อนโอนมาแล้ว แตะช่องหน้าชื่อ ไม่ต้องจำเองว่าใครโอนแล้วบ้าง":"When a friend pays you back, tap the box — no need to remember who's paid",
   "กด \"ดูใบสรุปยอด\" เพื่อดูใบเสร็จที่ส่งเข้ากลุ่มได้":"Tap \"See summary\" to get a receipt you can send to the group",
   "ส่งเข้ากลุ่มแชต":"Send it to the group chat",
-  "คัดลอกสรุปยอด หรือแชร์รูปใบเสร็จส่งเข้ากลุ่มได้เลย ส่วน \"ชวนเพื่อน\" จะสร้างลิงก์ให้เพื่อนติ๊กเมนูเอง (ตอนฝึกยังกดไม่ได้)":"Copy the summary or share the receipt image to your group. \"Invite friends\" makes a link so friends tick their own dishes (not available while practising)"
+  "คัดลอกสรุปยอด หรือแชร์รูปใบเสร็จส่งเข้ากลุ่มได้เลย ส่วน \"ชวนเพื่อน\" จะสร้างลิงก์ให้เพื่อนติ๊กเมนูเอง (ตอนฝึกยังกดไม่ได้)":"Copy the summary or share the receipt image to your group. \"Invite friends\" makes a link so friends tick their own dishes (not available while practising)",
+  /* v4.5.1: ปุ่มถัดไปในการสอน */
+  "ไม่อยากกรอก? กดถัดไป ระบบใส่ตัวอย่างให้ดู":"Don't want to type? Tap Next and we'll fill in an example",
+  "ส้มตำ":"Som tam"
 };
