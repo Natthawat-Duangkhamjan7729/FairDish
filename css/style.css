@@ -400,6 +400,8 @@ a.row-tap{text-decoration:none}
 
 /* กล่องเมนูแนะนำ (v1.4) */
 .suggest{margin-top:var(--s1);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);overflow:hidden;box-shadow:var(--shadow)}
+/* v4.13.2: รายการแนะนำสูงไม่เกิน ~3.5 แถว (เลื่อนในกล่อง) — มือถือที่แป้นพิมพ์เปิดอยู่จะยังเห็นช่องที่กำลังพิมพ์ */
+.sheet .suggest{max-height:calc(var(--tap) * 3.5 + 36px);overflow-y:auto;overscroll-behavior:contain}
 .suggest .s-head{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--line);background:var(--surface-2)}
 .suggest button{display:flex;align-items:center;gap:var(--s3);width:100%;min-height:var(--tap);padding:var(--s2) var(--s3);text-align:left;font-size:var(--fs-small);border-bottom:1px solid var(--line);color:var(--ink)}
 .suggest button:last-child{border-bottom:none}
