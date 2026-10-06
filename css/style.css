@@ -1393,9 +1393,6 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 }
 :root[data-theme="light"]{color-scheme:light}
 
-/* ---------------- แถบบอกว่าอยู่ใน Developer Beta (branch claude/dev-beta เท่านั้น) ---------------- */
-.sandbox-bar{background:var(--link-soft);color:var(--link);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
-.sandbox-bar a{text-decoration:underline;margin-left:var(--s2)}
 .inapp-bar{background:var(--secondary-soft);color:var(--secondary-ink);font-size:var(--fs-small);padding:var(--s3) var(--s4);text-align:center}
 .inapp-bar p{margin:0 auto var(--s2);max-width:40em;line-height:1.5}
 .inapp-acts{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--s2) var(--s3)}
