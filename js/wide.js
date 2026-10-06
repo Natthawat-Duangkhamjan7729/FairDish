@@ -547,6 +547,7 @@ function renderWsSuggest(){
   box.innerHTML = suggestBoxHTML(found, query, st.active, "wsSuggest", "data-ws-suggest");
   input.setAttribute("aria-expanded", "true");
   input.setAttribute("aria-activedescendant", st.active >= 0 ? "wsSuggest" + st.active : "");
+  showActiveSuggestion("wsSuggest", st.active);
 }
 function openWsSuggest(){
   ui.wsSuggest = { open:true, items:[], active:-1 };

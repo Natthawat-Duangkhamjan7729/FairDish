@@ -81,3 +81,30 @@ test("ไม่รู้ข้อมูลตั้งต้น → ไม่ท
   const theirs = bill({ menus:[{ id:"b", name:"B1", price:1, eaters:["m1"] }] });
   assert.deepEqual(names(app.mergeBills(null, mine, theirs).menus), ["B1", "A1"]);
 });
+
+test("v4.14.1: สองฝั่งแก้รายการเดียวกันคนละช่อง → ได้ทั้งคู่", () => {
+  const base = bill({ members:[{ id:"m1", name:"A" }, { id:"m2", name:"B" }, { id:"m3", name:"C" }],
+    menus:[{ id:"x1", name:"ลาบ", price:80, eaters:["m1","m2","m3"] }] });
+  const mine = plain(base); mine.members.splice(2, 1); mine.menus[0].eaters = ["m1","m2"];   // เราลบ C
+  const theirs = plain(base); theirs.menus[0].price = 120;                                   // เพื่อนแก้ราคา
+  const out = plain(app.mergeBills(base, mine, theirs));
+  assert.equal(out.menus[0].price, 120);
+  assert.deepEqual(out.menus[0].eaters, ["m1","m2"]);
+  assert.deepEqual(names(out.members), ["A", "B"]);
+});
+
+test("v4.14.1: คนกินรวมแบบเซต — เราเอาคนออก เพื่อนเพิ่มคน = ได้ทั้งสองอย่าง", () => {
+  const base = bill({ menus:[{ id:"x1", name:"ลาบ", price:80, eaters:["m1","m2"] }] });
+  const mine = plain(base); mine.menus[0].eaters = ["m1"];
+  const theirs = plain(base); theirs.members.push({ id:"m3", name:"C" }); theirs.menus[0].eaters = ["m1","m2","m3"];
+  assert.deepEqual(plain(app.mergeBills(base, mine, theirs).menus[0].eaters), ["m1","m3"]);
+});
+
+test("v4.14.1: ช่องเดียวกันแก้ทั้งสองฝั่ง → ใช้ของเรา", () => {
+  const base = bill();
+  const mine = plain(base); mine.menus[0].price = 1000;
+  const theirs = plain(base); theirs.menus[0].price = 1200; theirs.menus[0].name = "โรงแรม";
+  const out = plain(app.mergeBills(base, mine, theirs).menus[0]);
+  assert.equal(out.price, 1000);
+  assert.equal(out.name, "โรงแรม");
+});

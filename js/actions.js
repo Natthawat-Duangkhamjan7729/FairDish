@@ -201,6 +201,12 @@ function renderSuggestions(){
   input.setAttribute("aria-expanded","true");
   var active = items[ui.suggest.active];
   input.setAttribute("aria-activedescendant", active ? ("mSuggest"+ui.suggest.active) : "");
+  showActiveSuggestion("mSuggest", ui.suggest.active);
+}
+/** v4.14.1: กล่องแนะนำสูงจำกัด (เลื่อนในกล่อง) — เลือกด้วยลูกศรแล้วเลื่อนให้เห็นตัวที่เลือก (กล่องถูกวาดใหม่ทุกครั้ง ตำแหน่งเลื่อนกลับบนสุด) */
+function showActiveSuggestion(prefix, i){
+  var el = i >= 0 && document.getElementById(prefix + i);
+  if (el && el.scrollIntoView) el.scrollIntoView({ block:"nearest" });
 }
 
 /** กล่องเมนูแนะนำ — ใช้ทั้งฟอร์มแผ่น (#mName → "mSuggest"/data-suggest) และช่องบรรทัดเดียวจอใหญ่ (#wsName → "wsSuggest"/data-ws-suggest) */
