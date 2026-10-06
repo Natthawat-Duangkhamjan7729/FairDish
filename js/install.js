@@ -40,29 +40,60 @@ var Install = {
 var INSTALL_APPS = { line:"LINE", facebook:"Facebook", messenger:"Messenger", instagram:"Instagram", tiktok:"TikTok" };
 
 /* ---- v4.12: เปิดอยู่ในเบราว์เซอร์ของแอปแชต (LINE, IG, Messenger …) → แนะนำเปิดในเบราว์เซอร์จริง
-   บิลส่วนตัว/ชื่อ/กลุ่มของฉัน เก็บใน localStorage ของแอปนั้น เปิดลิงก์ใหม่จากแอปอื่นแล้วจะไม่เห็นข้อมูลเดิม ---- */
-var INAPP_SKIP_KEY = "fairdish:inapp-skip";   // sessionStorage: กด "ใช้ในแอปนี้ต่อ" แล้วไม่ถามซ้ำจนปิดแอป
-function renderInAppBar(){
-  var bar = document.getElementById("inappBar");
-  if (!bar) return;
-  var app = detectInApp(navigator.userAgent), skip = false;
-  try { skip = sessionStorage.getItem(INAPP_SKIP_KEY) === "1"; } catch(e){}
-  if (!app || skip){ bar.hidden = true; bar.innerHTML = ""; return; }
-  var ios = Install.platform() === "ios";
-  var external = location.origin + location.pathname + "?openExternalBrowser=1" + location.hash;   // LINE เปิดเบราว์เซอร์จริงให้เองเมื่อเจอพารามิเตอร์นี้
-  bar.hidden = false;
-  bar.innerHTML = '<p>'+L("เปิดอยู่ในแอป {app} — บิลที่ทำจะถูกเก็บไว้ในแอปนี้เท่านั้น เปิดในเบราว์เซอร์ดีกว่า ข้อมูลจะอยู่ครบทุกครั้งที่เปิด", { app:INSTALL_APPS[app] })+'</p>'+
-    '<div class="inapp-acts">'+
-      (app === "line"
-        ? '<a class="btn-sm btn-xs" href="'+esc(external)+'">'+L("เปิดในเบราว์เซอร์")+'</a>'
-        : '<span class="inapp-how">'+(ios ? L("แตะ ••• แล้วเลือก \"เปิดใน Safari\"") : L("แตะ ⋮ แล้วเลือก \"เปิดในเบราว์เซอร์\""))+'</span>'+
-          '<button class="btn-quiet btn-xs" type="button" id="installCopyLink">'+L("คัดลอกลิงก์")+'</button>')+
-      '<button class="link-btn" type="button" id="inappSkip">'+L("ใช้ในแอปนี้ต่อ")+'</button>'+
-    '</div>';
+   บิลส่วนตัว/ชื่อ/กลุ่มของฉัน เก็บใน localStorage ของแอปนั้น เปิดลิงก์ใหม่จากแอปอื่นแล้วจะไม่เห็นข้อมูลเดิม
+   v4.14: เป็นหน้าต่างเด้ง (#inappDialog) ขึ้นครั้งเดียวต่อการเปิดแอป — ปิดแบบไหนก็ไม่ถามซ้ำจนปิดแอป
+   หน้าต่าง "เข้าร่วมกลุ่มไหม?" รอให้หน้าต่างนี้ปิดก่อน (inAppPending() ใน maybeAskWhoAmI) ไม่ซ้อนกัน ---- */
+var INAPP_SKIP_KEY = "fairdish:inapp-skip";   // sessionStorage
+function inAppSkipped(){
+  try { return sessionStorage.getItem(INAPP_SKIP_KEY) === "1"; } catch(e){ return !!ui.inappSkipped; }
 }
+/** ยังต้องเตือนเรื่องเปิดในแอปแชตอยู่ไหม (ยังไม่ได้ปิดหน้าต่างนี้ในรอบนี้) */
+function inAppPending(){ return !!detectInApp(navigator.userAgent) && !inAppSkipped() && !ui.tour; }
+/** ลิงก์ของหน้าที่ผู้ใช้ตั้งใจเปิด — ระหว่างหน้าถามชื่อ/หน้าแนะนำ location.hash เป็น "#/" แต่ลิงก์กลุ่มที่สแกนมารออยู่ใน ui.nameFor / ui.onbNext
+    external = เติม ?openExternalBrowser=1 (LINE เปิดเบราว์เซอร์จริงให้เองเมื่อเจอพารามิเตอร์นี้) */
+function currentLink(external){
+  return location.origin + location.pathname + (external ? "?openExternalBrowser=1" : "") + (ui.nameFor || ui.onbNext || location.hash);
+}
+function inAppHTML(app){
+  var ios = Install.platform() === "ios";
+  var external = currentLink(true);
+  return '<div class="install-head">'+
+      '<img src="img/icon-192.png" alt="" width="48" height="48">'+
+      '<div><h2 id="inappTitle">'+L("เปิดในเบราว์เซอร์ดีกว่า")+'</h2>'+
+        '<p>'+L("ตอนนี้เปิดอยู่ในแอป {app}", { app:INSTALL_APPS[app] })+'</p></div>'+
+      '<button class="icon-btn" id="inappClose" aria-label="'+L("ปิด")+'">'+ICON_X+'</button>'+
+    '</div>'+
+    '<p class="inapp-text">'+L("บิลที่ทำในนี้จะถูกเก็บไว้ในแอป {app} เท่านั้น เปิดใน Safari หรือ Chrome แล้วข้อมูลจะอยู่ครบทุกครั้งที่เปิด", { app:INSTALL_APPS[app] })+'</p>'+
+    (app === "line"
+      ? '<a class="btn-main btn-block" href="'+esc(external)+'">'+L("เปิดในเบราว์เซอร์")+'</a>'
+      : installSteps([
+          [ios ? '•••' : ICON_KEBAB, ios ? L('แตะ <b>•••</b> มุมขวาบนของหน้าจอ') : L('แตะ <b>⋮</b> มุมขวาบนของหน้าจอ')],
+          [ICON_APP, ios ? L('เลือก <b>"เปิดใน Safari"</b> หรือ <b>"เปิดในเบราว์เซอร์"</b>') : L('เลือก <b>"เปิดในเบราว์เซอร์"</b> หรือ <b>"เปิดใน Chrome"</b>')]
+        ])+
+        '<button class="btn-quiet btn-block inapp-copy" type="button" id="installCopyLink">'+L("หรือคัดลอกลิงก์ไปวางในเบราว์เซอร์")+'</button>')+
+    '<button class="link-btn inapp-skip" type="button" id="inappSkip">'+L("ใช้ในแอปนี้ต่อ")+'</button>';
+}
+/** เรียกทุกครั้งที่เปลี่ยนหน้า (router.js) — ยังไม่เคยเตือนในรอบนี้ = เปิดหน้าต่าง, เปิดอยู่แล้ว = อัปเดตลิงก์ให้ตรงหน้าปัจจุบัน */
+function renderInApp(){
+  var box = document.getElementById("inappDialog");
+  if (!box) return;
+  var app = detectInApp(navigator.userAgent);
+  if (!app || !inAppPending()){ if (box.open) closeInApp(); return; }
+  if (!box.open && document.querySelector("dialog[open]")) return;   // มีหน้าต่างอื่นเปิดอยู่ ไว้เปลี่ยนหน้าครั้งถัดไปค่อยเตือน
+  box.innerHTML = inAppHTML(app);
+  if (!box.dataset.bound){ box.dataset.bound = "1"; box.addEventListener("close", function(){ if (inAppPending()) skipInApp(); }); }   // ปิดด้วย Esc/ปุ่มย้อนกลับ
+  if (!box.open){ if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open",""); }
+}
+function closeInApp(){
+  var box = document.getElementById("inappDialog");
+  if (box && box.open){ if (typeof box.close === "function") box.close(); else box.removeAttribute("open"); }
+}
+/** ปิดหน้าต่าง (ปุ่มปิด / "ใช้ในแอปนี้ต่อ" / Esc) = ไม่เตือนอีกจนปิดแอป แล้วทำสิ่งที่รอไว้ต่อ */
 function skipInApp(){
+  ui.inappSkipped = true;
   try { sessionStorage.setItem(INAPP_SKIP_KEY, "1"); } catch(e){}
-  renderInAppBar();
+  closeInApp();
+  if (ui.meAfterInApp){ ui.meAfterInApp = false; maybeAskWhoAmI(); }
 }
 var ICON_IOS_SHARE='<svg class="i-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
 var ICON_ADD_SQUARE='<svg class="i-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
@@ -98,7 +129,7 @@ function renderInstall(){
   if (!box) return;
   var inApp = detectInApp(navigator.userAgent);
   var platform = Install.platform();
-  var external = location.origin + location.pathname + "?openExternalBrowser=1" + location.hash;
+  var external = currentLink(true);
   box.innerHTML =
     '<div class="install-head">'+
       '<img src="img/icon-192.png" alt="" width="48" height="48">'+

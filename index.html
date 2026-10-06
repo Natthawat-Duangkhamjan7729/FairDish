@@ -25,14 +25,12 @@
 <body>
 
 
-<!-- v4.12: เปิดในแอปแชต (LINE / IG / Messenger) → แนะนำเปิดในเบราว์เซอร์จริง (เนื้อหาสร้างโดย js/install.js) -->
-<div class="inapp-bar" id="inappBar" role="note" hidden></div>
 <!-- v3.2+: หน้าตาแบบแอปมือถือ — ทุกหน้ามีแถบหัวของตัวเอง (สร้างใน js/pages.js) จอคอมจัดไว้กลางจอ -->
 <div class="app-shell">
 <main id="view"></main>
 
 <footer class="foot">
-  <span>FairDish v4.13.1 · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
+  <span>FairDish v4.14 · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
 </footer>
 </div>
 
@@ -63,6 +61,8 @@
 <dialog class="install-dialog share-dialog" id="shareDialog" aria-labelledby="shareTitle"></dialog>
 <!-- v4.13: หน้าต่างสแกน QR เข้ากลุ่ม (กล้องหลัง + กรอบสแกน) เนื้อหาสร้างโดย js/actions.js -->
 <dialog class="install-dialog scan-dialog" id="scanDialog" aria-labelledby="scanTitle"></dialog>
+<!-- v4.14: เปิดในแอปแชต (LINE / IG / Messenger …) → หน้าต่างแนะนำเปิดในเบราว์เซอร์จริง (เนื้อหาสร้างโดย js/install.js) -->
+<dialog class="install-dialog inapp-dialog" id="inappDialog" aria-labelledby="inappTitle"></dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
