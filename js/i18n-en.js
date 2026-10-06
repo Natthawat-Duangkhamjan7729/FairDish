@@ -3,6 +3,8 @@
 "use strict";
 
 EN = {
+  "ฟีเจอร์ใหม่ก่อนขึ้นตัวเต็ม ข้อมูลแยกจากตัวเต็ม":"New features before the main site. Data is separate from the main site.",
+  "ไปตัวเต็ม":"Go to main site",
   /* ---- ทั่วไป / เมนูหลัก ---- */
   "หน้าแรก":"Home", "ประวัติ":"History", "ใบสรุปยอด":"Summary", "กลุ่ม":"Groups", "วิธีใช้":"How it works", "อื่น ๆ":"More",
   "หารบิล":"Split", "เกี่ยวกับ":"About", "ติดตั้ง":"Install", "เมนูหลัก":"Main menu", "FairDish หน้าแรก":"FairDish home",
