@@ -56,6 +56,8 @@ var ui = {
   installNudgeOff:false, // v2.4: ผู้ใช้กดปิดการ์ดชวนติดตั้งแล้ว
   noReveal:false,       // v2.5: วาดหน้าใบสรุปซ้ำโดยไม่เล่นแอนิเมชันใบเสร็จ
   lastPayer:null,       // v3.0: คนจ่ายล่าสุดในโหมดทริป ใช้เป็นค่าตั้งต้นของรายการถัดไป
+  inappSkipped:false,   // v4.14: ปิดหน้าต่าง "เปิดในเบราว์เซอร์ดีกว่า" แล้ว (สำรองเมื่อ sessionStorage ใช้ไม่ได้)
+  meAfterInApp:false,   // v4.14: รอถาม "เข้าร่วมกลุ่มไหม?" หลังปิดหน้าต่างนั้น
   tripStash:null,       // v3.1: กำลังแก้มื้ออาหารข้างในทริป { mealId, menus, shared, charges, payers } ของทริปที่พักไว้
   history:[],           // v3.2: บิลส่วนตัวที่เก็บเข้าประวัติแล้ว (ใหม่สุดก่อน)
   sheet:null,           // v3.2: แผ่นล่างจอที่เปิดอยู่นอกหน้าหารบิล "kind" | "rename"
@@ -77,7 +79,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.13.2";
+var APP_VERSION = "4.14";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */

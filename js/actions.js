@@ -516,6 +516,7 @@ function maybeAskWhoAmI(){
   if (!ui.ctx || ui.loading || ui.groupError) return;   // v4.9: กลุ่มว่างก็ถามเข้าร่วมได้
   var g = myGroup(ui.ctx);
   if (!g || g.me || g.asked) return;
+  if (inAppPending()){ ui.meAfterInApp = true; return; }   // v4.14: หน้าต่างแนะนำเปิดในเบราว์เซอร์ขึ้นก่อน ปิดแล้วค่อยถาม
   g.asked = true;            // ถามครั้งเดียวต่อกลุ่มต่อเครื่อง กดข้ามก็ไม่ถามซ้ำ
   saveMyGroups();
   openMeDialog();             // v4.9: ชื่อตรงกับคนในกลุ่มก็ถามก่อน (ชื่อเล่นซ้ำกันได้) — ปุ่มหลักเป็น "ฉันคือ …"

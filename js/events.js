@@ -121,7 +121,7 @@ document.addEventListener("click", async function(e){
             "[data-open-kind],[data-new-kind],[data-trip-go],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
             "[data-paid],[data-show-done],[data-show-receipt],[data-restore-history],[data-del-history],#inviteBtn,"+
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
-            "#installBtn,#installClose,#installNow,#installCopyLink,#inappSkip,"+
+            "#installBtn,#installClose,#installNow,#installCopyLink,#inappSkip,#inappClose,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "#shareNative,#shareCopy,#shareSaveQr,"+
             "[data-lang],[data-onb-next],[data-onb-skip],[data-onb-again],"+
@@ -244,8 +244,8 @@ document.addEventListener("click", async function(e){
   if (t.id==="installBtn") return openInstall();
   if (t.id==="installClose") return closeInstall();
   if (t.id==="installNow") return installNow();
-  if (t.id==="installCopyLink") return copyText(location.href, L("คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย"));
-  if (t.id==="inappSkip") return skipInApp();
+  if (t.id==="installCopyLink") return copyText(currentLink(false), L("คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย"));
+  if (t.id==="inappSkip" || t.id==="inappClose") return skipInApp();
 
   /* v2.1: แท็บขั้นตอน, แผงกลุ่ม, ธีม */
   if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");

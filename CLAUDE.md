@@ -98,7 +98,7 @@
   ยุบกลุ่ม: `delete_group(p_id, p_owner)` ใน schema.sql — กุญแจคนสร้าง `myGroups[].owner` · ชวนเพื่อน = `openShareDialog()` (หน้า `/share` ยังเปิดจากลิงก์ได้)
   QR ถึงเวอร์ชัน 15 (220 ไบต์) · ชื่อฟังก์ชันระดับบนสุดห้ามซ้ำข้ามไฟล์ (tests/syntax.test.js เช็ก)
 - v4.12: มือถือไม่มีแท็บ "สรุป" (`steps()`) — ใครจ่าย/ใครโอน (`settleHTML()`) อยู่ใน `#billSettle` ของใบสรุปยอด, การสอนมือถือไปใบสรุปจาก `#totalBar`
-  แถบ in-app browser `renderInAppBar()` (install.js) · `ui.camera` จาก `detectCamera()` คุมระบบสแกน (v4.13: `openJoin()` → หน้าต่าง `#scanDialog` / แผ่นวางลิงก์) · ทริปตั้งชื่อตอนเริ่ม `openTripNameSheet()`
+  เปิดในแอปแชต (v4.14: หน้าต่าง `#inappDialog` จาก `renderInApp()` ใน install.js ครั้งเดียวต่อการเปิดแอป · ลิงก์ใช้ `currentLink()` ที่รู้ลิงก์กลุ่มที่รออยู่ · `maybeAskWhoAmI()` รอจน `skipInApp()`) · `ui.camera` จาก `detectCamera()` คุมระบบสแกน (v4.13: `openJoin()` → หน้าต่าง `#scanDialog` / แผ่นวางลิงก์) · ทริปตั้งชื่อตอนเริ่ม `openTripNameSheet()`
   ห้ามโฟกัสช่องพิมพ์เองในหน้าที่ขึ้นโดยผู้ใช้ไม่ได้กด (หน้าถามชื่อ, หน้าต่างเข้าร่วมกลุ่ม) — แป้นพิมพ์มือถือเด้งบัง
 - v4.13.1: บันทึกบิลกลุ่มชน = รวมข้อมูลให้เอง (`mergeBills(base, mine, theirs)` ใน save.js — ของที่เราแก้ใช้ของเรา ที่ไม่ได้แตะใช้ของเพื่อน, tests/merge.test.js)
   `Store.base` = บิลกลุ่มตอน `Store.version` — ที่ไหนตั้ง `Store.version` จากข้อมูลเซิร์ฟเวอร์ต้องตั้ง `Store.base` ด้วย · `nid()` มีส่วนสุ่มต่อท้าย (รหัสไม่ซ้ำข้ามเครื่อง)
