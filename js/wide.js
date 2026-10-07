@@ -187,10 +187,8 @@ function pageOnboardWide(){
    ========================================================= */
 function pageHomeWide(){
   return '<div class="wpage w-home">'+
-    landingHeaderHTML("")+landingHeroHTML()+   // งาน 1.1: ส่วนของหน้าแรก (pages.js) — ภาษาย้ายไปอยู่ใน Header
-    '<section class="lp-sec lp-mine" aria-labelledby="h-mine">'+
     helloHTML()+
-    '<div class="w-head"><h2 id="h-mine">'+L("บิลของฉัน")+'</h2>'+
+    '<div class="w-head"><h1>'+L("บิลของฉัน")+'</h1>'+langSwitch()+
       '<button class="install-btn" id="installBtn" type="button" aria-haspopup="dialog" hidden>'+ICON_INSTALL+'<span>'+L("ติดตั้งแอป")+'</span></button></div>'+
     '<div class="w-home-grid">'+
       '<div id="homeActive"></div>'+
@@ -206,8 +204,6 @@ function pageHomeWide(){
     '</div>'+
     '<div id="homeRecent"></div>'+
     '<div id="homeIntro"></div>'+
-    '</section>'+
-    landingRestHTML()+
   '</div>';
 }
 /** การ์ดบิลที่กำลังหาร (จอใหญ่) — มีวงกลมชื่อคน และบอกว่าใครจ่ายให้ร้าน */
