@@ -14,7 +14,7 @@ async function storeMyName(name){
   ui.myName = name;
   ui.nameAsked = true;
   try { await Store.saveProfile({ name:name, asked:true }); return true; }
-  catch(e){ toast(L("บันทึกชื่อลงเครื่องไม่สำเร็จ ใช้ได้เฉพาะรอบนี้"),"error"); return false; }
+  catch(e){ toast(L("บันทึกชื่อลงเครื่องไม่สำเร็จ ใช้ได้เฉพาะรอบนี้ ลองบันทึกอีกครั้งในหน้าตั้งค่า"),"error"); return false; }
 }
 
 /* ---- หน้าถามชื่อ (หน้าเต็ม ต่อจากหน้าแนะนำ — ไม่เด้งทับหน้าอื่น) ---- */
@@ -39,7 +39,7 @@ function pageAskName(){
     '<label class="sr-only" for="nameInput">'+L("ชื่อที่ให้เราเรียก")+'</label>'+
     '<input type="text" id="nameInput" placeholder="'+L("เช่น มาร์ค")+'" autocomplete="nickname" maxlength="'+MAX_NAME+'" aria-describedby="nameMsg">'+
     '<p class="field-msg muted" id="nameMsg" aria-live="polite"></p>'+
-    '<button class="btn-main btn-block" type="button" data-name-save="1">'+(ui.nameFor ? L("ตกลง ไปที่กลุ่ม") : L("ตกลง"))+'</button>'+
+    '<button class="btn-main btn-block" type="button" data-name-save="1">'+(ui.nameFor ? L("บันทึกแล้วไปที่กลุ่ม") : L("บันทึก"))+'</button>'+
     '<p class="intro-note">'+L("ชื่อนี้เก็บไว้ในเครื่องนี้เท่านั้น")+'</p>'+
   '</div>';
 }
@@ -108,9 +108,10 @@ async function saveMyNameFromSettings(){
   if (ok) toast(L("ต่อไปเราจะเรียกคุณว่า {name}", { name:name }),"ok");
 }
 async function clearMyName(){
+  var old = ui.myName;
   var ok = await storeMyName("");
   refreshMore();
-  if (ok) toast(L("ลบชื่อแล้ว"),"ok");
+  if (ok) toast(L("ลบชื่อแล้ว"),"ok",{ label:L("เอาคืน"), action:async function(){ if (!ui.myName && await storeMyName(old)) refreshMore(); } });   // งาน 6.2
 }
 
 /* ---- ใช้ชื่อในแอป ---- */

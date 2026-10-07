@@ -256,11 +256,11 @@ function memberExtraHTML(){
     var m = state.members.filter(function(p){ return p.id === ui.confirmMember; })[0];
     if (m){
       var n = menusOf(m.id).length;
-      html += '<div class="confirm" role="alertdialog" aria-label="'+L("ยืนยันการลบสมาชิก")+'">'+
+      html += '<div class="confirm" role="alertdialog" aria-label="'+L("ยืนยันการลบคนออกจากบิล")+'">'+
         '<h3>'+L("ลบ {name} ออกจากโต๊ะ?", { name:esc(m.name) })+'</h3>'+
         '<p>'+L("{name} อยู่ใน {n} เมนู ระบบจะนำชื่อออกจากเมนูเหล่านั้นแล้วคิดยอดใหม่ให้เฉพาะคนที่เหลือ", { name:esc(m.name), n:n })+'</p>'+
         '<div class="btn-row"><button class="btn-quiet" data-cancel-del="1">'+L("ยกเลิก")+'</button>'+
-        '<button class="btn-danger" data-confirm-del="'+m.id+'">'+L("ลบออก")+'</button></div></div>';
+        '<button class="btn-danger" data-confirm-del="'+m.id+'">'+L("ลบ")+'</button></div></div>';
     }
   }
   return html;

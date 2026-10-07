@@ -632,4 +632,16 @@ EN = {
   "โอนครบทุกคน บิลนี้เสร็จแล้ว":"Everyone has paid. This bill is done", "ความเคลื่อนไหว":"Activity", "ใหม่ {n}":"{n} new",
   "ยังไม่มีความเคลื่อนไหว เพื่อนเข้ากลุ่ม ยืนยันเมนู หรือติ๊กโอนแล้วจะขึ้นตรงนี้":"No activity yet. Joins, confirmations and payment ticks will show up here",
   "{n} รายการใหม่":"{n} new updates", "เริ่มกลุ่ม":"Created", "สมาชิกใหม่":"New member",
+  /* ---- งาน 6.2: คำศัพท์และข้อความแจ้งเตือน ---- */
+  "เอา {name} ออกจากรายการ?":"Remove {name} from your list?",
+  "กลุ่มยังอยู่และเพื่อนยังใช้ได้ แต่เครื่องนี้จะลืมกลุ่มนี้ ถ้าไม่มีลิงก์เก็บไว้ จะเปิดกลุ่มนี้ไม่ได้อีก":"The group stays and friends can still use it, but this device will forget it. Without the link saved somewhere, you won't be able to open it again",
+  "เอาออก":"Remove",
+  "เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ ลองกดเริ่มบิลใหม่อีกครั้ง":"Couldn't start a new bill. Your current bill is safe. Tap New bill again",
+  "ยุบกลุ่มไม่สำเร็จ กลุ่มนี้อาจถูกยุบไปแล้ว ลองเปิดกลุ่มใหม่จากหน้าประวัติ":"Couldn't close the group. It may already be closed. Try opening it again from History",
+  "ยุบกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง":"Couldn't close the group. Check your internet and try again",
+  "บันทึกไม่สำเร็จ ลองติ๊กอีกครั้ง":"Couldn't save. Try ticking again",
+  "คนใหม่":"New person",
+  "บันทึกชื่อลงเครื่องไม่สำเร็จ ใช้ได้เฉพาะรอบนี้ ลองบันทึกอีกครั้งในหน้าตั้งค่า":"Couldn't save your name on this device. It works for this visit only. Try saving again in Settings",
+  "บันทึกแล้วไปที่กลุ่ม":"Save and go to the group",
+  "ยืนยันการลบคนออกจากบิล":"Confirm removing this person from the bill",
 };

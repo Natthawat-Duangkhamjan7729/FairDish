@@ -249,7 +249,7 @@ function logRowParts(e){
   var amt = baht(e.amt || 0);
   switch (e.ev){
     case "create":    return ["open", L("เริ่มกลุ่ม"), by ? L("{by} สร้างกลุ่มนี้", { by:by }) : L("สร้างกลุ่มนี้แล้ว")];
-    case "join":      return ["open", L("สมาชิกใหม่"), L("{name} เข้ากลุ่ม", { name:who })];
+    case "join":      return ["open", L("คนใหม่"), L("{name} เข้ากลุ่ม", { name:who })];
     case "confirm":   return ["ok", L("ยืนยันแล้ว"), L("{name} ยืนยันเมนู", { name:who })];
     case "paid":      return ["ok", L("โอนแล้ว"), by ? L("{by} ติ๊กว่า {from} โอนให้ {to} {amt} บาทแล้ว", { by:by, from:who, to:to, amt:amt })
                                                      : L("มีคนติ๊กว่า {from} โอนให้ {to} {amt} บาทแล้ว", { from:who, to:to, amt:amt })];

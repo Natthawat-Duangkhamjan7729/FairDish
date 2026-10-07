@@ -108,7 +108,7 @@ async function removeMember(id){
 
   clearTimeout(ui.undoTimer);
   ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
-  toast(L("ลบ {name} แล้ว", { name:member.name }),"ok",{ label:L("เลิกทำ"), action:undoRemove });
+  toast(L("ลบ {name} แล้ว", { name:member.name }),"ok",{ label:L("เอาคืน"), action:undoRemove });
 }
 async function undoRemove(){
   if (!ui.undo) return;
@@ -413,7 +413,7 @@ async function removeMenu(id){
   if (!ok){ ui.undo = null; return; }   // บันทึกไม่ได้/ชนกับเพื่อน อย่าให้ toast เลิกทำทับข้อความแจ้งปัญหา
   clearTimeout(ui.undoTimer);
   ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
-  toast(L("ลบ {name} แล้ว", { name:menu.name }),"ok",{ label:L("เลิกทำ"), action:undoRemove });
+  toast(L("ลบ {name} แล้ว", { name:menu.name }),"ok",{ label:L("เอาคืน"), action:undoRemove });
 }
 
 /** ข้อความสรุปที่ส่งเข้าแชต — v2.4: เปิดด้วยคำขอบคุณให้อ่านเป็นเรื่องของเพื่อน ไม่ใช่ใบแจ้งหนี้ */
@@ -531,6 +531,16 @@ function joinGroup(){
   location.hash = hash;
 }
 
+/** งาน 6.2: เอากลุ่มออกจากรายการ = เครื่องนี้ลืมกุญแจของกลุ่ม (ย้อนไม่ได้ถ้าไม่มีลิงก์) จึงถามก่อน */
+function openForgetSheet(id){
+  var g = myGroup(id);
+  if (!g) return;
+  ui.sheet = "forget"; ui.forgetId = id;
+  renderGlobalSheet('<h2 class="sheet-title" id="forgetTitle">'+L("เอา {name} ออกจากรายการ?", { name:esc(g.name) })+'</h2>'+
+    '<p class="sheet-sub">'+L("กลุ่มยังอยู่และเพื่อนยังใช้ได้ แต่เครื่องนี้จะลืมกลุ่มนี้ ถ้าไม่มีลิงก์เก็บไว้ จะเปิดกลุ่มนี้ไม่ได้อีก")+'</p>'+
+    '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
+    '<button class="btn-danger" type="button" data-forget-ok="1">'+L("เอาออก")+'</button></div>', "forgetTitle");
+}
 async function forgetGroup(id){
   var g = myGroup(id);
   if (!g) return;
@@ -584,7 +594,7 @@ function openMeDialog(){
           return '<button data-me-pick="'+p.id+'">'+esc(p.name)+'</button>';
         }).join("")+'</div>'
       : '')+
-    '<div class="me-other name-skip"><button class="me-skip" data-me-close="1">'+L("ไม่ใช่ตอนนี้")+'</button></div>';
+    '<div class="me-other name-skip"><button class="me-skip" data-me-close="1">'+L("ไว้ทีหลัง")+'</button></div>';
   if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
   var close = box.querySelector("[data-me-close]");    // v4.12: showModal โฟกัสช่องแรกเอง (แป้นพิมพ์เด้ง) — ย้ายไปปุ่มปิดแทน
   if (close) close.focus({ preventScroll:true });
@@ -904,7 +914,7 @@ async function startNewBill(kind, demo, name){
     }
     toast(archived ? L("เก็บ {name} เข้าประวัติแล้ว เริ่ม{kind}ใหม่", { name:archived.name, kind:ktOf(kind,"name") }) : L("เริ่ม{kind}ใหม่แล้ว", { kind:ktOf(kind,"name") }),"ok");
   } catch(err){
-    toast(L("เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ"),"error");
+    toast(L("เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ ลองกดเริ่มบิลใหม่อีกครั้ง"),"error");
   }
 }
 /** step: "summary" (ค่าเริ่มต้น) = เปิดที่ใบสรุปยอด · "members" = เปิดที่หน้าหารบิล (v4.15 แถบซ้าย) */
@@ -1023,7 +1033,7 @@ async function dissolveGroup(){
   ui.dissolving = true;
   try {
     var res = await Cloud.remove(id, g.owner);
-    if (!res || !res.ok){ toast(L("ยุบกลุ่มไม่สำเร็จ (กลุ่มอาจถูกลบไปแล้ว)"),"error"); return; }
+    if (!res || !res.ok){ toast(L("ยุบกลุ่มไม่สำเร็จ กลุ่มนี้อาจถูกยุบไปแล้ว ลองเปิดกลุ่มใหม่จากหน้าประวัติ"),"error"); return; }
     var data = serialize(); data.name = Store.groupName;
     try { await archiveBill(data); } catch(e){}
     ui.myGroups = ui.myGroups.filter(function(x){ return x.id !== id; });
@@ -1033,7 +1043,7 @@ async function dissolveGroup(){
     location.hash = "#/";
     toast(L("ยุบกลุ่มแล้ว เก็บสำเนาไว้ในประวัติของคุณ"),"ok");
   } catch(e){
-    toast(L("ยุบกลุ่มไม่ได้ ตรวจอินเทอร์เน็ต หรือเซิร์ฟเวอร์ยังไม่รองรับ"),"error");
+    toast(L("ยุบกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"),"error");
   } finally {
     ui.dissolving = false;
   }
@@ -1259,7 +1269,7 @@ async function togglePaidAllHistory(id){
   Object.keys(h.data).forEach(function(k){ data[k] = h.data[k]; });
   data.paid = next;
   h.data = data;
-  try { await Store.saveHistory(ui.history); } catch(e){ return toast(L("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ"),"error"); }
+  try { await Store.saveHistory(ui.history); } catch(e){ return toast(L("บันทึกไม่สำเร็จ ลองติ๊กอีกครั้ง"),"error"); }
   refreshHistoryView();
   renderSideNav();                                     // บิลที่โอนครบแล้วออกจากแถบซ้าย
   toast(all ? L("เอาติ๊กออกทั้งหมดแล้ว") : L("ติ๊ก {name} ว่าโอนครบทุกคนแล้ว 🎉", { name:h.name }),"ok");
