@@ -78,7 +78,7 @@ var Store = {
     var text = JSON.stringify(data);
     await this.writeRaw(this.key, text);
     this.mem = JSON.parse(text);
-    ui.navLocal = undefined;              // v4.15: แถบซ้ายแบบ B อ่านบิลในเครื่องใหม่
+    ui.navLocal = undefined;              // v4.15: แถบซ้ายอ่านบิลในเครื่องใหม่
   },
   async loadMenus(){
     var raw = await this.readRaw(this.menuKey);
