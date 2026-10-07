@@ -49,7 +49,7 @@ function sideNavHTML(){
   return '<a class="sn-brand" href="#/"><img src="img/logo.png" alt="" width="36" height="36"><b>FairDish</b></a>'+
     '<button class="sn-new" type="button" data-open-kind="1" aria-haspopup="dialog" aria-label="'+L("เริ่มบิลใหม่")+'">'+ICON_PLUS+'<span class="sn-text">'+L("เริ่มบิลใหม่")+'</span></button>'+
     item("home", "#/", ICON_HOME, L("หน้าหลัก"))+
-    '<div class="sn-label">'+L("บิลที่เปิดอยู่")+'</div>'+
+    openBillsHTML(path)+
     item("split", splitHref(), ICON_FORK, L("หารบิล"))+
     item("bill", billHref(), ICON_COPY, '<span class="sn-long">'+L("ใบสรุปยอด")+'</span><span class="sn-short">'+L("สรุปยอด")+'</span>',
       paid ? '<span class="sn-badge mono">'+paid+'</span>' : '')+
@@ -57,8 +57,80 @@ function sideNavHTML(){
     '<div class="sn-sep" aria-hidden="true"></div>'+
     item("history", "#/history", ICON_CLOCK, L("ประวัติ"))+
     '<div class="sn-tip"><img src="img/mascot.png" alt="" width="62" height="62"><b>'+L("เคล็ดลับ")+'</b>'+
-      '<span>'+L("กด {key} ในหน้าหารบิลเพื่อเพิ่มเมนูได้ทันที", { key:kbd("N") })+'</span></div>'+
+      '<span>'+L("กด {key} ในหน้าหารบิลเพื่อเพิ่มเมนูได้ทันที", { key:kbd("M") })+'</span></div>'+
     item("more", "#/more", ICON_SETTINGS, L("ตั้งค่า"));
+}
+/* ---- v4.15: บิลที่เปิดอยู่ทุกบิล (บิลในเครื่อง + บิลกลุ่มที่ขึ้นในหน้าหลัก) — แตะเพื่อสลับบิล
+   อยู่หน้าใบสรุปยอด = ไปใบสรุปยอดของบิลนั้น, หน้าอื่น = หน้าหารบิล · ป้าย/ลิงก์ "หารบิล" "ใบสรุปยอด" ด้านล่างเป็นของบิลที่เลือกอยู่ ---- */
+/** บิลในเครื่องที่มีข้อมูล { name, kind } | null — จำไว้ใน ui.localOpen (โหลดจากเครื่องครั้งแรกแบบ async แล้ววาดแถบซ้ายใหม่) */
+function localOpenBill(){
+  if (ui.ctx === null && !ui.loading && !ui.tour){
+    ui.localOpen = billHasData(state) || ui.tripStash ? { name:billName(), kind:ui.tripStash ? "trip" : state.kind } : null;
+  } else if (ui.localOpen === undefined && !ui.localOpenLoading){
+    ui.localOpenLoading = true;
+    Store.loadLocalBill().then(function(saved){
+      ui.localOpen = billHasData(saved) ? { name:savedBillName(saved), kind:normalizeBill(saved).kind } : null;
+    }).catch(function(){ ui.localOpen = null; }).then(function(){ ui.localOpenLoading = false; renderSideNav(); });
+  }
+  return ui.localOpen || null;
+}
+/** บิลที่ยังไม่ปิด: บิลในเครื่องที่ทำอยู่ + บิลกลุ่ม (homeGroups) + บิลในประวัติที่ยังโอนไม่ครบ (30 วันล่าสุด)
+    { key, name, kind, split, bill, tag:"local"|"group"|"history" } */
+function openBills(){
+  var list = [], local = localOpenBill(), seen = {};
+  if (local) list.push({ key:"local", name:local.name, kind:local.kind, split:"#/split", bill:"#/bill", tag:"local" });
+  var groups = homeGroups().slice();
+  if (ui.ctx && myGroup(ui.ctx) && !groups.some(function(g){ return g.id === ui.ctx; })) groups.unshift(myGroup(ui.ctx));
+  groups.forEach(function(g){
+    if (seen[g.id]) return;
+    seen[g.id] = true;
+    list.push({ key:"g:"+g.id, name:g.name || L("กลุ่ม"), kind:(g.snap && g.snap.kind) || g.kind || "meal",
+                split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", tag:"group" });
+  });
+  // v4.15: บิลในประวัติที่ยังโอนไม่ครบ = ยังไม่ปิด (ผลจำไว้ต่อรายการ ข้อมูลในประวัติไม่เปลี่ยน)
+  var cut = Date.now() - HOME_GROUP_DAYS * 864e5;
+  ui.histDone = ui.histDone || {};
+  ui.history.forEach(function(h){
+    if ((h.at || 0) < cut) return;
+    if (!(h.id in ui.histDone)){ try { ui.histDone[h.id] = billDone(h.data); } catch(e){ ui.histDone[h.id] = true; } }
+    if (ui.histDone[h.id]) return;
+    list.push({ key:"h:"+h.id, name:h.name, kind:normalizeBill(h.data).kind, split:"#/h/"+h.id, bill:"#/h/"+h.id, tag:"history" });
+  });
+  return list;
+}
+/** key ของบิลที่กำลังดูอยู่ (ใช้ไฮไลต์ในแถบซ้าย) */
+function currentBillKey(path){
+  if (path === "/h") return "h:"+hashPath().replace(/^\/h\//, "");
+  if (path !== "/split" && path !== "/bill") return "";
+  if (ui.ctx === undefined) return "";
+  return ui.ctx ? "g:"+ui.ctx : "local";
+}
+/** v4.15: บิลที่ยังไม่ปิด แยกหัวข้อ มื้ออาหาร / ทริป แต่ละหัวข้อพับ/กางได้ (ui.snFold) — แถบไอคอน (แท็บเล็ต) เห็นแค่ไอคอนบิล */
+function openBillsHTML(path){
+  var bills = openBills();
+  var label = '<div class="sn-label">'+(bills.length ? L("บิลที่เปิดอยู่ ({n})", { n:bills.length }) : L("บิลที่เปิดอยู่"))+'</div>';
+  if (!bills.length) return label;
+  var toBill = path === "/bill" || path === "/h";
+  var cur = currentBillKey(path);
+  ui.snFold = ui.snFold || {};
+  return label+'<div class="sn-open">'+["meal", "trip"].map(function(kind){
+    var mine = bills.filter(function(b){ return b.kind === kind; });
+    if (!mine.length) return "";
+    var open = !ui.snFold[kind] || mine.some(function(b){ return b.key === cur; });
+    return '<div class="sn-kind'+(open ? ' open' : '')+'">'+
+      '<button class="sn-kind-head" type="button" data-sn-fold="'+kind+'" aria-expanded="'+open+'">'+
+        '<span class="ico" aria-hidden="true">'+ktOf(kind, "icon")+'</span>'+
+        '<span class="sn-kind-name">'+L("{kind} ({n})", { kind:ktOf(kind, "name"), n:mine.length })+'</span>'+
+        '<span class="sn-caret" aria-hidden="true">▾</span></button>'+
+      '<div class="sn-bills" role="group" aria-label="'+esc(ktOf(kind, "name"))+'"'+(open ? '' : ' hidden')+'>'+mine.map(function(b){
+        var on = b.key === cur;
+        return '<a class="sn-bill'+(on ? ' on' : '')+'" href="'+(toBill ? b.bill : b.split)+'"'+(on ? ' aria-current="true"' : '')+' title="'+esc(b.name)+'">'+
+          '<span class="ico" aria-hidden="true">'+ktOf(b.kind, "icon")+'</span>'+
+          '<span class="sn-bill-name">'+esc(b.name)+'</span>'+
+          (b.tag === "group" ? '<span class="sn-bill-tag" aria-label="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>'
+            : (b.tag === "history" ? '<span class="sn-bill-tag" aria-label="'+L("อยู่ในประวัติ")+'">'+ICON_CLOCK+'</span>' : ''))+'</a>';
+      }).join("")+'</div></div>';
+  }).join("")+'</div>';
 }
 /** วาดแถบซ้าย — ซ่อนบนมือถือ ตอนหน้าแนะนำ และหน้าที่เพื่อนเปิดมายืนยันเมนู (#/g/<id>/me) */
 function renderSideNav(){
@@ -247,12 +319,12 @@ function pageWorkspace(){
         '<div class="ws-col-head"><h2 id="h-ws-menu">'+(trip ? kt("itemsTitle") : L("เมนู"))+'</h2><span id="wsMenuMeta"></span></div>'+
         '<div class="ws-add" role="group" aria-label="'+kt("add")+'">'+
           '<div class="ws-name-wrap"><label class="sr-only" for="wsName">'+kt("nameLabel")+'</label>'+
-          '<input type="text" id="wsName" placeholder="'+(trip ? kt("namePh") : L("ชื่อเมนู เช่น ส้มตำปู"))+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-keyshortcuts="N" '+
+          '<input type="text" id="wsName" placeholder="'+(trip ? kt("namePh") : L("ชื่อเมนู เช่น ส้มตำปู"))+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-keyshortcuts="M" '+
             'role="combobox" aria-expanded="false" aria-controls="wsSuggestList" aria-autocomplete="list">'+
           '<div id="wsSuggest"></div></div>'+
           '<label class="sr-only" for="wsPrice">'+kt("pricePh")+'</label>'+
           '<input type="number" id="wsPrice" inputmode="decimal" step="0.01" min="0" placeholder="'+L("ราคา")+'" class="mono">'+
-          '<button class="btn-sm" type="button" id="wsAdd">'+L("+ เพิ่ม")+' '+kbd("N")+'</button>'+
+          '<button class="btn-sm" type="button" id="wsAdd">'+L("+ เพิ่ม")+' '+kbd("M")+'</button>'+
           (trip ? '<button class="btn-line btn-xs" type="button" data-add-meal="1">'+L("+ มื้ออาหาร 🍲")+'</button>' : '')+
         '</div>'+
         '<p class="field-msg muted" id="wsAddMsg" aria-live="polite"></p>'+
@@ -380,7 +452,7 @@ function wsMenuCard(m, trip){
   var known = m.eaters.filter(function(id){ return !!nameOf(id); });
   var all = state.members.length > 0 && known.length === state.members.length;
   var dim = ui.wsFocus && known.indexOf(ui.wsFocus) < 0;
-  var unpaid = trip && !nameOf(m.payer);
+  var unpaid = trip && !payerNames(m);
   var note = !known.length ? ['warn', L("ยังไม่มีใครมีส่วน — ลากชื่อมาวางหรือแตะชื่อด้านล่าง")]
     : (unpaid ? ['warn', L("ยังไม่เลือกคนจ่าย")]
     : ['ok', all ? L("หารทุกคน · คนละ {amt} บาท", { amt:baht(m.price / known.length) })
@@ -388,10 +460,10 @@ function wsMenuCard(m, trip){
   return '<article class="ws-card'+(dim ? ' dim' : '')+(note[0] === 'warn' ? ' warn' : '')+'" data-ws-drop="'+m.id+'" aria-label="'+esc(m.name)+'">'+
     '<button class="ws-card-head" type="button" data-edit-menu="'+m.id+'" aria-label="'+L("แก้ไข {name}", { name:esc(m.name) })+'">'+
       '<b>'+esc(m.name)+'</b><span class="mono">'+baht(m.price)+'</span></button>'+
-    (trip ? '<div class="ws-payrow"><span class="label">'+L("ใครจ่าย")+'</span><div class="pick" role="radiogroup" aria-label="'+L("ใครจ่ายรายการนี้")+'">'+
+    (trip ? '<div class="ws-payrow"><span class="label">'+L("ใครจ่าย")+'</span><div class="pick" role="group" aria-label="'+L("ใครจ่ายรายการนี้ (เลือกได้หลายคน)")+'">'+
       state.members.map(function(p){
-        var on = m.payer === p.id;
-        return '<button role="radio" data-ws-pay="'+m.id+':'+p.id+'" aria-pressed="'+on+'" aria-checked="'+on+'">'+esc(p.name)+'</button>';
+        var on = payerIds(m).indexOf(p.id) >= 0;
+        return '<button data-ws-pay="'+m.id+':'+p.id+'" aria-pressed="'+on+'">'+esc(p.name)+'</button>';
       }).join("")+'</div></div>' : '')+
     (state.members.length ? '<div class="pick ws-picks" role="group" aria-label="'+L("ใครมีส่วนใน {name}", { name:esc(m.name) })+'">'+
       '<button class="all" data-ws-all="'+m.id+'" aria-pressed="'+all+'">'+L("ทุกคน")+'</button>'+
@@ -403,13 +475,14 @@ function wsMenuCard(m, trip){
 }
 function wsMealCard(m){
   var sub = mealTotalOf(m), n = mealOf(m).menus.length;
-  var unpaid = sub.grand > 0 && !nameOf(m.payer);
+  var payers = payerNames(m);
+  var unpaid = sub.grand > 0 && !payers;
   return '<article class="ws-card ws-meal'+(unpaid ? ' warn' : '')+'">'+
     '<button class="ws-card-head" type="button" data-open-meal="'+m.id+'" aria-label="'+L("เปิดมื้อ {name}", { name:esc(m.name) })+'">'+
       '<b>🍲 '+esc(m.name)+'</b><span class="mono">'+baht(sub.grand)+'</span></button>'+
     '<p class="ws-note '+(unpaid ? 'warn' : 'ok')+'">'+
-      (unpaid ? L("ยังไม่เลือกคนจ่าย") : (nameOf(m.payer) ? L("{name} จ่าย", { name:esc(nameOf(m.payer)) }) : ''))+
-      ((unpaid || nameOf(m.payer)) ? ' · ' : '')+(n ? L("{n} เมนู", { n:n }) : L("ยังไม่มีเมนู"))+'</p>'+
+      (unpaid ? L("ยังไม่เลือกคนจ่าย") : (payers ? L("{name} จ่าย", { name:esc(payers) }) : ''))+
+      ((unpaid || payers) ? ' · ' : '')+(n ? L("{n} เมนู", { n:n }) : L("ยังไม่มีเมนู"))+'</p>'+
     '<button class="btn-line btn-xs" type="button" data-open-meal="'+m.id+'">'+L("เปิดมื้อนี้ ›")+'</button>'+
   '</article>';
 }
@@ -486,24 +559,26 @@ async function wsToggleAll(menuId){
   await commit(null, "menu");
   render();
 }
+/** v4.15: แตะชื่อคนจ่าย = เพิ่ม/เอาออก (หลายคนจ่ายรายการเดียวได้) */
 async function wsSetPayer(menuId, pid){
   var m = wsMenu(menuId);
-  if (!m || !nameOf(pid) || m.payer === pid) return;
+  if (!m || !nameOf(pid)) return;
   pushUndo();
-  m.payer = pid;
-  ui.lastPayer = pid;
+  var next = togglePayerId(m.payer, pid);
+  if (next) m.payer = next; else delete m.payer;
+  if (next) ui.lastPayer = next;
   render();
   await commit(null, "menu");
   render();
 }
-/** เพิ่มรายการจากช่องบรรทัดเดียว — คนมีส่วนเริ่มที่ทุกคน (แตะชื่อออกทีหลังได้) */
+/** เพิ่มรายการจากช่องบรรทัดเดียว — v4.15: ยังไม่มีใครมีส่วน ให้แตะ/ลากชื่อเลือกเอง (เดิมเลือกทุกคนให้อัตโนมัติ) */
 async function wsAddMenu(){
   var nameEl = document.getElementById("wsName"), priceEl = document.getElementById("wsPrice"), msg = document.getElementById("wsAddMsg");
   if (!nameEl || !priceEl || ui.savingMenu) return;
-  var ids = state.members.map(function(p){ return p.id; });
+  var ids = [];
   var f = { name:nameEl.value, price:priceEl.value, eaters:ids, payer:null };
   var e = validateMenuForm(f);
-  var problem = e.name || e.price || e.eaters;
+  var problem = e.name || e.price || (state.members.length ? "" : e.eaters);
   if (problem){
     if (msg){ msg.className = "field-msg error"; msg.textContent = problem; }
     (e.name ? nameEl : (e.price ? priceEl : (document.getElementById("memberInput") || nameEl))).focus();
@@ -513,7 +588,7 @@ async function wsAddMenu(){
   var price = parseFloat(String(f.price));
   var item = { id:nid(), name:name, price:price, eaters:ids };
   if (state.kind === "trip" && !ui.tripStash){
-    var payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
+    var payer = defaultPayer();
     if (payer) item.payer = payer;
   }
   pushUndo();

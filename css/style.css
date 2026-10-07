@@ -301,6 +301,9 @@ input[aria-invalid=true]{border-color:var(--danger);background:var(--danger-soft
   font-size:var(--fs-small);font-weight:600;color:var(--primary-ink);
 }
 .chip .nm{max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* v4.15: ข้อความตัดด้วย … (overflow:hidden) ตัดสระบน/วรรณยุกต์ที่ซ้อนกัน (ชื่อที่มี ิ ี ำ ่ ้) — เผื่อที่บนล่าง */
+.chip .nm,.r-line .who,.suggest .s-name,.payer-name,.list-body b,.t-label,.status-row b,.group-title h2,.appbar-title h1,.appbar-sub,
+.home-top .home-brand,.share-link,.ws-pname b,.w-hist-row .body b,.tour-tip.mini h2{line-height:1.6;padding-block:.12em}
 .chip .act{width:var(--tap-sm);height:var(--tap-sm);border-radius:50%;display:grid;place-items:center;color:var(--primary-ink)}
 .chip .act:hover{background:var(--chip-hover)}
 .chip .act.del:hover{background:var(--danger-soft);color:var(--danger)}
@@ -827,7 +830,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 @media(prefers-reduced-motion:no-preference){
   .sheet-wrap:not(.still) .sheet{animation:sheet-up .22s cubic-bezier(.2,.8,.3,1)}
   .sheet-wrap:not(.still) .sheet-backdrop{animation:fade-in .2s ease}
-  @keyframes sheet-up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+  @keyframes sheet-up{from{transform:translateY(40px)}to{transform:none}}   /* v4.15: ไม่จางที่แผ่น (iOS ค้างภาพจาง = แผ่นซ้อน) */
   @keyframes fade-in{from{opacity:0}to{opacity:1}}
 }
 .kind-grid{display:grid;gap:var(--s3)}
@@ -1000,6 +1003,20 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-item.on{background:var(--link-soft);color:var(--link)}
   .sn-badge{position:absolute;top:4px;right:2px;font-size:10px;line-height:1.5;padding:0 5px;border-radius:var(--r-pill);background:var(--secondary);color:var(--secondary-ink)}
   .sidenav .sn-item:last-child{margin-top:auto}
+  /* v4.15: บิลที่เปิดอยู่หลายบิล — แถบไอคอนเห็นแค่ไอคอน (ชื่ออยู่ใน title) */
+  .sn-bills{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;padding:4px 0;margin-bottom:4px;border-bottom:1px solid var(--line)}
+  .sn-bill{position:relative;display:flex;align-items:center;justify-content:center;width:56px;min-height:44px;border-radius:14px;border:1.5px solid transparent;color:var(--ink-2);font-size:14px;font-weight:600}
+  .sn-bill .ico{font-size:20px;line-height:1}
+  .sn-bill-name{display:none}
+  .sn-bill-tag{position:absolute;right:4px;bottom:2px;color:var(--link)}
+  .sn-bill-tag svg{width:12px;height:12px}
+  .sn-bill:hover{background:var(--surface-2);color:var(--ink)}
+  .sn-bill.on{border-color:var(--link-line);background:var(--surface);color:var(--ink)}
+  .sn-open{width:100%;padding-bottom:4px;margin-bottom:4px;border-bottom:1px solid var(--line)}
+  .sn-open .sn-bills{border-bottom:none;margin-bottom:0;padding:2px 0}
+  .sn-kind{width:100%}
+  .sn-kind-head{display:none}
+  .sn-kind .sn-bills[hidden]{display:flex}
 
   /* หัวของแต่ละหน้า */
   .wpage{padding:var(--wpad-y) var(--wpad-x) var(--s7);max-width:1240px;margin:0 auto}
@@ -1185,7 +1202,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .w-settle .settle{margin-top:0;padding-top:0;border-top:none}
   .w-settle .tf-list{display:grid;gap:8px}
   .w-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-  .w-actions > *{min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .w-actions > *{min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px;white-space:normal;text-align:center}   /* v4.15: ข้อความยาว ("ชวนเพื่อนตรวจยอด · ยืนยันเมนู") ขึ้นบรรทัดใหม่ ไม่ล้นปุ่ม */
   .w-actions svg{width:18px;height:18px}
   .w-done{position:relative;display:flex;align-items:center;gap:16px;width:100%;min-height:140px;padding:18px 20px 18px 150px;border-radius:var(--r-md);
     background:var(--primary-soft);border:1.5px solid var(--chip-line);text-align:left;color:var(--ink)}
@@ -1301,6 +1318,20 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-tip b{display:block;font-size:13px}
   .sn-tip span{display:block;font-size:12px;line-height:1.5;color:var(--ink-2)}
   .sidenav .sn-item:last-child{margin-top:8px}
+  .sn-bills{align-items:stretch;padding:2px 0 8px;margin-bottom:6px}
+  .sn-bill{width:auto;justify-content:flex-start;gap:10px;padding:2px 12px;min-height:40px}
+  .sn-bill .ico{font-size:18px}
+  .sn-bill-name{display:block;flex:1;min-width:0;padding-block:.15em;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sn-bill-tag{position:static;display:grid;place-items:center}
+  .sn-kind-head{display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:700;color:var(--ink-2);text-align:left}
+  .sn-kind-head:hover{background:var(--surface-2);color:var(--ink)}
+  .sn-kind-head .ico{font-size:16px;line-height:1}
+  .sn-kind-name{flex:1;min-width:0;padding-block:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sn-caret{transition:transform .15s;transform:rotate(-90deg);font-size:12px}
+  .sn-kind.open .sn-caret{transform:none}
+  .sn-kind .sn-bills[hidden]{display:none}
+  .sn-kind .sn-bills{padding:0 0 4px 14px}
+  .sn-open{padding-bottom:6px;margin-bottom:6px}
   .w-onb-text{padding:40px 72px 48px 40px}
   .w-onb-main h1{font-size:48px}
   .w-onb-mascot{width:min(480px,70%)}
@@ -1394,10 +1425,10 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
 }
 :root[data-theme="light"]{color-scheme:light}
-
 /* ---------------- แถบบอกว่าอยู่ใน Developer Beta (branch claude/dev-beta เท่านั้น) ---------------- */
 .sandbox-bar{background:var(--link-soft);color:var(--link);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
 .sandbox-bar a{text-decoration:underline;margin-left:var(--s2)}
+
 .inapp-text{line-height:1.6;margin-bottom:var(--s4)}
 .inapp-dialog .install-steps{margin-bottom:var(--s4)}
 .inapp-dialog .install-ico{font-weight:700;letter-spacing:1px}
