@@ -1103,8 +1103,7 @@ function openRenameSheet(){
       '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
       '<button class="btn-sm" type="button" id="billNameSave">'+L("บันทึก")+'</button></div>'+
     '</div>', "renameTitle");
-  var input = document.getElementById("billNameInput");
-  if (input){ input.focus(); input.select(); }
+  focusField(document.getElementById("billNameInput"), true);
 }
 function renderGlobalSheet(body, labelId){
   var slot = document.getElementById("globalSheet");
@@ -1202,8 +1201,7 @@ function openHostSheet(){
       '<div class="form-actions"><button class="btn-quiet" type="button" data-host-skip="1">'+L("ไม่ใส่ชื่อฉัน")+'</button>'+
       '<button class="btn-sm" type="button" data-host-save="1">'+L("สร้างกลุ่ม")+'</button></div>'+
     '</div>', "hostTitle");
-  var input = document.getElementById("hostNameInput");
-  if (input) input.focus();
+  focusField(document.getElementById("hostNameInput"));
 }
 async function saveHostSheet(){
   var input = document.getElementById("hostNameInput");

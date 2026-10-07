@@ -45,6 +45,15 @@ function restoreSheetScroll(slot){
   if (sh && ui.sheetScroll) sh.scrollTop = ui.sheetScroll;
   syncSheetLock();
 }
+/** v4.15: โฟกัสช่องในแผ่นล่างจอ — แผ่นที่เพิ่งเปิดไม่เล่นแอนิเมชันเลื่อนขึ้น (ใส่ .still ก่อนวาดเฟรมแรก)
+    iOS (โดยเฉพาะเบราว์เซอร์ในแอป IG/LINE) เปิดแป้นพิมพ์ระหว่างแผ่นกำลังเลื่อน แล้วค้างภาพเฟรมแรกไว้ = แผ่นซ้อนเป็นสองชั้น */
+function focusField(el, select){
+  if (!el) return;
+  var wrap = el.closest ? el.closest(".sheet-wrap") : null;
+  if (wrap) wrap.classList.add("still");
+  el.focus();
+  if (select && el.select) el.select();
+}
 /** ล็อกการเลื่อนหน้าหลังแผ่นล่างจอ */
 function syncSheetLock(){
   document.body.classList.toggle("sheet-open", !!document.querySelector(".sheet-wrap"));
@@ -399,7 +408,7 @@ function renderMenus(){
   if (ui.focusMenuField){
     var target = document.getElementById(ui.focusMenuField);
     ui.focusMenuField = null;
-    if (target) target.focus();
+    focusField(target);
   }
 }
 
@@ -424,7 +433,7 @@ function renderCharges(){
       '<button class="btn-sm" id="cSave">'+L("เพิ่ม")+'</button></div>'+
     '</div>', 'data-close-sheet="charge"');
   syncSheetLock();
-  document.getElementById("cLabel").focus();
+  focusField(document.getElementById("cLabel"));
 }
 
 function renderShared(){
@@ -455,7 +464,7 @@ function renderShared(){
       '<button class="btn-sm" id="sSave">'+L("เพิ่ม")+'</button></div>'+
     '</div>', 'data-close-sheet="shared"');
   syncSheetLock();
-  document.getElementById("sName").focus();
+  focusField(document.getElementById("sName"));
   ui.sharedSuggest = { open:true, items:[], active:-1 };
   renderSharedSuggestions();
 }

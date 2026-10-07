@@ -74,31 +74,62 @@ function localOpenBill(){
   }
   return ui.localOpen || null;
 }
+/** บิลที่ยังไม่ปิด: บิลในเครื่องที่ทำอยู่ + บิลกลุ่ม (homeGroups) + บิลในประวัติที่ยังโอนไม่ครบ (30 วันล่าสุด)
+    { key, name, kind, split, bill, tag:"local"|"group"|"history" } */
 function openBills(){
   var list = [], local = localOpenBill(), seen = {};
-  if (local) list.push({ id:"", name:local.name, kind:local.kind });
+  if (local) list.push({ key:"local", name:local.name, kind:local.kind, split:"#/split", bill:"#/bill", tag:"local" });
   var groups = homeGroups().slice();
   if (ui.ctx && myGroup(ui.ctx) && !groups.some(function(g){ return g.id === ui.ctx; })) groups.unshift(myGroup(ui.ctx));
   groups.forEach(function(g){
     if (seen[g.id]) return;
     seen[g.id] = true;
-    list.push({ id:g.id, name:g.name || L("กลุ่ม"), kind:(g.snap && g.snap.kind) || g.kind || "meal" });
+    list.push({ key:"g:"+g.id, name:g.name || L("กลุ่ม"), kind:(g.snap && g.snap.kind) || g.kind || "meal",
+                split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", tag:"group" });
+  });
+  // v4.15: บิลในประวัติที่ยังโอนไม่ครบ = ยังไม่ปิด (ผลจำไว้ต่อรายการ ข้อมูลในประวัติไม่เปลี่ยน)
+  var cut = Date.now() - HOME_GROUP_DAYS * 864e5;
+  ui.histDone = ui.histDone || {};
+  ui.history.forEach(function(h){
+    if ((h.at || 0) < cut) return;
+    if (!(h.id in ui.histDone)){ try { ui.histDone[h.id] = billDone(h.data); } catch(e){ ui.histDone[h.id] = true; } }
+    if (ui.histDone[h.id]) return;
+    list.push({ key:"h:"+h.id, name:h.name, kind:normalizeBill(h.data).kind, split:"#/h/"+h.id, bill:"#/h/"+h.id, tag:"history" });
   });
   return list;
 }
+/** key ของบิลที่กำลังดูอยู่ (ใช้ไฮไลต์ในแถบซ้าย) */
+function currentBillKey(path){
+  if (path === "/h") return "h:"+hashPath().replace(/^\/h\//, "");
+  if (path !== "/split" && path !== "/bill") return "";
+  if (ui.ctx === undefined) return "";
+  return ui.ctx ? "g:"+ui.ctx : "local";
+}
+/** v4.15: บิลที่ยังไม่ปิด แยกหัวข้อ มื้ออาหาร / ทริป แต่ละหัวข้อพับ/กางได้ (ui.snFold) — แถบไอคอน (แท็บเล็ต) เห็นแค่ไอคอนบิล */
 function openBillsHTML(path){
   var bills = openBills();
-  var label = '<div class="sn-label">'+(bills.length > 1 ? L("บิลที่เปิดอยู่ ({n})", { n:bills.length }) : L("บิลที่เปิดอยู่"))+'</div>';
-  if (bills.length < 2) return label;
-  var toBill = path === "/bill";
-  var cur = ui.ctx || "";
-  return label+'<div class="sn-bills" role="group" aria-label="'+L("สลับบิลที่เปิดอยู่")+'">'+bills.map(function(b){
-    var on = b.id === cur && ui.ctx !== undefined;
-    var href = b.id ? "#/g/"+b.id+(toBill ? "/bill" : "") : (toBill ? "#/bill" : "#/split");
-    return '<a class="sn-bill'+(on ? ' on' : '')+'" href="'+href+'"'+(on ? ' aria-current="true"' : '')+' title="'+esc(b.name)+'">'+
-      '<span class="ico" aria-hidden="true">'+ktOf(b.kind, "icon")+'</span>'+
-      '<span class="sn-bill-name">'+esc(b.name)+'</span>'+
-      (b.id ? '<span class="sn-bill-tag" aria-label="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>' : '')+'</a>';
+  var label = '<div class="sn-label">'+(bills.length ? L("บิลที่เปิดอยู่ ({n})", { n:bills.length }) : L("บิลที่เปิดอยู่"))+'</div>';
+  if (!bills.length) return label;
+  var toBill = path === "/bill" || path === "/h";
+  var cur = currentBillKey(path);
+  ui.snFold = ui.snFold || {};
+  return label+'<div class="sn-open">'+["meal", "trip"].map(function(kind){
+    var mine = bills.filter(function(b){ return b.kind === kind; });
+    if (!mine.length) return "";
+    var open = !ui.snFold[kind] || mine.some(function(b){ return b.key === cur; });
+    return '<div class="sn-kind'+(open ? ' open' : '')+'">'+
+      '<button class="sn-kind-head" type="button" data-sn-fold="'+kind+'" aria-expanded="'+open+'">'+
+        '<span class="ico" aria-hidden="true">'+ktOf(kind, "icon")+'</span>'+
+        '<span class="sn-kind-name">'+L("{kind} ({n})", { kind:ktOf(kind, "name"), n:mine.length })+'</span>'+
+        '<span class="sn-caret" aria-hidden="true">▾</span></button>'+
+      '<div class="sn-bills" role="group" aria-label="'+esc(ktOf(kind, "name"))+'"'+(open ? '' : ' hidden')+'>'+mine.map(function(b){
+        var on = b.key === cur;
+        return '<a class="sn-bill'+(on ? ' on' : '')+'" href="'+(toBill ? b.bill : b.split)+'"'+(on ? ' aria-current="true"' : '')+' title="'+esc(b.name)+'">'+
+          '<span class="ico" aria-hidden="true">'+ktOf(b.kind, "icon")+'</span>'+
+          '<span class="sn-bill-name">'+esc(b.name)+'</span>'+
+          (b.tag === "group" ? '<span class="sn-bill-tag" aria-label="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>'
+            : (b.tag === "history" ? '<span class="sn-bill-tag" aria-label="'+L("อยู่ในประวัติ")+'">'+ICON_CLOCK+'</span>' : ''))+'</a>';
+      }).join("")+'</div></div>';
   }).join("")+'</div>';
 }
 /** วาดแถบซ้าย — ซ่อนบนมือถือ ตอนหน้าแนะนำ และหน้าที่เพื่อนเปิดมายืนยันเมนู (#/g/<id>/me) */

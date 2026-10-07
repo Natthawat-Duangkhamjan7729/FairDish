@@ -830,7 +830,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 @media(prefers-reduced-motion:no-preference){
   .sheet-wrap:not(.still) .sheet{animation:sheet-up .22s cubic-bezier(.2,.8,.3,1)}
   .sheet-wrap:not(.still) .sheet-backdrop{animation:fade-in .2s ease}
-  @keyframes sheet-up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+  @keyframes sheet-up{from{transform:translateY(40px)}to{transform:none}}   /* v4.15: ไม่จางที่แผ่น (iOS ค้างภาพจาง = แผ่นซ้อน) */
   @keyframes fade-in{from{opacity:0}to{opacity:1}}
 }
 .kind-grid{display:grid;gap:var(--s3)}
@@ -1012,6 +1012,11 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-bill-tag svg{width:12px;height:12px}
   .sn-bill:hover{background:var(--surface-2);color:var(--ink)}
   .sn-bill.on{border-color:var(--link-line);background:var(--surface);color:var(--ink)}
+  .sn-open{width:100%;padding-bottom:4px;margin-bottom:4px;border-bottom:1px solid var(--line)}
+  .sn-open .sn-bills{border-bottom:none;margin-bottom:0;padding:2px 0}
+  .sn-kind{width:100%}
+  .sn-kind-head{display:none}
+  .sn-kind .sn-bills[hidden]{display:flex}
 
   /* หัวของแต่ละหน้า */
   .wpage{padding:var(--wpad-y) var(--wpad-x) var(--s7);max-width:1240px;margin:0 auto}
@@ -1318,6 +1323,15 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-bill .ico{font-size:18px}
   .sn-bill-name{display:block;flex:1;min-width:0;padding-block:.15em;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sn-bill-tag{position:static;display:grid;place-items:center}
+  .sn-kind-head{display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:700;color:var(--ink-2);text-align:left}
+  .sn-kind-head:hover{background:var(--surface-2);color:var(--ink)}
+  .sn-kind-head .ico{font-size:16px;line-height:1}
+  .sn-kind-name{flex:1;min-width:0;padding-block:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sn-caret{transition:transform .15s;transform:rotate(-90deg);font-size:12px}
+  .sn-kind.open .sn-caret{transform:none}
+  .sn-kind .sn-bills[hidden]{display:none}
+  .sn-kind .sn-bills{padding:0 0 4px 14px}
+  .sn-open{padding-bottom:6px;margin-bottom:6px}
   .w-onb-text{padding:40px 72px 48px 40px}
   .w-onb-main h1{font-size:48px}
   .w-onb-mascot{width:min(480px,70%)}
