@@ -477,6 +477,7 @@ EN = {
   "กรองตามประเภท":"Filter by type",
   "ไม่พบบิลที่ค้นหา":"No bills match your search",
   "เลือกบิลทางซ้ายเพื่อดูใบสรุปยอด":"Pick a bill on the left to see its summary",
+  "บิลที่เก็บไว้จะแสดงใบสรุปยอดตรงนี้":"Saved bills show their summary here",
   "บิลกลุ่มอยู่บนเซิร์ฟเวอร์ เปิดเพื่อดูยอดล่าสุดที่เพื่อนแก้":"Group bills live on the server. Open it to see your friends' latest changes",
   "เปิดบิลกลุ่ม":"Open group bill",
   "เอาออกจากรายการ":"Remove from list",

@@ -216,7 +216,8 @@ function renderMembers(){
   }
 
   if (ui.loading){
-    box.innerHTML = '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
+    // งาน 3.3: ตอนโหลดบิลกลุ่มบอกเป็นข้อความด้วย (มือถือเดิมมีแค่แถบจาง ๆ ดูเหมือนบิลว่าง)
+    box.innerHTML = '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>'+'<p class="hint" role="status" style="margin:var(--s2) 0 0">'+L("กำลังโหลดข้อมูลบิล…")+'</p>';
     if (extra) extra.innerHTML = "";
     return;
   }
@@ -292,7 +293,7 @@ function renderMenus(){
 
   if (ui.loading){
     if (meta) meta.textContent = "";
-    if (list) list.innerHTML = '<div class="skeleton" aria-hidden="true"><i style="width:100%"></i></div>';
+    if (list) list.innerHTML = '<div class="skeleton" aria-hidden="true"><i style="width:100%"></i></div>'+'<p class="hint" role="status" style="margin:var(--s2) 0 0">'+L("กำลังโหลดข้อมูลบิล…")+'</p>';
     slot.innerHTML = "";
     return;
   }

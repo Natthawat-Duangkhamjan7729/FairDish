@@ -815,7 +815,7 @@ function renderHistoryWide(){
     byMonth[key].push(x);
   });
   list.innerHTML = !d.any
-    ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'
+    ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'+'<div class="btn-row" style="margin-top:var(--s3)"><button class="btn-main" type="button" data-open-kind="1" aria-haspopup="dialog">'+L("เริ่มบิลใหม่")+'</button></div>'   // งาน 3.3: ปุ่มพาไปทำสิ่งแรก
     : (!all.length ? '<p class="w-empty-search">'+L("ไม่พบบิลที่ค้นหา")+'</p>'
       : (d.open.length ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+d.open.map(histRowHTML).join("") : '')+
         (d.groups.length ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+d.groups.map(histRowHTML).join("") : '')+
@@ -824,7 +824,8 @@ function renderHistoryWide(){
     b.setAttribute("aria-pressed", String(b.getAttribute("data-hist-filter") === (ui.histFilter || "all")));
   });
   var x = all.filter(function(it){ return it.id === ui.histSel; })[0];
-  if (!x){ detail.innerHTML = '<div class="w-hist-none"><img src="img/mascot.png" alt="" width="120" height="120"><p>'+L("เลือกบิลทางซ้ายเพื่อดูใบสรุปยอด")+'</p></div>'; return; }
+  // งาน 3.3: ยังไม่มีบิลเลย = บอกว่าแผงนี้จะแสดงอะไร (เดิมบอกให้เลือกบิลทั้งที่ทางซ้ายว่าง)
+  if (!x){ detail.innerHTML = '<div class="w-hist-none"><img src="img/mascot.png" alt="" width="120" height="120"><p>'+(d.any ? L("เลือกบิลทางซ้ายเพื่อดูใบสรุปยอด") : L("บิลที่เก็บไว้จะแสดงใบสรุปยอดตรงนี้"))+'</p></div>'; return; }
   if (x.group){
     detail.innerHTML = '<div class="w-hist-inner"><div class="w-card w-group-card"><span class="ico" aria-hidden="true">'+x.icon+'</span>'+
       '<h2>'+esc(x.name)+'</h2><p class="muted"><span class="tag-group">'+ICON_USERS+' '+L("บิลกลุ่ม")+'</span>'+(x.sub ? ' · '+esc(x.sub) : '')+'</p>'+

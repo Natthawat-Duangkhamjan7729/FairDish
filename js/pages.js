@@ -346,7 +346,7 @@ function pageHistory(){
   var empty = !ui.myGroups.length && !ui.history.length && !cur;
   return appBar({ title:L("ประวัติบิล"), right:settingsLink() })+
     '<div class="page">'+
-      (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>' : '')+
+      (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'+'<div class="btn-row" style="margin-top:var(--s3)"><button class="btn-main" type="button" data-open-kind="1" aria-haspopup="dialog">'+L("เริ่มบิลใหม่")+'</button></div>' : '')+   // งาน 3.3: ปุ่มพาไปทำสิ่งแรก
       (open ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+'<div class="list-wrap">'+open+
         '<button class="icon-btn list-x" type="button" data-del-local="1" aria-label="'+L("ลบบิลนี้")+'">'+ICON_X+'</button></div>' : '')+
       (groups ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+groups : '')+
