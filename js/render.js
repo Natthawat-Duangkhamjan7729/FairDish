@@ -9,22 +9,6 @@
 var WIDE_MQ = window.matchMedia ? window.matchMedia("(min-width:600px)") : null;
 function isWide(){ return !!(WIDE_MQ && WIDE_MQ.matches); }
 
-/* ---- v4.15: ทริป — หลายคนจ่ายรายการ/มื้อเดียวได้ (payer = string หรือ array, payerIds()/packPayer() ใน calc.js) ---- */
-/** ชื่อคนจ่ายที่ยังอยู่ในบิล คั่นด้วยจุลภาค ("" = ยังไม่เลือก) */
-function payerNames(m){ return payerIds(m).map(nameOf).filter(Boolean).join(", "); }
-/** แตะชื่อคนจ่าย: มีอยู่แล้ว = เอาออก, ยังไม่มี = เพิ่ม (คนที่ถูกลบจากบิลไปแล้วถูกทิ้ง) */
-function togglePayerId(cur, id){
-  var ids = payerIds({ payer:cur }).filter(function(x){ return !!nameOf(x); });
-  var i = ids.indexOf(id);
-  if (i >= 0) ids.splice(i, 1); else ids.push(id);
-  return packPayer(ids);
-}
-/** คนจ่ายตั้งต้นของรายการใหม่ = ชุดที่เลือกครั้งก่อน หรือ "ฉัน" */
-function defaultPayer(){
-  var ids = payerIds({ payer:ui.lastPayer }).filter(function(x){ return !!nameOf(x); });
-  return ids.length ? packPayer(ids) : (myMemberId() || null);
-}
-
 function render(){
   renderMealHead(); renderGroupBar(); renderMembers(); renderMenus(); renderCharges(); renderShared(); renderSummary();
   renderStepTabs(); renderTotalBar(); renderAppBarSub();
@@ -44,15 +28,6 @@ function restoreSheetScroll(slot){
   var sh = slot && slot.querySelector(".sheet");
   if (sh && ui.sheetScroll) sh.scrollTop = ui.sheetScroll;
   syncSheetLock();
-}
-/** v4.15: โฟกัสช่องในแผ่นล่างจอ — แผ่นที่เพิ่งเปิดไม่เล่นแอนิเมชันเลื่อนขึ้น (ใส่ .still ก่อนวาดเฟรมแรก)
-    iOS (โดยเฉพาะเบราว์เซอร์ในแอป IG/LINE) เปิดแป้นพิมพ์ระหว่างแผ่นกำลังเลื่อน แล้วค้างภาพเฟรมแรกไว้ = แผ่นซ้อนเป็นสองชั้น */
-function focusField(el, select){
-  if (!el) return;
-  var wrap = el.closest ? el.closest(".sheet-wrap") : null;
-  if (wrap) wrap.classList.add("still");
-  el.focus();
-  if (select && el.select) el.select();
 }
 /** ล็อกการเลื่อนหน้าหลังแผ่นล่างจอ */
 function syncSheetLock(){
@@ -90,11 +65,11 @@ function renderMealHead(){
     '<label class="label" for="mealName">'+L("ชื่อมื้อ")+'</label>'+
     '<input type="text" id="mealName" value="'+esc(item.name)+'" maxlength="'+MAX_MENU_NAME+'" autocomplete="off" placeholder="'+L("เช่น มื้อเย็น ร้านส้มตำ")+'">'+
     '<div class="label" style="margin-top:var(--s4)">'+L("ใครจ่ายมื้อนี้")+'</div>'+
-    '<div class="pick payer-pick" role="group" aria-label="'+L("ใครจ่ายมื้อนี้ (เลือกได้หลายคน)")+'">'+state.members.map(function(p){
-      var on = payerIds(item).indexOf(p.id) >= 0;
-      return '<button data-meal-pay="'+p.id+'" aria-pressed="'+on+'">'+esc(p.name)+'</button>';
+    '<div class="pick payer-pick" role="radiogroup" aria-label="'+L("ใครจ่ายมื้อนี้")+'">'+state.members.map(function(p){
+      var on = item.payer === p.id;
+      return '<button role="radio" data-meal-pay="'+p.id+'" aria-pressed="'+on+'" aria-checked="'+on+'">'+esc(p.name)+'</button>';
     }).join("")+'</div>'+
-    (payerNames(item) ? '' : '<p class="field-msg error">'+L("เลือกว่าใครจ่ายมื้อนี้ จะได้รวมในการโอนของทริป")+'</p>')+
+    (nameOf(item.payer) ? '' : '<p class="field-msg error">'+L("เลือกว่าใครจ่ายมื้อนี้ จะได้รวมในการโอนของทริป")+'</p>')+
     '<p class="meal-total">'+L("ยอดมื้อนี้")+' <b>'+baht(r.grand)+' ฿</b> <span>'+L("หารตามที่แต่ละคนกินจริง")+'</span></p>'+
   '</section>';
 }
@@ -288,10 +263,9 @@ function memberExtraHTML(){
 /** v3.1: แถวมื้ออาหารในรายการทริป — แตะเพื่อเข้าไปแก้เมนูข้างใน */
 function mealRow(m){
   var sub = mealTotalOf(m), n = mealOf(m).menus.length;
-  var payers = payerNames(m);
-  var unpaid = sub.grand > 0 && !payers;
-  var who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : (payers ? '<b class="payer-tag">'+L("{name} จ่าย", { name:esc(payers) })+'</b>' : ''))+
-    (unpaid || payers ? ' · ' : '')+(n ? L("{n} เมนู", { n:n }) : L("ยังไม่มีเมนู"));
+  var unpaid = sub.grand > 0 && !nameOf(m.payer);
+  var who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : (nameOf(m.payer) ? '<b class="payer-tag">'+L("{name} จ่าย", { name:esc(nameOf(m.payer)) })+'</b>' : ''))+
+    (unpaid || nameOf(m.payer) ? ' · ' : '')+(n ? L("{n} เมนู", { n:n }) : L("ยังไม่มีเมนู"));
   return '<div class="row-item meal-row'+(unpaid ? ' warn' : '')+'">'+
     '<button class="row-tap" data-open-meal="'+m.id+'" aria-label="'+L("เปิดมื้อ {name}", { name:esc(m.name) })+'">'+
       '<span class="body"><span class="name">🍲 '+esc(m.name)+'</span><span class="sub">'+who+'</span></span>'+
@@ -331,8 +305,8 @@ function renderMenus(){
       var known = m.eaters.filter(function(id){ return !!nameOf(id); });
       var who = known.length ? eatersLabel(known) : L("ยังไม่ได้เลือกคนมีส่วน — ยังไม่ถูกนำไปคำนวณ");
       var trip = state.kind === "trip";
-      var unpaid = trip && known.length && !payerNames(m);
-      if (trip && known.length) who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : '<b class="payer-tag">'+L("{name} จ่าย", { name:esc(payerNames(m)) })+'</b>')+' · '+who;
+      var unpaid = trip && known.length && !nameOf(m.payer);
+      if (trip && known.length) who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : '<b class="payer-tag">'+L("{name} จ่าย", { name:esc(nameOf(m.payer)) })+'</b>')+' · '+who;
       var each = known.length > 1 ? '<small>'+L("คนละ {amt}", { amt:baht(m.price/known.length) })+'</small>' : '';
       var editing = state.menuForm && state.menuForm.id===m.id;
       // v2.6: แถวไม่มีไอคอน แตะแถวเพื่อแก้ ปุ่มอีกจาน/ลบอยู่ในฟอร์มแก้
@@ -366,12 +340,12 @@ function renderMenus(){
       }).join("")+'</div>'
     : '';
   var preview = menuPreviewText(f);
-  // v3.0: ทริป — ใครจ่ายรายการนี้ (v4.15: เลือกได้หลายคน หารยอดที่จ่ายเท่ากัน)
+  // v3.0: ทริป — ใครจ่ายรายการนี้ (เลือกได้คนเดียว)
   var payerPick = state.kind === "trip" && state.members.length
-    ? '<div class="label">'+L("ใครจ่ายรายการนี้")+' <span class="hint">'+L("เลือกได้หลายคน")+'</span></div>'+
-      '<div class="pick payer-pick" role="group" aria-label="'+L("ใครจ่ายรายการนี้ (เลือกได้หลายคน)")+'">'+state.members.map(function(p){
-        var on = payerIds(f).indexOf(p.id) >= 0;
-        return '<button data-pay="'+p.id+'" aria-pressed="'+on+'">'+esc(p.name)+'</button>';
+    ? '<div class="label">'+L("ใครจ่ายรายการนี้")+'</div>'+
+      '<div class="pick payer-pick" role="radiogroup" aria-label="'+L("ใครจ่ายรายการนี้")+'">'+state.members.map(function(p){
+        var on = f.payer === p.id;
+        return '<button role="radio" data-pay="'+p.id+'" aria-pressed="'+on+'" aria-checked="'+on+'">'+esc(p.name)+'</button>';
       }).join("")+'</div>'+
       (e.payer ? '<p class="field-msg error" aria-live="polite">'+esc(e.payer)+'</p>' : '')
     : '';
@@ -408,7 +382,7 @@ function renderMenus(){
   if (ui.focusMenuField){
     var target = document.getElementById(ui.focusMenuField);
     ui.focusMenuField = null;
-    focusField(target);
+    if (target) target.focus();
   }
 }
 
@@ -433,7 +407,7 @@ function renderCharges(){
       '<button class="btn-sm" id="cSave">'+L("เพิ่ม")+'</button></div>'+
     '</div>', 'data-close-sheet="charge"');
   syncSheetLock();
-  focusField(document.getElementById("cLabel"));
+  document.getElementById("cLabel").focus();
 }
 
 function renderShared(){
@@ -464,7 +438,7 @@ function renderShared(){
       '<button class="btn-sm" id="sSave">'+L("เพิ่ม")+'</button></div>'+
     '</div>', 'data-close-sheet="shared"');
   syncSheetLock();
-  focusField(document.getElementById("sName"));
+  document.getElementById("sName").focus();
   ui.sharedSuggest = { open:true, items:[], active:-1 };
   renderSharedSuggestions();
 }

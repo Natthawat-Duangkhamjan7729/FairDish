@@ -107,8 +107,6 @@ async function refreshGroup(manual, live){
     var g = await Cloud.get(id);
     if (ui.ctx !== id) return;
     if (!g){ ui.groupError = "notfound"; return refreshView(); }
-    // v4.14.1: ระหว่างรอคำตอบ เราอาจบันทึกไปแล้ว (version ในเครื่องใหม่กว่า) — คำตอบเก่าห้ามวาดทับ
-    if (ui.save === "saving" || g.version < Store.version) return;
     if (g.version !== Store.version){
       var before = groupSnapshot(), wasDone = billDone(serialize());
       applyBill(g.data);

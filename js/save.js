@@ -30,8 +30,7 @@ function normalizeBill(saved){
     .map(function(p){ return { id:String(p.id), name:String(p.name || "") }; });
   b.menus = (Array.isArray(saved.menus) ? saved.menus : []).map(function(m){
     var item = { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
-    var payer = packPayer(payerIds(m));                 // v4.15: หลายคนจ่ายได้ (array)
-    if (payer) item.payer = payer;
+    if (m.payer) item.payer = String(m.payer);
     if (m.type === "meal"){
       var md = m.meal || {};
       item.type = "meal";
@@ -171,19 +170,13 @@ function mergeItem(base, mine, theirs){
   var mineChanged = !sameJSON(mine, base), theirsChanged = !sameJSON(theirs, base);
   if (!mineChanged) return theirs;
   if (!theirsChanged) return mine;
-  // v4.14.1: สองฝั่งแก้รายการเดียวกัน → รวมทีละช่อง (เราแก้ราคา เพื่อนแก้ชื่อ = ได้ทั้งคู่ · ช่องเดียวกันใช้ของเรา)
-  var out = mergeKeys(base, mine, theirs);
-  if (Array.isArray(base.eaters) && Array.isArray(mine.eaters) && Array.isArray(theirs.eaters))
-    out.eaters = mergeSet(base.eaters, mine.eaters, theirs.eaters);
-  if (mine.type === "meal" && theirs.type === "meal" && base.type === "meal")   // มื้อในทริป: รวมข้างในมื้อด้วย
+  if (mine.type === "meal" && theirs.type === "meal" && base.type === "meal"){   // มื้อในทริป: รวมข้างในมื้อด้วย
+    var out = mergeItem(Object.assign({}, base, { meal:null }), Object.assign({}, mine, { meal:null }), Object.assign({}, theirs, { meal:null }));
+    out = Object.assign({}, out);
     out.meal = mergeParts(base.meal || {}, mine.meal || {}, theirs.meal || {});
-  return out;
-}
-/** รายชื่อคนกิน: ของเพื่อน + คนที่เราเพิ่ม − คนที่เราเอาออก (ลำดับตามของเพื่อน) */
-function mergeSet(base, mine, theirs){
-  var out = theirs.filter(function(x){ return !(base.indexOf(x) >= 0 && mine.indexOf(x) < 0); });
-  mine.forEach(function(x){ if (base.indexOf(x) < 0 && out.indexOf(x) < 0) out.push(x); });
-  return out;
+    return out;
+  }
+  return mine;
 }
 function mergeParts(b, m, t){
   return { menus:mergeList(b.menus, m.menus, t.menus), shared:mergeList(b.shared, m.shared, t.shared), charges:mergeList(b.charges, m.charges, t.charges) };
