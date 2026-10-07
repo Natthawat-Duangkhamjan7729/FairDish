@@ -350,7 +350,8 @@ function pageHistory(){
   return appBar({ title:L("ประวัติบิล"), right:settingsLink() })+
     '<div class="page">'+
       (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>' : '')+
-      (open ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+open : '')+
+      (open ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+'<div class="list-wrap">'+open+
+        '<button class="icon-btn list-x" type="button" data-del-local="1" aria-label="'+L("ลบบิลนี้")+'">'+ICON_X+'</button></div>' : '')+
       (groups ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+groups : '')+
       join+
       past+
