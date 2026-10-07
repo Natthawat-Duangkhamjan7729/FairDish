@@ -94,7 +94,7 @@ function route(){
   if (path==="/share") fitShareQr();
   if ((path==="/history" || path==="/groups" || path==="/h") && isWide()) renderHistoryWide();
   renderSideNav();
-  renderInAppBar();                    // v4.12: ลิงก์ "เปิดในเบราว์เซอร์" ต้องพาไปหน้าปัจจุบัน
+  renderInApp();                       // v4.12: ลิงก์ "เปิดในเบราว์เซอร์" ต้องพาไปหน้าปัจจุบัน
   syncSheetLock();
   jumpTo(0);
 }

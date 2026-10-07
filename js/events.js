@@ -59,7 +59,8 @@ function wideShortcut(e){
   if (path === "/split" && wsActive()){
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (k === "z" || k === "Z")){ e.preventDefault(); wsUndo(); return true; }
     if (e.ctrlKey || e.metaKey) return false;
-    if (k === "n" || k === "N"){ var n = document.getElementById("wsName"); if (n){ e.preventDefault(); n.focus(); return true; } }
+    // v4.15: M = เมนู (ตรงกับปุ่มลัดเริ่มมื้อในหน้าแรก) — N ยังใช้ได้สำหรับคนที่เคยชิน
+    if (k === "m" || k === "M" || k === "n" || k === "N"){ var n = document.getElementById("wsName"); if (n){ e.preventDefault(); n.focus(); return true; } }
     if (k === "Escape" && ui.wsFocus){ e.preventDefault(); ui.wsFocus = null; renderWorkspace(); return true; }
   }
   if (path === "/" && !ui.showOnb && !e.ctrlKey && !e.metaKey && (k === "m" || k === "M" || k === "t" || k === "T")){
@@ -117,11 +118,11 @@ document.addEventListener("click", async function(e){
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
-            "[data-step],[data-group-panel],[data-theme-pick],[data-pay],"+
+            "[data-step],[data-group-panel],[data-theme-pick],[data-nav-style],[data-pay],"+
             "[data-open-kind],[data-new-kind],[data-trip-go],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
-            "[data-paid],[data-show-done],[data-show-receipt],[data-restore-history],[data-del-history],#inviteBtn,"+
+            "[data-paid],[data-show-done],[data-show-receipt],[data-restore-history],[data-del-history],[data-nav-open],[data-paid-all],[data-hist-paid-all],#inviteBtn,"+
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
-            "#installBtn,#installClose,#installNow,#installCopyLink,#inappSkip,"+
+            "#installBtn,#installClose,#installNow,#installCopyLink,#inappSkip,#inappClose,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
             "#shareNative,#shareCopy,#shareSaveQr,"+
             "[data-lang],[data-onb-next],[data-onb-skip],[data-onb-again],"+
@@ -173,7 +174,10 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-guest-again")){ ui.guestDone = false; return rerenderGuest(); }
   if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return jumpTo(0); }
   if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return jumpTo(0); }
+  if (t.getAttribute("data-paid-all")) return togglePaidAll();
+  if ((v = t.getAttribute("data-hist-paid-all"))) return togglePaidAllHistory(v);
   if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
+  if ((v = t.getAttribute("data-nav-open"))){ v = v.split(":"); return restoreHistory(v[0], v[1] === "bill" ? "summary" : "members"); }   // v4.15: แถบซ้ายแบบ B
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
 
   /* v4.5: สอนใช้แบบกดจริง */
@@ -235,8 +239,8 @@ document.addEventListener("click", async function(e){
   /* v3.0: คนจ่ายของรายการทริป */
   if ((v = t.getAttribute("data-pay"))){
     syncMenuForm();
-    state.menuForm.payer = v;
-    if (ui.menuErr) ui.menuErr.payer = "";
+    setPayersOf(state.menuForm, togglePayerIn(knownPayers(state.menuForm), v));   // v4.15: จ่ายด้วยกันหลายคนได้
+    if (ui.menuErr && knownPayers(state.menuForm).length) ui.menuErr.payer = "";
     return renderMenus();
   }
 
@@ -244,13 +248,14 @@ document.addEventListener("click", async function(e){
   if (t.id==="installBtn") return openInstall();
   if (t.id==="installClose") return closeInstall();
   if (t.id==="installNow") return installNow();
-  if (t.id==="installCopyLink") return copyText(location.href, L("คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย"));
-  if (t.id==="inappSkip") return skipInApp();
+  if (t.id==="installCopyLink") return copyText(currentLink(false), L("คัดลอกลิงก์แล้ว วางในเบราว์เซอร์ได้เลย"));
+  if (t.id==="inappSkip" || t.id==="inappClose") return skipInApp();
 
   /* v2.1: แท็บขั้นตอน, แผงกลุ่ม, ธีม */
   if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");
   if (t.getAttribute("data-group-panel")){ ui.groupPanel = !ui.groupPanel; return renderGroupBar(); }
   if ((v = t.getAttribute("data-theme-pick"))) return setTheme(v);
+  if ((v = t.getAttribute("data-nav-style"))) return setNavStyle(v);
 
   /* v2.0: กลุ่ม */
   if (t.id==="groupJoin") return joinGroup();
@@ -300,10 +305,10 @@ document.addEventListener("click", async function(e){
   }
 
   if (t.id==="menuOpen"){
-    // v2.4: โต๊ะไทยส่วนใหญ่กินด้วยกัน เริ่มที่ "ทุกคน" แล้วแตะเอาคนที่ไม่กินออก
-    state.menuForm={ id:null, name:"", price:"", eaters:state.members.map(function(p){ return p.id; }) };
+    // v4.15: ไม่เลือกทุกคนให้เอง — แตะชื่อคนที่กินเอง (หรือกด "ทุกคน")
+    state.menuForm={ id:null, name:"", price:"", eaters:[] };
     // v3.0: ทริป — คนจ่ายตั้งต้น = คนที่เลือกครั้งก่อน หรือ "ฉัน"
-    if (state.kind === "trip") state.menuForm.payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
+    if (state.kind === "trip") setPayersOf(state.menuForm, defaultPayers());
     ui.menuErr={}; ui.focusMenuField="mName";
     ui.suggest={ open:true, items:[], active:-1, total:0 };
     return renderMenus();
@@ -311,7 +316,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-suggest")) !== null) return pickSuggestion(parseInt(v,10));
   if ((v = t.getAttribute("data-edit-menu"))){
     var m = state.menus.filter(function(x){ return x.id===v; })[0];
-    if (m){ state.menuForm={ id:m.id, name:m.name, price:m.price, eaters:m.eaters.slice(), payer:m.payer || null }; ui.menuErr={}; }
+    if (m){ state.menuForm=setPayersOf({ id:m.id, name:m.name, price:m.price, eaters:m.eaters.slice() }, payersOf(m)); ui.menuErr={}; }
     closeSuggestions();
     return renderMenus();
   }
@@ -452,3 +457,14 @@ document.addEventListener("drop", function(e){
 document.addEventListener("focusin", function(e){
   if (e.target && e.target.id === "wsName" && !(ui.wsSuggest && ui.wsSuggest.open)) openWsSuggest();
 });
+
+/* v4.15: แถบซ้ายแบบ B — แตะ/คลิกชื่อบิลครั้งแรกเพื่อกางเมนูย่อย (ทั้งคอมและแท็บเล็ต) กางอยู่แล้ว = เปิดบิลตามปกติ */
+document.addEventListener("click", function(e){
+  var head = e.target.closest && e.target.closest("#sidenav .sn-bhead");
+  if (!head) return;
+  var box = head.closest(".sn-bill");
+  if (!box || box.classList.contains("open")) return;
+  e.preventDefault(); e.stopPropagation();
+  ui.navOpenKey = box.getAttribute("data-nav-key");
+  renderSideNav();
+}, true);

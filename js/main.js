@@ -142,6 +142,28 @@ setInterval(function(){
   if (ui.ctx && document.visibilityState === "visible" && !ui.tour) refreshGroup(false, true);
 }, LIVE_MS);
 
+/* v4.15: เปิด FairDish ไว้หลายแท็บ — แท็บอื่นแก้ประวัติ / กลุ่มของฉัน / บิลในเครื่อง ให้แท็บนี้ใช้ข้อมูลใหม่ด้วย
+   (เดิมแท็บเก่าบันทึกข้อมูลเก่าทับ: บิลที่ลบจากประวัติกลับมาอีก บิลที่ย้ายขึ้นกลุ่มแล้วกลับมาเป็นบิลในเครื่องซ้ำ) */
+window.addEventListener("storage", async function(e){
+  if (!e.key || Store.mode !== "local") return;
+  var path = currentPath();
+  if (e.key === Store.historyKey){
+    try { ui.history = await Store.loadHistory(); } catch(err){ return; }
+    if (path === "/history" || path === "/groups") refreshHistoryView();
+  } else if (e.key === Store.groupsKey){
+    try { ui.myGroups = await Store.loadGroups(); } catch(err){ return; }
+    if (path === "/history" || path === "/groups") refreshHistoryView();
+  } else if (e.key === Store.key){
+    ui.navLocal = undefined;
+    if (ui.ctx !== null || ui.tour) return;           // แท็บนี้ไม่ได้เปิดบิลในเครื่องอยู่ — ตอนเปิดจะโหลดใหม่เองอยู่แล้ว
+    var busy = state.menuForm || state.sharedForm || state.chargeForm || ui.editingMember || ui.sheet || ui.save === "saving" || typingInView();
+    if ((path === "/split" || path === "/bill") && !busy) loadContext(null);
+    else ui.ctx = undefined;                          // กำลังกรอกอยู่ — ไม่วาดทับ เปิดหน้าหารบิลครั้งหน้าค่อยโหลดใหม่
+  } else return;
+  if (path === "/") fillHome(true);
+  renderSideNav();
+});
+
 async function boot(){
   MENU_LIBRARY = buildMenuLibrary();
   await Store.init();
@@ -156,6 +178,7 @@ async function boot(){
     var prof = await Store.loadProfile();
     if (prof){ ui.myName = cleanMyName(prof.name).slice(0, MAX_NAME); ui.nameAsked = !!prof.asked; }
   } catch(e){}
+  try { ui.navStyle = (await Store.readRaw(NAV_STYLE_KEY)) === "b" ? "b" : "a"; } catch(e){}
   try { ui.installNudgeOff = (await Store.readRaw(INSTALL_NUDGE_KEY)) === "off"; } catch(e){}
   updateInstallButton();
   detectCamera();                     // v4.12: ไม่รอ — แผ่นเลือกประเภทบิลใช้ตอนผู้ใช้กดเปิด

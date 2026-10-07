@@ -31,6 +31,7 @@ function normalizeBill(saved){
   b.menus = (Array.isArray(saved.menus) ? saved.menus : []).map(function(m){
     var item = { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
     if (m.payer) item.payer = String(m.payer);
+    if (Array.isArray(m.payers) && m.payers.length > 1) setPayersOf(item, m.payers.map(String));   // v4.15: จ่ายด้วยกันหลายคน
     if (m.type === "meal"){
       var md = m.meal || {};
       item.type = "meal";

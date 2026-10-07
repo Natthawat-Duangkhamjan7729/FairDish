@@ -194,6 +194,32 @@ test("ทริป: เศษสตางค์ยังลงตัว แล�
   assert.equal(b.s.reason, "unpaid");
 });
 
+/* ---- v4.15: หลายคนจ่ายรายการเดียวกัน = จ่ายคนละเท่ากัน ---- */
+test("ทริป: หลายคนจ่ายรายการเดียว แบ่งยอดที่จ่ายเท่ากัน เศษสตางค์ลงตัว", () => {
+  const app = loadApp();
+  app.state.kind = "trip";
+  app.state.members = ["เอ", "บี", "ซี"].map((name, i) => ({ id: "m" + i, name }));
+  app.state.menus = [app.setPayersOf({ id: "t0", name: "ที่พัก", price: 3000, eaters: ["m0", "m1", "m2"] }, ["m0", "m1"]),
+                     app.setPayersOf({ id: "t1", name: "ข้าว", price: 100, eaters: ["m0", "m1", "m2"] }, ["m0", "m1", "m2"])];
+  assert.equal(app.state.menus[0].payer, "m0");             // เครื่องเวอร์ชันเก่ายังอ่านคนจ่ายคนแรกได้
+  const r = app.compute(), s = app.settleBill(r);
+  assert.equal(s.ok, true);
+  assert.deepEqual({ ...s.paid }, { m0: 1533.34, m1: 1533.33, m2: 33.33 });
+  assert.ok(s.transfers.every(t => t.from === "m2"));     // ซีไม่ได้จ่ายที่พัก — โอนให้สองคนที่จ่าย
+  assertBalanced(r, s);
+});
+
+test("ทริป: คนจ่ายที่ถูกลบออกไม่นับ — เหลือคนเดียวก็จ่ายเต็ม ไม่เหลือเลย = ยังไม่ระบุ", () => {
+  const app = loadApp();
+  app.state.kind = "trip";
+  app.state.members = [{ id: "a", name: "เอ" }, { id: "b", name: "บี" }];
+  app.state.menus = [{ id: "x", name: "ที่พัก", price: 1000, eaters: ["a", "b"], payer: "a", payers: ["a", "gone"] }];
+  assert.deepEqual({ ...app.settleBill(app.compute()).paid }, { a: 1000 });
+  app.state.menus[0] = app.setPayersOf(app.state.menus[0], []);
+  assert.equal(app.state.menus[0].payer, undefined);
+  assert.equal(app.settleBill(app.compute()).reason, "unpaid");
+});
+
 test("มื้ออาหาร: settleBill ใช้คนจ่ายระดับบิลแบบเดิม", () => {
   const app = loadApp();
   app.state.members = [{ id: "m0", name: "เอ" }, { id: "m1", name: "บี" }];

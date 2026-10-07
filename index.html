@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>[Beta] FairDish — จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์</title>
+<title>FairDish — จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์</title>
 <meta name="description" content="FairDish คำนวณค่าอาหารจากเมนูที่แต่ละคนกินจริง รวมค่าส่วนกลางให้อัตโนมัติ แล้วสรุปเป็นบิลที่ส่งเข้ากลุ่มได้ทันที">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,15 +25,12 @@
 <body>
 
 
-<div class="sandbox-bar beta" role="note">🧪 Beta — <span data-i18n="ฟีเจอร์ใหม่ก่อนขึ้นตัวเต็ม ข้อมูลแยกจากตัวเต็ม">ฟีเจอร์ใหม่ก่อนขึ้นตัวเต็ม ข้อมูลแยกจากตัวเต็ม</span> <a href="https://fairdish.vercel.app" data-i18n="ไปตัวเต็ม">ไปตัวเต็ม</a></div>
-<!-- v4.12: เปิดในแอปแชต (LINE / IG / Messenger) → แนะนำเปิดในเบราว์เซอร์จริง (เนื้อหาสร้างโดย js/install.js) -->
-<div class="inapp-bar" id="inappBar" role="note" hidden></div>
 <!-- v3.2+: หน้าตาแบบแอปมือถือ — ทุกหน้ามีแถบหัวของตัวเอง (สร้างใน js/pages.js) จอคอมจัดไว้กลางจอ -->
 <div class="app-shell">
 <main id="view"></main>
 
 <footer class="foot">
-  <span>FairDish v4.13.1 Beta · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
+  <span>FairDish v4.15 · <span data-i18n="ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น">ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น</span></span>
 </footer>
 </div>
 
@@ -64,6 +61,8 @@
 <dialog class="install-dialog share-dialog" id="shareDialog" aria-labelledby="shareTitle"></dialog>
 <!-- v4.13: หน้าต่างสแกน QR เข้ากลุ่ม (กล้องหลัง + กรอบสแกน) เนื้อหาสร้างโดย js/actions.js -->
 <dialog class="install-dialog scan-dialog" id="scanDialog" aria-labelledby="scanTitle"></dialog>
+<!-- v4.14: เปิดในแอปแชต (LINE / IG / Messenger …) → หน้าต่างแนะนำเปิดในเบราว์เซอร์จริง (เนื้อหาสร้างโดย js/install.js) -->
+<dialog class="install-dialog inapp-dialog" id="inappDialog" aria-labelledby="inappTitle"></dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -79,6 +78,7 @@
 <script src="js/seal.js" defer></script>
 <script src="js/cloud.js" defer></script>
 <script src="js/menu-library.js" defer></script>
+<script src="js/library-en.js" defer></script>
 <script src="js/utils.js" defer></script>
 <script src="js/save.js" defer></script>
 <script src="js/calc.js" defer></script>

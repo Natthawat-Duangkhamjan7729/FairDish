@@ -81,3 +81,11 @@ test("ไม่รู้ข้อมูลตั้งต้น → ไม่ท
   const theirs = bill({ menus:[{ id:"b", name:"B1", price:1, eaters:["m1"] }] });
   assert.deepEqual(names(app.mergeBills(null, mine, theirs).menus), ["B1", "A1"]);
 });
+
+test("v4.15: หลายคนจ่ายรายการเดียว — normalizeBill เก็บไว้ และรวมข้อมูลแล้วไม่หาย", () => {
+  const two = { id:"x1", name:"ที่พัก", price:900, eaters:["m1","m2"], payer:"m1", payers:["m1","m2"] };
+  assert.deepEqual(plain(app.normalizeBill(bill({ menus:[two] })).menus[0].payers), ["m1","m2"]);
+  const base = bill();
+  const merged = app.mergeBills(base, bill({ menus:[two] }), base);
+  assert.deepEqual(plain(merged.menus[0].payers), ["m1","m2"]);
+});

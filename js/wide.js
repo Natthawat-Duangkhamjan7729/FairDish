@@ -46,19 +46,97 @@ function sideNavHTML(){
   };
   var paid = openBillPaidText();
   var share = "";   // v4.11: ชวนเพื่อนอยู่ที่ปุ่มขวาบนของหน้าหารบิล/ท้ายใบสรุปยอดอย่างเดียว (เปิดเป็นหน้าต่าง)
+  // v4.15 (ทดลอง): แบบ A = ไม่มีลิงก์บิลที่เปิดอยู่ (เข้าบิลจากการ์ดในหน้าหลัก เหมือนมือถือ)
+  //                แบบ B = บิลที่เปิดอยู่ทุกใบเป็นหัวข้อใหญ่ (ชื่อบิลจริง) มีลิงก์หารบิล / ใบสรุปยอดตัวเล็กข้างใต้
+  var openPart = ui.navStyle === "b" ? navBillsHTML(path) : '';
   return '<a class="sn-brand" href="#/"><img src="img/logo.png" alt="" width="36" height="36"><b>FairDish</b></a>'+
     '<button class="sn-new" type="button" data-open-kind="1" aria-haspopup="dialog" aria-label="'+L("เริ่มบิลใหม่")+'">'+ICON_PLUS+'<span class="sn-text">'+L("เริ่มบิลใหม่")+'</span></button>'+
     item("home", "#/", ICON_HOME, L("หน้าหลัก"))+
-    '<div class="sn-label">'+L("บิลที่เปิดอยู่")+'</div>'+
-    item("split", splitHref(), ICON_FORK, L("หารบิล"))+
-    item("bill", billHref(), ICON_COPY, '<span class="sn-long">'+L("ใบสรุปยอด")+'</span><span class="sn-short">'+L("สรุปยอด")+'</span>',
-      paid ? '<span class="sn-badge mono">'+paid+'</span>' : '')+
+    openPart+
     share+
     '<div class="sn-sep" aria-hidden="true"></div>'+
     item("history", "#/history", ICON_CLOCK, L("ประวัติ"))+
     '<div class="sn-tip"><img src="img/mascot.png" alt="" width="62" height="62"><b>'+L("เคล็ดลับ")+'</b>'+
-      '<span>'+L("กด {key} ในหน้าหารบิลเพื่อเพิ่มเมนูได้ทันที", { key:kbd("N") })+'</span></div>'+
+      '<span>'+L("กด {key} ในหน้าหารบิลเพื่อเพิ่มเมนูได้ทันที", { key:kbd("M") })+'</span></div>'+
     item("more", "#/more", ICON_SETTINGS, L("ตั้งค่า"));
+}
+/** "โอนแล้ว x/y" ของบิลใดก็ได้ (ไม่รู้คนจ่าย = "") */
+function paidTextOf(data){
+  var b = normalizeBill(data);
+  if (!b.members.length) return "";
+  var s = settleBill(computeBill(b), b);
+  if (!s.ok || !s.transfers.length) return "";
+  var p = paidProgress(s.transfers, b.paid);
+  return p.done + "/" + p.total;
+}
+/** v4.15 (ทดลองแบบ B): บิลที่เปิดค้างอยู่ทุกใบ = บิลในเครื่อง (ถ้ามีข้อมูล) + บิลกลุ่มที่ขึ้นการ์ดในหน้าหลัก
+ *  [{ key, name, icon, split, bill, paid, current }] — บิลที่เปิดอยู่ตอนนี้ใช้ข้อมูลสดจาก state */
+function navOpenBills(){
+  var live = ui.ctx !== undefined && !ui.loading && !ui.groupError;
+  var list = [];
+  var local = localBillNow();
+  var groups = homeGroups().slice();
+  if (live && ui.ctx && !groups.some(function(g){ return g.id === ui.ctx; })){
+    var cur = myGroup(ui.ctx);
+    if (cur) groups.unshift(cur);                     // กลุ่มที่เปิดอยู่แต่ไม่ได้ขึ้นการ์ดในหน้าหลัก (เก่าเกิน 30 วัน) ก็ยังต้องกลับไปได้
+  }
+  var snapOf = function(g){ return (live && ui.ctx === g.id) ? serialize() : g.snap; };
+  // v4.15: บิลที่ติ๊กโอนครบแล้ว (จบแล้ว) ไม่อยู่ในแถบซ้าย
+  if (billHasData(local) && !billDone(local) && !groups.some(function(g){ return sameBillContent(local, snapOf(g)); })){
+    var lb = normalizeBill(local);
+    list.push({ key:"local", name:savedBillName(local), icon:ktOf(lb.kind, "icon"), split:"#/split", bill:"#/bill",
+      paid:paidTextOf(local), current:ui.ctx === null });
+  }
+  groups.forEach(function(g){
+    var data = snapOf(g);
+    if (!billHasData(data) || billDone(data)) return;
+    list.push({ key:g.id, name:(live && ui.ctx === g.id && Store.groupName) || g.name, icon:ktOf(normalizeBill(data).kind, "icon"),
+      split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", paid:paidTextOf(data), current:ui.ctx === g.id, group:true });
+  });
+  // v4.15: บิลในประวัติที่ยังไม่จบ (ยังโอนไม่ครบ) ก็นับว่าเปิดค้างอยู่ — กดแล้วสลับมาเป็นบิลที่ทำอยู่ (บิลเดิมเข้าประวัติแทน)
+  ui.history.filter(function(h){ return !billDone(h.data); }).slice(0, NAV_HIST_MAX).forEach(function(h){
+    list.push({ key:h.id, name:h.name, icon:ktOf(normalizeBill(h.data).kind, "icon"), hist:true, paid:paidTextOf(h.data) });
+  });
+  return list;
+}
+var NAV_HIST_MAX = 6;
+
+function navBillsHTML(path){
+  var bills = navOpenBills();
+  if (!bills.length) return '';
+  return '<div class="sn-label">'+L("บิลที่เปิดอยู่")+'</div>'+bills.map(function(b){
+    var here = b.current && (path === "/split" || path === "/bill");
+    // บิลในประวัติเป็นปุ่ม (ต้องสลับเป็นบิลที่ทำอยู่ก่อน) บิลอื่นเป็นลิงก์ปกติ
+    var go = function(where, cls, on, inner, title){
+      var attrs = ' class="'+cls+(on ? ' on' : '')+'"'+(title ? ' title="'+esc(title)+'"' : '')+(on ? ' aria-current="page"' : '');
+      return b.hist ? '<button type="button"'+attrs+' data-nav-open="'+esc(b.key)+':'+where+'">'+inner+'</button>'
+                    : '<a'+attrs+' href="'+(where === "bill" ? b.bill : b.split)+'">'+inner+'</a>';
+    };
+    // v4.15: แต่ละบิลเป็น dropdown — แตะ/คลิกชื่อบิลครั้งแรก = กาง (ตัวรับใน events.js) กางอยู่แล้วแตะอีกครั้ง = เปิดหน้าหารบิล · บิลที่อยู่ตอนนี้กางไว้เสมอ
+    var open = here || ui.navOpenKey === b.key;
+    return '<div class="sn-bill'+(here ? ' here' : '')+(open ? ' open' : '')+'" data-nav-key="'+esc(b.key)+'">'+
+      go("split", "sn-bhead", false, '<span class="sn-bico" aria-hidden="true">'+b.icon+'</span><span class="sn-bname">'+esc(b.name)+'</span>'+
+        (b.group ? '<span class="sn-bgroup" title="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>' : '')+
+        '<span class="sn-caret" aria-hidden="true">'+ICON_CHEVRON+'</span>', b.name)+
+      '<div class="sn-subs">'+
+        go("split", "sn-sub", here && path === "/split", ICON_FORK+'<span>'+L("หารบิล")+'</span>')+
+        go("bill", "sn-sub", here && path === "/bill", ICON_COPY+'<span class="sn-long">'+L("ใบสรุปยอด")+'</span><span class="sn-short">'+L("สรุปยอด")+'</span>'+(b.paid ? ' <span class="sn-badge mono">'+b.paid+'</span>' : ''))+
+      '</div></div>';
+  }).join("");
+}
+/** v4.15 (ทดลอง): สลับแบบแถบซ้าย A / B — จำไว้ในเครื่อง */
+var NAV_STYLE_KEY = "fairdish:navstyle:v1";
+async function setNavStyle(v){
+  ui.navStyle = v === "b" ? "b" : "a";
+  try { await Store.writeRaw(NAV_STYLE_KEY, ui.navStyle); } catch(e){}
+  renderSideNav();
+  if (currentPath() === "/more"){ var y = window.scrollY; document.getElementById("view").innerHTML = pageMore(); jumpTo(y); }
+}
+function navStyleSwitch(){
+  return '<div class="lang-switch theme-switch" role="group" aria-label="'+L("แถบเมนูซ้าย (จอใหญ่)")+'">'+
+    [["a","แบบ A"],["b","แบบ B"]].map(function(o){
+      return '<button type="button" data-nav-style="'+o[0]+'" aria-pressed="'+(ui.navStyle === o[0])+'">'+L(o[1])+'</button>';
+    }).join("")+'</div>';
 }
 /** วาดแถบซ้าย — ซ่อนบนมือถือ ตอนหน้าแนะนำ และหน้าที่เพื่อนเปิดมายืนยันเมนู (#/g/<id>/me) */
 function renderSideNav(){
@@ -144,7 +222,7 @@ function pageHomeWide(){
   '</div>';
 }
 /** การ์ดบิลที่กำลังหาร (จอใหญ่) — มีวงกลมชื่อคน และบอกว่าใครจ่ายให้ร้าน */
-function activeCardWide(saved, o){
+function activeCardWide(saved, o, open){
   var c = cardLinks(saved, o);
   var b = normalizeBill(saved);
   var r = computeBill(b), s = settleBill(r, b);
@@ -156,7 +234,7 @@ function activeCardWide(saved, o){
   var avs = b.members.slice(0, 6).map(function(p, k){ return '<span title="'+esc(p.name)+'">'+avatarHTML(p.name, k)+'</span>'; }).join("")+
     (b.members.length > 6 ? '<span class="av av-more" aria-hidden="true">+'+(b.members.length - 6)+'</span>' : '');
   return '<section class="w-active'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
-    '<div class="active-top">'+statusBadge(prog && prog.all)+
+    '<div class="active-top">'+statusBadge(prog && prog.all, open)+
       '<span class="active-meta">'+(c.group ? L("บิลกลุ่ม")+' · ' : '')+L("{n} คน · {k} {items}", { n:b.members.length, k:b.menus.length, items:ktOf(b.kind,"items") })+'</span></div>'+
     '<div class="w-active-mid"><div class="w-active-sum"><h2 id="'+c.hid+'">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
       '<div class="w-active-amt mono">'+baht(r.grand)+' <span>฿</span></div></div>'+
@@ -247,12 +325,12 @@ function pageWorkspace(){
         '<div class="ws-col-head"><h2 id="h-ws-menu">'+(trip ? kt("itemsTitle") : L("เมนู"))+'</h2><span id="wsMenuMeta"></span></div>'+
         '<div class="ws-add" role="group" aria-label="'+kt("add")+'">'+
           '<div class="ws-name-wrap"><label class="sr-only" for="wsName">'+kt("nameLabel")+'</label>'+
-          '<input type="text" id="wsName" placeholder="'+(trip ? kt("namePh") : L("ชื่อเมนู เช่น ส้มตำปู"))+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-keyshortcuts="N" '+
+          '<input type="text" id="wsName" placeholder="'+(trip ? kt("namePh") : L("ชื่อเมนู เช่น ส้มตำปู"))+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-keyshortcuts="M" '+
             'role="combobox" aria-expanded="false" aria-controls="wsSuggestList" aria-autocomplete="list">'+
           '<div id="wsSuggest"></div></div>'+
           '<label class="sr-only" for="wsPrice">'+kt("pricePh")+'</label>'+
           '<input type="number" id="wsPrice" inputmode="decimal" step="0.01" min="0" placeholder="'+L("ราคา")+'" class="mono">'+
-          '<button class="btn-sm" type="button" id="wsAdd">'+L("+ เพิ่ม")+' '+kbd("N")+'</button>'+
+          '<button class="btn-sm" type="button" id="wsAdd">'+L("+ เพิ่ม")+' '+kbd("M")+'</button>'+
           (trip ? '<button class="btn-line btn-xs" type="button" data-add-meal="1">'+L("+ มื้ออาหาร 🍲")+'</button>' : '')+
         '</div>'+
         '<p class="field-msg muted" id="wsAddMsg" aria-live="polite"></p>'+
@@ -380,7 +458,7 @@ function wsMenuCard(m, trip){
   var known = m.eaters.filter(function(id){ return !!nameOf(id); });
   var all = state.members.length > 0 && known.length === state.members.length;
   var dim = ui.wsFocus && known.indexOf(ui.wsFocus) < 0;
-  var unpaid = trip && !nameOf(m.payer);
+  var unpaid = trip && !knownPayers(m).length;
   var note = !known.length ? ['warn', L("ยังไม่มีใครมีส่วน — ลากชื่อมาวางหรือแตะชื่อด้านล่าง")]
     : (unpaid ? ['warn', L("ยังไม่เลือกคนจ่าย")]
     : ['ok', all ? L("หารทุกคน · คนละ {amt} บาท", { amt:baht(m.price / known.length) })
@@ -388,11 +466,8 @@ function wsMenuCard(m, trip){
   return '<article class="ws-card'+(dim ? ' dim' : '')+(note[0] === 'warn' ? ' warn' : '')+'" data-ws-drop="'+m.id+'" aria-label="'+esc(m.name)+'">'+
     '<button class="ws-card-head" type="button" data-edit-menu="'+m.id+'" aria-label="'+L("แก้ไข {name}", { name:esc(m.name) })+'">'+
       '<b>'+esc(m.name)+'</b><span class="mono">'+baht(m.price)+'</span></button>'+
-    (trip ? '<div class="ws-payrow"><span class="label">'+L("ใครจ่าย")+'</span><div class="pick" role="radiogroup" aria-label="'+L("ใครจ่ายรายการนี้")+'">'+
-      state.members.map(function(p){
-        var on = m.payer === p.id;
-        return '<button role="radio" data-ws-pay="'+m.id+':'+p.id+'" aria-pressed="'+on+'" aria-checked="'+on+'">'+esc(p.name)+'</button>';
-      }).join("")+'</div></div>' : '')+
+    (trip ? '<div class="ws-payrow"><span class="label">'+L("ใครจ่าย")+'</span>'+
+      payerPickHTML(knownPayers(m), "data-ws-pay", L("ใครจ่ายรายการนี้"), m.id+":")+'</div>' : '')+
     (state.members.length ? '<div class="pick ws-picks" role="group" aria-label="'+L("ใครมีส่วนใน {name}", { name:esc(m.name) })+'">'+
       '<button class="all" data-ws-all="'+m.id+'" aria-pressed="'+all+'">'+L("ทุกคน")+'</button>'+
       state.members.map(function(p){
@@ -403,13 +478,13 @@ function wsMenuCard(m, trip){
 }
 function wsMealCard(m){
   var sub = mealTotalOf(m), n = mealOf(m).menus.length;
-  var unpaid = sub.grand > 0 && !nameOf(m.payer);
+  var paidBy = payerText(m), unpaid = sub.grand > 0 && !paidBy;
   return '<article class="ws-card ws-meal'+(unpaid ? ' warn' : '')+'">'+
     '<button class="ws-card-head" type="button" data-open-meal="'+m.id+'" aria-label="'+L("เปิดมื้อ {name}", { name:esc(m.name) })+'">'+
       '<b>🍲 '+esc(m.name)+'</b><span class="mono">'+baht(sub.grand)+'</span></button>'+
     '<p class="ws-note '+(unpaid ? 'warn' : 'ok')+'">'+
-      (unpaid ? L("ยังไม่เลือกคนจ่าย") : (nameOf(m.payer) ? L("{name} จ่าย", { name:esc(nameOf(m.payer)) }) : ''))+
-      ((unpaid || nameOf(m.payer)) ? ' · ' : '')+(n ? L("{n} เมนู", { n:n }) : L("ยังไม่มีเมนู"))+'</p>'+
+      (unpaid ? L("ยังไม่เลือกคนจ่าย") : paidBy)+
+      ((unpaid || paidBy) ? ' · ' : '')+(n ? L("{n} เมนู", { n:n }) : L("ยังไม่มีเมนู"))+'</p>'+
     '<button class="btn-line btn-xs" type="button" data-open-meal="'+m.id+'">'+L("เปิดมื้อนี้ ›")+'</button>'+
   '</article>';
 }
@@ -486,22 +561,23 @@ async function wsToggleAll(menuId){
   await commit(null, "menu");
   render();
 }
+/** v4.15: แตะชื่อ = เพิ่ม/เอาออกจากคนจ่ายรายการนี้ (จ่ายด้วยกันหลายคนได้) */
 async function wsSetPayer(menuId, pid){
   var m = wsMenu(menuId);
-  if (!m || !nameOf(pid) || m.payer === pid) return;
+  if (!m || !nameOf(pid)) return;
   pushUndo();
-  m.payer = pid;
-  ui.lastPayer = pid;
+  setPayersOf(m, togglePayerIn(knownPayers(m), pid));
+  if (knownPayers(m).length) ui.lastPayers = knownPayers(m);
   render();
   await commit(null, "menu");
   render();
 }
-/** เพิ่มรายการจากช่องบรรทัดเดียว — คนมีส่วนเริ่มที่ทุกคน (แตะชื่อออกทีหลังได้) */
+/** เพิ่มรายการจากช่องบรรทัดเดียว — v4.15: ยังไม่มีใครมีส่วน ให้แตะ/ลากชื่อคนที่กินเอง (ไม่เลือกทุกคนให้) */
 async function wsAddMenu(){
   var nameEl = document.getElementById("wsName"), priceEl = document.getElementById("wsPrice"), msg = document.getElementById("wsAddMsg");
   if (!nameEl || !priceEl || ui.savingMenu) return;
   var ids = state.members.map(function(p){ return p.id; });
-  var f = { name:nameEl.value, price:priceEl.value, eaters:ids, payer:null };
+  var f = { name:nameEl.value, price:priceEl.value, eaters:ids };   // ตรวจแค่ชื่อ/ราคา/มีคนในบิล — คนกินและคนจ่ายเลือกบนการ์ด
   var e = validateMenuForm(f);
   var problem = e.name || e.price || e.eaters;
   if (problem){
@@ -511,11 +587,8 @@ async function wsAddMenu(){
   }
   var name = String(f.name).trim().replace(/\s+/g, " ");
   var price = parseFloat(String(f.price));
-  var item = { id:nid(), name:name, price:price, eaters:ids };
-  if (state.kind === "trip" && !ui.tripStash){
-    var payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
-    if (payer) item.payer = payer;
-  }
+  var item = { id:nid(), name:name, price:price, eaters:[] };
+  if (state.kind === "trip" && !ui.tripStash) setPayersOf(item, defaultPayers());
   pushUndo();
   state.menus.unshift(item);
   closeWsSuggest();
@@ -702,7 +775,14 @@ function histFiltered(){
   var e = billEntries();
   var q = normText(ui.histQ || ""), f = ui.histFilter || "all";
   var ok = function(x){ return (!q || normText(x.name).indexOf(q) >= 0) && (f === "all" || x.kind === f); };
-  return { groups:e.groups.filter(ok), hist:e.hist.filter(ok), any:e.groups.length + e.hist.length > 0 };
+  // v4.15: บิลที่กำลังทำอยู่ขึ้นบนสุด (เดิมหน้าประวัติไม่มีบิลล่าสุด)
+  var cur = localBillNow(), open = [];
+  if (cur){
+    var cb = normalizeBill(cur);
+    open.push({ id:"local", local:cur, kind:cb.kind, icon:ktOf(cb.kind,"icon"), name:savedBillName(cur), at:Date.now(),
+      sub:L("กำลังหาร · {n} คน", { n:cb.members.length }), amt:baht(computeBill(cb).grand), href:"#/bill" });
+  }
+  return { open:open.filter(ok), groups:e.groups.filter(ok), hist:e.hist.filter(ok), any:open.length + e.groups.length + e.hist.length > 0 };
 }
 function pageHistoryWide(selId){
   if (selId) ui.histSel = selId;
@@ -736,7 +816,7 @@ function renderHistoryWide(){
   var list = document.getElementById("histList"), detail = document.getElementById("histDetail");
   if (!list || !detail) return;
   var d = histFiltered();
-  var all = d.groups.concat(d.hist);
+  var all = d.open.concat(d.groups, d.hist);
   if (!all.some(function(x){ return x.id === ui.histSel; })) ui.histSel = all.length ? all[0].id : null;
   var months = [], byMonth = {};
   d.hist.forEach(function(x){
@@ -747,7 +827,8 @@ function renderHistoryWide(){
   list.innerHTML = !d.any
     ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'
     : (!all.length ? '<p class="w-empty-search">'+L("ไม่พบบิลที่ค้นหา")+'</p>'
-      : (d.groups.length ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+d.groups.map(histRowHTML).join("") : '')+
+      : (d.open.length ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+d.open.map(histRowHTML).join("") : '')+
+        (d.groups.length ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+d.groups.map(histRowHTML).join("") : '')+
         months.map(function(m){ return '<h2 class="list-head">'+esc(m)+'</h2>'+byMonth[m].map(histRowHTML).join(""); }).join(""));
   Array.prototype.forEach.call(document.querySelectorAll("[data-hist-filter]"), function(b){
     b.setAttribute("aria-pressed", String(b.getAttribute("data-hist-filter") === (ui.histFilter || "all")));
@@ -762,12 +843,22 @@ function renderHistoryWide(){
       '<button class="btn-line btn-block" data-forget-group="'+esc(x.group.id)+'">'+L("เอาออกจากรายการ")+'</button></div></div>';
     return;
   }
+  if (x.local){
+    var lb = normalizeBill(x.local), lr = computeBill(lb), ls = settleBill(lr, lb);
+    detail.innerHTML = '<div class="w-hist-inner">'+
+      '<p class="past-when"><span class="badge warn">'+L("กำลังหาร")+'</span> '+L("บิลที่ทำอยู่ตอนนี้ ยังไม่ได้เก็บเข้าประวัติ")+'</p>'+
+      receiptHTML(lr, { kind:lb.kind })+
+      (ls.ok && ls.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(ls, false, "h-past-tf", lb.paid, (ui.ctx === null && !ui.loading) ? 'data-paid-all="1"' : '')+'</section>' : '')+
+      '<div class="btn-stack"><a class="btn-main btn-block" href="#/split">'+L("ทำต่อ")+'</a>'+
+        '<a class="btn-line btn-block" href="#/bill">'+L("ใบสรุปยอด")+'</a></div></div>';
+    return;
+  }
   var h = x.hist, b = normalizeBill(h.data);
   var r = computeBill(b), s = settleBill(r, b);
   detail.innerHTML = '<div class="w-hist-inner">'+
     '<p class="past-when">'+L("เก็บเข้าประวัติเมื่อ {date}", { date:esc(longDate(h.at)) })+'</p>'+
     receiptHTML(r, { kind:b.kind })+
-    (s.ok && s.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(s, false, "h-past-tf", b.paid)+'</section>' : '')+
+    (s.ok && s.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(s, false, "h-past-tf", b.paid, 'data-hist-paid-all="'+esc(h.id)+'"')+'</section>' : '')+
     '<div class="btn-stack">'+
       '<button class="btn-main btn-block" data-restore-history="'+esc(h.id)+'">'+L("เปิดบิลนี้ทำต่อ")+'</button>'+
       '<button class="btn-danger btn-block" data-del-history="'+esc(h.id)+'">'+ICON_DEL+' '+L("ลบออกจากประวัติ")+'</button>'+
