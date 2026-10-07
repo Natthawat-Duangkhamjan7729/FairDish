@@ -320,7 +320,7 @@ function validateMenuForm(f){
 
   if (state.members.length === 0) errs.eaters = L("ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในแท็บ \"คน\" ก่อน");
   else if (f.eaters.length === 0) errs.eaters = kt("noEater");
-  if (state.kind === "trip" && state.members.length && !nameOf(f.payer)) errs.payer = L("เลือกว่าใครจ่ายรายการนี้");
+  if (state.kind === "trip" && state.members.length && !payerNames(f)) errs.payer = L("เลือกว่าใครจ่ายรายการนี้");
   return errs;
 }
 async function saveMenuForm(){
@@ -341,7 +341,7 @@ async function saveMenuForm(){
 
   if (editing){
     state.menus.forEach(function(x){
-      if (x.id===f.id){ x.name=name; x.price=price; x.eaters=f.eaters.slice(); if (f.payer) x.payer=f.payer; }
+      if (x.id===f.id){ x.name=name; x.price=price; x.eaters=f.eaters.slice(); if (payerNames(f)) x.payer=f.payer; }
     });
   } else {
     var item = { id:nid(), name:name, price:price, eaters:f.eaters.slice() };
@@ -507,7 +507,7 @@ async function forgetGroup(id){
   if (!g) return;
   ui.myGroups = ui.myGroups.filter(function(x){ return x.id !== id; });
   await saveMyGroups();
-  if (currentPath() === "/history") document.getElementById("view").innerHTML = pageHistory();
+  rerenderHistory();
   toast(L("เอา {name} ออกจากรายการแล้ว (กลุ่มยังอยู่ เปิดจากลิงก์ได้)", { name:g.name }),"ok");
 }
 
@@ -731,6 +731,10 @@ async function fillHome(again){
       try { await Store.writeRaw(DONE_SEEN_KEY, saved.savedAt || "seen"); } catch(e){}
     }
   }
+  if (!ui.tour && ui.ctx !== null){                    // v4.15: รายการบิลที่เปิดอยู่ในแถบซ้ายตรงกับการ์ดในหน้านี้
+    ui.localOpen = has ? { name:savedBillName(saved), kind:normalizeBill(saved).kind } : null;
+    renderSideNav();
+  }
   if (currentPath() !== "/") return;
   var groups = homeGroups(), skip = {}, marked = false;
   groups.forEach(function(g){
@@ -816,6 +820,7 @@ async function replaceLocalBill(next, step){
   try { saved = await Store.loadLocalBill(); } catch(e){}
   var archived = billHasData(saved) ? await archiveBill(saved) : null;
   await Store.saveLocalBill(next);
+  ui.localOpen = undefined;            // v4.15: แถบซ้ายโหลดบิลในเครื่องใหม่
   if (ui.tripStash) exitMeal();
   ui.step = step || "members";
   ui.showDone = false;
@@ -884,12 +889,21 @@ async function deleteHistory(id){
   var h = ui.history[index];
   ui.history.splice(index, 1);
   try { await Store.saveHistory(ui.history); } catch(e){}
-  location.hash = "#/history";
-  toast(L("ลบ {name} ออกจากประวัติแล้ว", { name:h.name }),"ok",{ label:L("เลิกทำ"), action:async function(){
+  // v4.15: จอใหญ่ลบจาก #/history เอง hash ไม่เปลี่ยน route() ไม่ทำงาน — บิลที่ลบยังค้างบนจอ (กด "เลิกทำ" แล้วกลับมา)
+  if (location.hash === "#/history") rerenderHistory(); else location.hash = "#/history";
+  toast(L("ลบ {name} ออกจากประวัติแล้ว", { name:h.name }),"ok",{ label:L("ยกเลิกการลบ"), action:async function(){
     ui.history.splice(Math.min(index, ui.history.length), 0, h);
     try { await Store.saveHistory(ui.history); } catch(e){}
-    if (currentPath() === "/history") document.getElementById("view").innerHTML = pageHistory();
+    rerenderHistory();
   }});
+}
+/** v4.15: วาดหน้าประวัติใหม่ (มือถือและจอใหญ่ — จอใหญ่ต้องเติมรายการด้วย renderHistoryWide() ที่ route() เรียกให้) */
+function rerenderHistory(){
+  var p = currentPath();
+  if (p !== "/history" && p !== "/groups" && p !== "/h") return;
+  var y = window.scrollY;
+  route();
+  jumpTo(y);
 }
 
 /* ---- v3.2: แผ่นล่างจอ เลือกประเภทบิล / ตั้งชื่อบิล ---- */
@@ -1258,7 +1272,7 @@ function backToTrip(){
 }
 async function addMeal(){
   var n = state.menus.filter(function(m){ return m.type === "meal"; }).length + 1;
-  var payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
+  var payer = defaultPayer();
   var item = { id:nid(), type:"meal", name:L("มื้อที่ {n}", { n:n }), price:0, eaters:[],
                meal:{ menus:[], shared:[], charges:defaultCharges() } };
   if (payer) item.payer = payer;
@@ -1279,8 +1293,9 @@ async function renameMeal(value){
 async function setMealPayer(id){
   var item = currentMeal();
   if (!item || !nameOf(id)) return;
-  item.payer = id;
-  ui.lastPayer = id;
+  var next = togglePayerId(item.payer, id);   // v4.15: หลายคนจ่ายมื้อเดียวได้
+  if (next) item.payer = next; else delete item.payer;
+  if (next) ui.lastPayer = next;
   renderMealHead();
   await commit();
 }

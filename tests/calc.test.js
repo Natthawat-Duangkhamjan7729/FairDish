@@ -278,3 +278,45 @@ test("ติ๊กโอนแล้ว: นับครบเมื่อติ
   assert.equal(app.paidProgress([t1, { from: "c", to: "a", amount: 130 }], paid).done, 1);
   assert.equal(app.paidProgress([], paid).all, false);
 });
+
+/* ---- v4.15: ทริป — หลายคนจ่ายรายการเดียว ---- */
+test("ทริป: สองคนจ่ายรายการเดียว หารยอดที่จ่ายเท่ากัน", () => {
+  const app = loadApp();
+  const b = { kind: "trip", members: [{ id: "a", name: "เอ" }, { id: "b", name: "บี" }, { id: "c", name: "ซี" }],
+    menus: [{ id: "x", name: "ที่พัก", price: 900, eaters: ["a", "b", "c"], payer: ["a", "b"] }], shared: [], charges: app.defaultCharges(), payers: [] };
+  const r = app.computeBill(b);
+  const s = app.settleBill(r, b);
+  assert.equal(s.ok, true);
+  assert.deepEqual({ ...s.paid }, { a: 450, b: 450 });
+  assert.deepEqual(transfersText(s).sort(), ["ซี>บี:150", "ซี>เอ:150"]);
+});
+
+test("ทริป: หลายคนจ่ายแล้วหารไม่ลงตัว เศษสตางค์ไปคนแรก ยอดจ่ายรวมเท่ายอดบิล", () => {
+  const app = loadApp();
+  const b = { kind: "trip", members: [{ id: "a", name: "เอ" }, { id: "b", name: "บี" }, { id: "c", name: "ซี" }],
+    menus: [{ id: "x", name: "รถ", price: 100, eaters: ["a", "b", "c"], payer: ["a", "b", "c"] }], shared: [], charges: app.defaultCharges(), payers: [] };
+  const ip = app.itemPayers(b);
+  const cents = [...ip.payers].map(p => Math.round(p.amount * 100)).sort((x, y) => y - x);
+  assert.deepEqual(cents, [3334, 3333, 3333]);
+  assert.equal(ip.missing, 0);
+});
+
+test("ทริป: คนจ่ายที่ถูกลบออกจากบิลไม่นับ ถ้าไม่เหลือใครเลย = ยังไม่ระบุคนจ่าย", () => {
+  const app = loadApp();
+  const b = { kind: "trip", members: [{ id: "a", name: "เอ" }, { id: "b", name: "บี" }],
+    menus: [{ id: "x", name: "ข้าว", price: 100, eaters: ["a", "b"], payer: ["a", "gone"] },
+            { id: "y", name: "น้ำ", price: 20, eaters: ["a", "b"], payer: ["gone"] }], shared: [], charges: app.defaultCharges(), payers: [] };
+  const ip = app.itemPayers(b);
+  assert.deepEqual([...ip.payers].map(p => [p.id, p.amount]), [["a", 100]]);
+  assert.equal(ip.missing, 1);
+});
+
+test("payerIds / packPayer: คนเดียวเก็บเป็น string หลายคนเป็น array ตัดซ้ำ", () => {
+  const app = loadApp();
+  assert.deepEqual([...app.payerIds({ payer: "a" })], ["a"]);
+  assert.deepEqual([...app.payerIds({ payer: ["a", "b", "a"] })], ["a", "b"]);
+  assert.deepEqual([...app.payerIds({})], []);
+  assert.equal(app.packPayer(["a"]), "a");
+  assert.deepEqual([...app.packPayer(["a", "b", "a"])], ["a", "b"]);
+  assert.equal(app.packPayer([]), null);
+});

@@ -50,7 +50,7 @@ document.addEventListener("keydown", function(e){
   if (e.target.id === "groupJoinInput"){ e.preventDefault(); joinGroup(); }
   if (e.target.id === "wsName" || e.target.id === "wsPrice"){ e.preventDefault(); wsAddMenu(); }
 });
-/** v4.4: ปุ่มลัดบนจอใหญ่ — N เพิ่มรายการ, M/T เริ่มบิล, Ctrl/⌘+Z เลิกทำ, Esc เลิกดูเฉพาะคน (ไม่ทำงานตอนพิมพ์อยู่) */
+/** v4.4: ปุ่มลัดบนจอใหญ่ — M (หรือ N) เพิ่มรายการ, M/T เริ่มบิล, Ctrl/⌘+Z เลิกทำ, Esc เลิกดูเฉพาะคน (ไม่ทำงานตอนพิมพ์อยู่) */
 function wideShortcut(e){
   if (!isWide() || e.altKey) return false;
   var tag = e.target.tagName, typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target.isContentEditable;
@@ -59,7 +59,8 @@ function wideShortcut(e){
   if (path === "/split" && wsActive()){
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (k === "z" || k === "Z")){ e.preventDefault(); wsUndo(); return true; }
     if (e.ctrlKey || e.metaKey) return false;
-    if (k === "n" || k === "N"){ var n = document.getElementById("wsName"); if (n){ e.preventDefault(); n.focus(); return true; } }
+    // v4.15: M = เมนู (N แบบเดิมยังใช้ได้)
+    if (k === "m" || k === "M" || k === "n" || k === "N"){ var n = document.getElementById("wsName"); if (n){ e.preventDefault(); n.focus(); return true; } }
     if (k === "Escape" && ui.wsFocus){ e.preventDefault(); ui.wsFocus = null; renderWorkspace(); return true; }
   }
   if (path === "/" && !ui.showOnb && !e.ctrlKey && !e.metaKey && (k === "m" || k === "M" || k === "t" || k === "T")){
@@ -235,7 +236,7 @@ document.addEventListener("click", async function(e){
   /* v3.0: คนจ่ายของรายการทริป */
   if ((v = t.getAttribute("data-pay"))){
     syncMenuForm();
-    state.menuForm.payer = v;
+    state.menuForm.payer = togglePayerId(state.menuForm.payer, v);   // v4.15: เลือกได้หลายคน
     if (ui.menuErr) ui.menuErr.payer = "";
     return renderMenus();
   }
@@ -300,10 +301,10 @@ document.addEventListener("click", async function(e){
   }
 
   if (t.id==="menuOpen"){
-    // v2.4: โต๊ะไทยส่วนใหญ่กินด้วยกัน เริ่มที่ "ทุกคน" แล้วแตะเอาคนที่ไม่กินออก
-    state.menuForm={ id:null, name:"", price:"", eaters:state.members.map(function(p){ return p.id; }) };
+    // v4.15: เริ่มที่ยังไม่มีใคร ให้แตะเลือกคนที่กินเอง (เดิมเลือกทุกคนให้อัตโนมัติ) — ทุกคนกด "ทุกคน" ทีเดียว
+    state.menuForm={ id:null, name:"", price:"", eaters:[] };
     // v3.0: ทริป — คนจ่ายตั้งต้น = คนที่เลือกครั้งก่อน หรือ "ฉัน"
-    if (state.kind === "trip") state.menuForm.payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
+    if (state.kind === "trip") state.menuForm.payer = defaultPayer();
     ui.menuErr={}; ui.focusMenuField="mName";
     ui.suggest={ open:true, items:[], active:-1, total:0 };
     return renderMenus();
