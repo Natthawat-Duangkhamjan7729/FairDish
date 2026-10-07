@@ -906,7 +906,7 @@ async function startNewBill(kind, demo, name){
     toast(L("เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ"),"error");
   }
 }
-/** step: "summary" (ค่าเริ่มต้น) = เปิดที่ใบสรุปยอด · "members" = เปิดที่หน้าหารบิล (v4.15 แถบซ้ายแบบ B) */
+/** step: "summary" (ค่าเริ่มต้น) = เปิดที่ใบสรุปยอด · "members" = เปิดที่หน้าหารบิล (v4.15 แถบซ้าย) */
 async function restoreHistory(id, step){
   if (ui.tour) tourEnd(false);
   await reloadHistory();

@@ -118,7 +118,7 @@ document.addEventListener("click", async function(e){
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
-            "[data-step],[data-group-panel],[data-theme-pick],[data-nav-style],[data-pay],"+
+            "[data-step],[data-group-panel],[data-theme-pick],[data-pay],"+
             "[data-open-kind],[data-new-kind],[data-trip-go],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
             "[data-paid],[data-show-done],[data-show-receipt],[data-restore-history],[data-del-history],[data-nav-open],[data-paid-all],[data-hist-paid-all],#inviteBtn,"+
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
@@ -177,7 +177,7 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-paid-all")) return togglePaidAll();
   if ((v = t.getAttribute("data-hist-paid-all"))) return togglePaidAllHistory(v);
   if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
-  if ((v = t.getAttribute("data-nav-open"))){ v = v.split(":"); return restoreHistory(v[0], v[1] === "bill" ? "summary" : "members"); }   // v4.15: แถบซ้ายแบบ B
+  if ((v = t.getAttribute("data-nav-open"))){ v = v.split(":"); return restoreHistory(v[0], v[1] === "bill" ? "summary" : "members"); }   // v4.15: แถบซ้าย
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
 
   /* v4.5: สอนใช้แบบกดจริง */
@@ -255,7 +255,6 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");
   if (t.getAttribute("data-group-panel")){ ui.groupPanel = !ui.groupPanel; return renderGroupBar(); }
   if ((v = t.getAttribute("data-theme-pick"))) return setTheme(v);
-  if ((v = t.getAttribute("data-nav-style"))) return setNavStyle(v);
 
   /* v2.0: กลุ่ม */
   if (t.id==="groupJoin") return joinGroup();
@@ -458,7 +457,7 @@ document.addEventListener("focusin", function(e){
   if (e.target && e.target.id === "wsName" && !(ui.wsSuggest && ui.wsSuggest.open)) openWsSuggest();
 });
 
-/* v4.15: แถบซ้ายแบบ B — แตะ/คลิกชื่อบิลครั้งแรกเพื่อกางเมนูย่อย (ทั้งคอมและแท็บเล็ต) กางอยู่แล้ว = เปิดบิลตามปกติ */
+/* v4.15: แถบซ้าย — แตะ/คลิกชื่อบิลครั้งแรกเพื่อกางเมนูย่อย (ทั้งคอมและแท็บเล็ต) กางอยู่แล้ว = เปิดบิลตามปกติ */
 document.addEventListener("click", function(e){
   var head = e.target.closest && e.target.closest("#sidenav .sn-bhead");
   if (!head) return;

@@ -178,7 +178,6 @@ async function boot(){
     var prof = await Store.loadProfile();
     if (prof){ ui.myName = cleanMyName(prof.name).slice(0, MAX_NAME); ui.nameAsked = !!prof.asked; }
   } catch(e){}
-  try { ui.navStyle = (await Store.readRaw(NAV_STYLE_KEY)) === "b" ? "b" : "a"; } catch(e){}
   try { ui.installNudgeOff = (await Store.readRaw(INSTALL_NUDGE_KEY)) === "off"; } catch(e){}
   updateInstallButton();
   detectCamera();                     // v4.12: ไม่รอ — แผ่นเลือกประเภทบิลใช้ตอนผู้ใช้กดเปิด

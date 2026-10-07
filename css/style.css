@@ -1001,7 +1001,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-item.on{background:var(--link-soft);color:var(--link)}
   .sn-badge{position:absolute;top:4px;right:2px;font-size:10px;line-height:1.5;padding:0 5px;border-radius:var(--r-pill);background:var(--secondary);color:var(--secondary-ink)}
   .sidenav .sn-item:last-child{margin-top:auto}
-  /* v4.15 (ทดลองแบบ B): บิลที่เปิดอยู่ — แถบไอคอนแสดงแค่ไอคอนบิล + ชื่อสั้น ลิงก์ย่อยซ่อน (เข้าใบสรุปจากหน้าหารบิลได้) */
+  /* v4.15: บิลที่เปิดอยู่ — แถบไอคอนแสดงแค่ไอคอนบิล + ชื่อสั้น ลิงก์ย่อยซ่อน (เข้าใบสรุปจากหน้าหารบิลได้) */
   .sidenav{overflow-y:auto}
   .sn-bill{width:72px}
   .sn-bhead{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:60px;justify-content:center;padding:4px;border-radius:16px;color:var(--ink-2);font-size:11px;font-weight:600}
