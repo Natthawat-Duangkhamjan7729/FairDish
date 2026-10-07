@@ -449,7 +449,7 @@ function wsMenuCard(m, trip){
   var all = state.members.length > 0 && known.length === state.members.length;
   var dim = ui.wsFocus && known.indexOf(ui.wsFocus) < 0;
   var unpaid = trip && !knownPayers(m).length;
-  var note = !known.length ? ['warn', L("ยังไม่มีใครมีส่วน — ลากชื่อมาวางหรือแตะชื่อด้านล่าง")]
+  var note = !known.length ? ['warn', L("ยังไม่มีใครมีส่วน ลากชื่อมาวางหรือแตะชื่อด้านล่าง")]
     : (unpaid ? ['warn', L("ยังไม่เลือกคนจ่าย")]
     : ['ok', all ? L("หารทุกคน · คนละ {amt} บาท", { amt:baht(m.price / known.length) })
                  : L("หาร {n} คน · คนละ {amt} บาท", { n:known.length, amt:baht(m.price / known.length) })]);
@@ -716,7 +716,7 @@ function pageShareWide(){
                 avatarHTML(x.name, memberIndex(x.id))+'<b>'+esc(x.name)+(x.id === me ? ' <span class="me-tag">'+L("ฉัน")+'</span>' : '')+'</b>'+
                 '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+L(b[1])+'</span></button>';
             }).join("")
-          : '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
+          : '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
       '</section>'+
       '<section class="w-preview" aria-labelledby="h-w-prev">'+(trip ? tripSharePreviewHTML() : sharePreviewHTML(pick))+'</section>'+
     '</div>'+
@@ -815,7 +815,7 @@ function renderHistoryWide(){
     byMonth[key].push(x);
   });
   list.innerHTML = !d.any
-    ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'
+    ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'
     : (!all.length ? '<p class="w-empty-search">'+L("ไม่พบบิลที่ค้นหา")+'</p>'
       : (d.open.length ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+d.open.map(histRowHTML).join("") : '')+
         (d.groups.length ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+d.groups.map(histRowHTML).join("") : '')+

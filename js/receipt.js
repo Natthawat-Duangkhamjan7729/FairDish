@@ -145,11 +145,11 @@ function transfersBlock(s, interactive, headId, paid, allAttr){
   return '<div class="tf-head"><h3 class="settle-head" id="'+headId+'">'+L("ใครโอนให้ใคร")+'</h3>'+
       (s.transfers.length ? '<span class="tf-count">'+L("โอนแล้ว {done}/{total}", { done:prog.done, total:prog.total })+'</span>' : '')+'</div>'+
     (s.transfers.length
-      ? (interactive ? '<p class="hint">'+L("แตะช่องหน้าชื่อเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p>' : '')+
+      ? (interactive ? '<p class="hint">'+L("แตะช่องหน้าชื่อเมื่อโอนแล้ว")+'</p>' : '')+
         (allAttr && s.transfers.length > 1
           ? '<button class="tf-row tf-all'+(prog.all ? ' done' : '')+'" type="button" role="checkbox" aria-checked="'+prog.all+'" '+allAttr+'>'+
               '<span class="tf-tick" aria-hidden="true"><span class="tf-box">'+(prog.all ? ICON_CHECK : '')+'</span></span>'+
-              '<span class="tf-who"><b>'+(prog.all ? L("โอนครบทุกคนแล้ว — แตะเพื่อเอาติ๊กออกทั้งหมด") : L("ติ๊กว่าโอนครบทุกคน"))+'</b></span></button>'
+              '<span class="tf-who"><b>'+(prog.all ? L("โอนครบทุกคนแล้ว (แตะเพื่อเอาติ๊กออกทั้งหมด)") : L("ติ๊กว่าโอนครบทุกคน"))+'</b></span></button>'
           : '')+
         '<div class="tf-list">'+rows+'</div>'+
         (s.transfers.length > 1 ? '<p class="tf-note">'+L("หักลบให้แล้ว โอนแค่ {n} ครั้งก็จบ", { n:s.transfers.length })+'</p>' : '')

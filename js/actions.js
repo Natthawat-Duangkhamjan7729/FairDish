@@ -218,7 +218,7 @@ function suggestBoxHTML(found, query, active, prefix, attr){
   var items = found.items;
   var head = String(query||"").trim()
     ? (found.total > items.length
-        ? L("{label} {n} จาก {total} รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง", { label:kt("suggest"), n:items.length, total:found.total })
+        ? L("{label} {n} จาก {total} รายการ พิมพ์ต่อเพื่อกรองให้แคบลง", { label:kt("suggest"), n:items.length, total:found.total })
         : L("{label} {n} รายการ", { label:kt("suggest"), n:items.length }))
     : kt("suggestOften");
   return '<div class="suggest" id="'+prefix+'List" role="listbox" aria-label="'+kt("suggest")+'">'+
@@ -436,7 +436,7 @@ function summaryText(){
     });
   }
   if (ui.ctx) lines.push(L("กดดูได้ว่ายอดมาจาก{what}: {link}", { what:kt("fromWhat"), link:groupLink(ui.ctx)+"/bill" }));
-  lines.push(state.kind === "trip" ? L("— หารตามที่ใช้จริงด้วย FairDish") : L("— หารตามที่กินจริงด้วย FairDish"));
+  lines.push(state.kind === "trip" ? L("หารตามที่ใช้จริงด้วย FairDish") : L("หารตามที่กินจริงด้วย FairDish"));
   return lines.join("\n");
 }
 function copyText(text, okMessage){
@@ -874,7 +874,7 @@ function openTripNameSheet(kind){
   ui.sheet = "tripname";
   var def = defaultBillName("trip");
   renderGlobalSheet('<h2 class="sheet-title" id="tripNameTitle">'+(kind === "trip-group" ? L("ตั้งชื่อทริปแบบกลุ่ม") : L("ตั้งชื่อทริป"))+'</h2>'+
-    '<p class="sheet-sub">'+L("ไม่บังคับ — ไม่ตั้งก็ใช้ชื่อ {name}", { name:esc(def) })+'</p>'+
+    '<p class="sheet-sub">'+L("ไม่บังคับ ถ้าไม่ตั้งจะใช้ชื่อ {name}", { name:esc(def) })+'</p>'+
     '<div class="form-box">'+
       '<label class="sr-only" for="tripNameInput">'+L("ชื่อทริป")+'</label>'+
       '<input type="text" id="tripNameInput" maxlength="'+MAX_GROUP_NAME+'" autocomplete="off" placeholder="'+L("เช่น เชียงใหม่ 3 วัน 2 คืน")+'">'+
@@ -1012,7 +1012,7 @@ function openDissolveSheet(){
   closeShareDialog();
   ui.sheet = "dissolve";
   renderGlobalSheet('<h2 class="sheet-title" id="dissolveTitle">'+L("ยุบกลุ่ม {name}?", { name:esc(Store.groupName) })+'</h2>'+
-    '<p class="sheet-sub">'+L("บิลกลุ่มจะถูกลบออกจากเซิร์ฟเวอร์ถาวร เพื่อนที่มีลิงก์จะเปิดไม่ได้อีก — เราเก็บสำเนาไว้ในประวัติของคุณให้")+'</p>'+
+    '<p class="sheet-sub">'+L("บิลกลุ่มจะถูกลบออกจากเซิร์ฟเวอร์ถาวร เพื่อนที่มีลิงก์จะเปิดไม่ได้อีก แต่เราเก็บสำเนาไว้ในประวัติของคุณ")+'</p>'+
     '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
     '<button class="btn-danger" type="button" data-dissolve-ok="1">'+L("ยุบกลุ่ม")+'</button></div>', "dissolveTitle");
 }
@@ -1032,7 +1032,7 @@ async function dissolveGroup(){
     location.hash = "#/";
     toast(L("ยุบกลุ่มแล้ว เก็บสำเนาไว้ในประวัติของคุณ"),"ok");
   } catch(e){
-    toast(L("ยุบกลุ่มไม่ได้ — ตรวจอินเทอร์เน็ต หรือเซิร์ฟเวอร์ยังไม่รองรับ"),"error");
+    toast(L("ยุบกลุ่มไม่ได้ ตรวจอินเทอร์เน็ต หรือเซิร์ฟเวอร์ยังไม่รองรับ"),"error");
   } finally {
     ui.dissolving = false;
   }
@@ -1153,8 +1153,8 @@ async function startScan(){
     tick();
   } catch(e){
     stopScan();
-    msg(e && e.name === "NotAllowedError" ? L("ไม่ได้รับอนุญาตให้ใช้กล้อง — เปิดสิทธิ์กล้องในการตั้งค่าเบราว์เซอร์ หรือวางลิงก์แทน")
-                                          : L("เปิดกล้องไม่ได้ — วางลิงก์ด้านล่างแทน หรือใช้แอปกล้องของมือถือสแกน"), true);
+    msg(e && e.name === "NotAllowedError" ? L("ไม่ได้รับอนุญาตให้ใช้กล้อง เปิดสิทธิ์กล้องในการตั้งค่าเบราว์เซอร์ หรือวางลิงก์แทน")
+                                          : L("เปิดกล้องไม่ได้ วางลิงก์ด้านล่างแทน หรือใช้แอปกล้องของมือถือสแกน"), true);
   }
 }
 function stopScan(){
@@ -1261,7 +1261,7 @@ async function togglePaidAllHistory(id){
 /* ---- v3.2: ชวนเพื่อนเข้ากลุ่มจากบิลส่วนตัว = ย้ายบิลนี้ขึ้นกลุ่ม ---- */
 /** hostName: ชื่อคนสร้างกลุ่ม ("" = ไม่ใส่) · ไม่ส่งมา = ใช้ชื่อที่ให้เราเรียก ยังไม่มีชื่อ = ถามก่อนสร้าง */
 async function inviteFromBill(hostName){
-  if (ui.tour) return toast(L("ตอนฝึกยังชวนเพื่อนไม่ได้ — จบการสอนแล้วลองกับบิลจริงได้เลย"),"error");
+  if (ui.tour) return toast(L("ตอนฝึกยังชวนเพื่อนไม่ได้ จบการสอนแล้วลองกับบิลจริงได้เลย"),"error");
   if (ui.ctx || !Cloud.ready() || ui.creatingGroup) return;
   // v4.7: คนสร้างกลุ่ม = คนเปิด QR ให้เพื่อนสแกน → ใส่ชื่อตัวเองในบิลกลุ่มให้เลย และจำว่า "ฉันคือคนนี้"
   if (typeof hostName !== "string"){

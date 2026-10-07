@@ -142,7 +142,7 @@ function pageShare(){
           return '<div class="status-row'+(x.id === me ? ' me' : '')+'"><b>'+esc(x.name)+'</b>'+
             '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+L(b[1])+'</span></div>';
         }).join("")
-      : '<p class="empty" style="margin-top:var(--s5)">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
+      : '<p class="empty" style="margin-top:var(--s5)">'+L("ยังไม่มีใครในบิลนี้ ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
     '<div class="btn-stack">'+(trip
       ? '<a class="btn-main btn-block" href="'+splitHref()+'">'+L("ไปใส่ค่าใช้จ่าย")+'</a>'
       : '<a class="btn-line btn-block" href="'+confirmHref()+'">'+L("ยืนยันเมนูของฉัน · ดูหน้าที่เพื่อนเห็น")+'</a>')+'</div>'+
@@ -172,7 +172,7 @@ function shareDialogHTML(){
       '<button class="btn-line" type="button" id="shareNative">'+ICON_SHARE+' '+L("แชร์ทางอื่น")+'</button>'+
       '<button class="btn-line" type="button" id="shareSaveQr">'+ICON_SAVE_IMG+' '+L("บันทึกรูป QR")+'</button>'+
     '</div>'+
-    (!c.total ? '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>'
+    (!c.total ? '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>'
       : trip ? tripPeopleHTML(amounts, me)
       : '<div class="list-title"><h2>'+L("ยืนยันแล้ว {done} จาก {total} คน", { done:c.done, total:c.total })+'</h2></div>'+
         c.rows.map(function(x){

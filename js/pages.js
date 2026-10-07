@@ -346,7 +346,7 @@ function pageHistory(){
   var empty = !ui.myGroups.length && !ui.history.length && !cur;
   return appBar({ title:L("ประวัติบิล"), right:settingsLink() })+
     '<div class="page">'+
-      (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>' : '')+
+      (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>' : '')+
       (open ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+'<div class="list-wrap">'+open+
         '<button class="icon-btn list-x" type="button" data-del-local="1" aria-label="'+L("ลบบิลนี้")+'">'+ICON_X+'</button></div>' : '')+
       (groups ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+groups : '')+
@@ -430,7 +430,7 @@ function pageHow(){
       '<div class="stp"><b>1</b><h3>'+L("ใครกินบ้าง")+'</h3><p>'+L("พิมพ์ชื่อทุกคนที่ร่วมโต๊ะ กดเพิ่มทีละคน ชื่อเล่นสั้น ๆ อ่านง่ายที่สุดตอนดูบิล")+'</p></div>'+
       '<div class="stp"><b>2</b><h3>'+L("รายการอาหาร")+'</h3><p>'+L("ใส่ชื่อเมนูกับราคาต่อจาน แล้วแตะเลือกคนที่กินจานนั้น ถ้าทั้งโต๊ะกินกดปุ่มทุกคนได้เลย")+'</p></div>'+
       '<div class="stp"><b>3</b><h3>'+L("ค่าส่วนกลาง")+'</h3><p>'+L("เปิดค่าบริการหรือ VAT ตามที่ร้านคิด ส่วนน้ำเปล่า น้ำแข็ง ข้าวเหนียว ใส่เป็นรายการหารเท่ากัน")+'</p></div>'+
-      '<div class="stp"><b>4</b><h3>'+L("สรุปยอด")+'</h3><p>'+L("เลือกว่าใครจ่ายให้ร้าน แล้วรู้เลยว่าใครต้องโอนให้ใคร ติ๊กเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p></div>'+
+      '<div class="stp"><b>4</b><h3>'+L("สรุปยอด")+'</h3><p>'+L("เลือกว่าใครจ่ายให้ร้าน แล้วรู้เลยว่าใครต้องโอนให้ใคร ติ๊กชื่อเมื่อโอนแล้ว")+'</p></div>'+
     '</div>'+
     howCompareHTML()+
     '<section><div class="sec-head"><h2>'+L("สามคำถามที่ถูกถามบ่อย")+'</h2></div>'+
@@ -452,9 +452,9 @@ function howCompareHTML(){
   var equal = Math.round(r.grand / n * 100) / 100;
   var fork = d.by[L("โฟรค์")], yuka = d.by[L("ยูกะ")], ice = d.by[L("ไอซ์")];
   var labels = [
-    L("{name} — กิน {n} เมนู", { name:esc(fork.name), n:fork.items.length }),
-    L("{name} — ไม่กินเผ็ด {n} เมนู", { name:esc(yuka.name), n:yuka.items.length }),
-    L("{name} — กิน {n} เมนู มีซอยจุ๊", { name:esc(ice.name), n:ice.items.length })
+    L("{name} กิน {n} เมนู", { name:esc(fork.name), n:fork.items.length }),
+    L("{name} ไม่กินเผ็ด {n} เมนู", { name:esc(yuka.name), n:yuka.items.length }),
+    L("{name} กิน {n} เมนู มีซอยจุ๊", { name:esc(ice.name), n:ice.items.length })
   ];
   function rows(vals){ return '<ul>'+labels.map(function(t, k){ return '<li><span>'+t+'</span><span>'+baht(vals[k])+'</span></li>'; }).join("")+'</ul>'; }
   return '<section><div class="sec-head"><h2>'+L("บิลใบเดียวกัน สองวิธีคิด")+'</h2>'+
@@ -462,7 +462,7 @@ function howCompareHTML(){
       '<div class="compare">'+
         '<div class="cmp bad"><h3>'+L("หารเท่ากันทั้งโต๊ะ")+'</h3><div class="tag">'+L("{total} ÷ {n} = ทุกคนจ่ายเท่ากัน", { total:baht(r.grand), n:n })+'</div>'+
           rows([equal, equal, equal])+
-          '<p class="foot">'+L("{a}จ่ายเกินไป {over} บาท ส่วน{b}จ่ายขาดไป {short} บาท ทั้งที่ไม่มีใครตั้งใจเอาเปรียบกัน",
+          '<p class="foot">'+L("{a}จ่ายเกินไป {over} บาท ส่วน{b}จ่ายขาดไป {short} บาท",
             { a:esc(fork.name), over:baht(equal - fork.rounded), b:esc(ice.name), short:baht(ice.rounded - equal) })+'</p></div>'+
         '<div class="cmp good"><h3>'+L("หารด้วย FairDish")+'</h3><div class="tag">'+L("คิดจากเมนูที่แต่ละคนกินจริง")+'</div>'+
           rows([fork.rounded, yuka.rounded, ice.rounded])+
@@ -489,7 +489,7 @@ function pageAbout(){
       '<p>'+L("FairDish มีผู้ใช้ประเภทเดียว ทุกคนที่เปิดแอปทำสิ่งเดียวกันได้ทั้งหมด จึงไม่มีระบบสมาชิกหรือสิทธิ์แอดมินให้ต้องจำรหัสผ่าน")+'</p></div>'+
       '<ul class="bill-list">'+
         item("✓",L("ใช้ได้ทันทีโดยไม่ต้องล็อกอิน"),L("เปิดแล้วใช้เลย ไม่เก็บข้อมูลส่วนตัว ไม่ต้องรอโหลดบัญชี"))+
-        item("✓",L("บันทึกบิลไว้ในเครื่องให้อัตโนมัติ"),L("แก้อะไรก็บันทึกทันที เริ่มบิลใหม่แล้วบิลเดิมเก็บไว้ในหน้าประวัติ เปิดกลับมาทำต่อได้"))+
+        item("✓",L("บันทึกบิลไว้ในเครื่องให้อัตโนมัติ"),L("เริ่มบิลใหม่แล้วบิลเดิมเก็บไว้ในหน้าประวัติ เปิดกลับมาทำต่อได้"))+
         item("✓",L("เพื่อนยืนยันเมนูเองได้"),L("ส่งลิงก์ให้เพื่อนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตให้ทันที"))+
         item("✓",L("ไม่เก็บเบอร์โทรหรือเลขบัตรประชาชน"),L("FairDish เก็บแค่ชื่อเล่นและรายการในบิล ไม่ขอข้อมูลที่ใช้ระบุตัวตน"))+
         item("—",L("ยังไม่มีบัญชีผู้ใช้"),L("บิลส่วนตัวอยู่ในเครื่องที่ใช้เท่านั้น ถ้าอยากเปิดหลายเครื่องให้ย้ายบิลขึ้นกลุ่ม"))+

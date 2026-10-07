@@ -235,7 +235,7 @@ function renderMembers(){
         '</span>';
       }
       // v2.6: ชิปเหลือแค่ชื่อ แตะเพื่อแก้หรือลบ (ไอคอนไปอยู่ในโหมดแก้)
-      return '<button class="chip chip-tap" data-edit-member="'+p.id+'" aria-label="'+L("{name} — แตะเพื่อแก้หรือลบ", { name:esc(p.name) })+'">'+
+      return '<button class="chip chip-tap" data-edit-member="'+p.id+'" aria-label="'+L("{name}: แตะเพื่อแก้หรือลบ", { name:esc(p.name) })+'">'+
         '<span class="nm">'+esc(p.name)+'</span></button>';
     }).join("") + '</div>';
   }
@@ -307,7 +307,7 @@ function renderMenus(){
     list.innerHTML = state.menus.map(function(m){
       if (m.type === "meal") return mealRow(m);
       var known = m.eaters.filter(function(id){ return !!nameOf(id); });
-      var who = known.length ? eatersLabel(known) : L("ยังไม่ได้เลือกคนมีส่วน — ยังไม่ถูกนำไปคำนวณ");
+      var who = known.length ? eatersLabel(known) : L("ยังไม่ได้เลือกคนมีส่วน จึงยังไม่ถูกนำไปคำนวณ");
       var trip = state.kind === "trip";
       var unpaid = trip && known.length && !knownPayers(m).length;
       if (trip && known.length) who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : '<b class="payer-tag">'+payerText(m)+'</b>')+' · '+who;

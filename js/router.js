@@ -5,7 +5,7 @@
    9. เส้นทางหน้า
    ========================================================= */
 var routes = {
-  "/":       { title:"FairDish — จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์", view:pageHome },
+  "/":       { title:"FairDish · จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์", view:pageHome },
   "/split":  { title:"หารบิล · FairDish", view:pageSplit },
   "/bill":   { title:"ใบสรุปยอด · FairDish", view:pageBill },
   "/history":{ title:"ประวัติบิล · FairDish", view:pageHistory },
