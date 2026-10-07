@@ -80,7 +80,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.16.7";
+var APP_VERSION = "4.16.8";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */
@@ -145,4 +145,30 @@ function demoMealData(){
   var charges = defaultCharges();
   charges.forEach(function(c){ c.on = false; });   // ร้านอีสานทั่วไปไม่คิดค่าบริการ / VAT
   return { kind:"meal", name:L("ร้านส้มตำหน้ามอ"), members:members, menus:menus, shared:shared, charges:charges, payers:[], paid:{} };
+}
+
+/* ---- งาน 3.4: ตรวจฟอร์มค่าส่วนกลาง / ค่าใช้จ่ายแบบเปอร์เซ็นต์ (ไม่แตะ DOM — tests/validate.test.js) ----
+   คืน { ช่อง: "ข้อความบอกวิธีแก้" } เฉพาะช่องที่ผิด · ว่าง = ผ่าน */
+function priceError(raw){
+  var text = String(raw === undefined || raw === null ? "" : raw).trim(), n = parseFloat(text);
+  if (text === "") return L("ยังไม่ได้ใส่ราคา");
+  if (isNaN(n) || !/^-?\d*\.?\d+$/.test(text)) return L("ราคาต้องเป็นตัวเลข เช่น 60 หรือ 60.50");
+  if (n < 0) return L("ราคาต้องไม่ติดลบ");
+  if (n > MAX_PRICE) return L("ราคาสูงเกินจริง ลองตรวจจำนวนศูนย์อีกครั้ง");
+  return "";
+}
+function validateSharedForm(name, priceRaw){
+  var errs = {}, n = String(name || "").trim();
+  if (!n) errs.name = L("ใส่ชื่อรายการก่อน");
+  else if (n.length > MAX_MENU_NAME) errs.name = L("ชื่อเมนูยาวเกิน {n} ตัวอักษร", { n:MAX_MENU_NAME });
+  var p = priceError(priceRaw); if (p) errs.price = p;
+  return errs;
+}
+function validateChargeForm(label, rateRaw){
+  var errs = {}, n = String(label || "").trim(), text = String(rateRaw === undefined || rateRaw === null ? "" : rateRaw).trim(), r = parseFloat(text);
+  if (!n) errs.label = L("ใส่ชื่อค่าใช้จ่ายก่อน");
+  else if (n.length > MAX_MENU_NAME) errs.label = L("ชื่อเมนูยาวเกิน {n} ตัวอักษร", { n:MAX_MENU_NAME });
+  if (text === "" || isNaN(r) || !/^-?\d*\.?\d+$/.test(text)) errs.rate = L("ใส่เปอร์เซ็นต์เป็นตัวเลข");
+  else if (r < 0 || r > 100) errs.rate = L("เปอร์เซ็นต์ต้องอยู่ระหว่าง 0 ถึง 100");
+  return errs;
 }

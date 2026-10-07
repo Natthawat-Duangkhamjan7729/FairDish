@@ -128,6 +128,7 @@ EN = {
   "รอรับคืน {amt} บาท":"Get back {amt} THB", "ไม่ต้องโอนให้ใคร":"Nothing to pay", "คืนข้อมูลกลับมาแล้ว":"Restored",
   "ล้างข้อมูลแล้ว":"Cleared", "ลบค่าใช้จ่ายแล้ว":"Charge removed", "ใส่ชื่อค่าใช้จ่ายก่อน":"Enter a charge name first",
   "ใส่เปอร์เซ็นต์เป็นตัวเลข":"Enter the percentage as a number", "เพิ่มค่าใช้จ่ายแล้ว":"Charge added", "ใส่ชื่อรายการก่อน":"Enter an item name first",
+  "เปอร์เซ็นต์ต้องอยู่ระหว่าง 0 ถึง 100":"The percentage must be between 0 and 100",
   "ใส่ราคาเป็นตัวเลข":"Enter the price as a number", "เพิ่มค่าส่วนกลางแล้ว":"Shared item added", "ลบรายการแล้ว":"Item removed",
   "ใส่ข้อมูลตัวอย่างแล้ว":"Sample data loaded", "มื้อที่ {n}":"Meal {n}", "เปลี่ยนชื่อมื้อเป็น {name} แล้ว":"Meal renamed to {name}",
   "มีรายการอยู่แล้ว ล้างข้อมูลก่อนถึงจะเปลี่ยนเป็น{kind}ได้":"This bill already has items. Clear it first to switch to {kind}.",

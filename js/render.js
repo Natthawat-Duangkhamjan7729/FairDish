@@ -402,9 +402,11 @@ function renderCharges(){
     '<div class="form-box">'+
       '<div class="form-title">'+L("ค่าใช้จ่ายแบบเปอร์เซ็นต์")+'</div>'+
       '<label class="sr-only" for="cLabel">'+L("ชื่อค่าใช้จ่าย")+'</label>'+
-      '<input type="text" id="cLabel" placeholder="'+L("ชื่อค่าใช้จ่าย เช่น ค่าเปิดขวด")+'" autocomplete="off">'+
+      '<input type="text" id="cLabel" placeholder="'+L("ชื่อค่าใช้จ่าย เช่น ค่าเปิดขวด")+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-describedby="cLabelMsg">'+
+      '<p class="field-msg" id="cLabelMsg" aria-live="polite"></p>'+   // งาน 3.4: ข้อความใต้ช่องที่ผิด
       '<label class="sr-only" for="cRate">'+L("เปอร์เซ็นต์")+'</label>'+
-      '<input type="number" id="cRate" inputmode="decimal" step="0.1" min="0" placeholder="'+L("เปอร์เซ็นต์ (%)")+'">'+
+      '<input type="number" id="cRate" inputmode="decimal" step="0.1" min="0" max="100" placeholder="'+L("เปอร์เซ็นต์ (%)")+'" aria-describedby="cRateMsg">'+
+      '<p class="field-msg" id="cRateMsg" aria-live="polite"></p>'+
       '<div class="form-actions"><button class="btn-quiet" id="cCancel">'+L("ยกเลิก")+'</button>'+
       '<button class="btn-sm" id="cSave">'+L("เพิ่ม")+'</button></div>'+
     '</div>', 'data-close-sheet="charge"');
@@ -431,11 +433,13 @@ function renderShared(){
     '<div class="form-box">'+
       '<div class="form-title">'+L("เพิ่มรายการหารเท่ากัน")+'</div>'+
       '<label class="sr-only" for="sName">'+L("ชื่อรายการ")+'</label>'+
-      '<input type="text" id="sName" placeholder="'+L("ชื่อรายการ เช่น น้ำแข็ง")+'" autocomplete="off" '+
-        'role="combobox" aria-autocomplete="list" aria-controls="sSuggest" aria-expanded="false">'+
+      '<input type="text" id="sName" placeholder="'+L("ชื่อรายการ เช่น น้ำแข็ง")+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" '+
+        'role="combobox" aria-autocomplete="list" aria-controls="sSuggest" aria-expanded="false" aria-describedby="sNameMsg">'+
       '<div id="sSuggest"></div>'+
+      '<p class="field-msg" id="sNameMsg" aria-live="polite"></p>'+   // งาน 3.4: ข้อความใต้ช่องที่ผิด
       '<label class="sr-only" for="sPrice">'+L("ราคา")+'</label>'+
-      '<input type="number" id="sPrice" inputmode="decimal" step="0.01" min="0" placeholder="'+L("ราคา (บาท)")+'">'+
+      '<input type="number" id="sPrice" inputmode="decimal" step="0.01" min="0" max="'+MAX_PRICE+'" placeholder="'+L("ราคา (บาท)")+'" aria-describedby="sPriceMsg">'+
+      '<p class="field-msg" id="sPriceMsg" aria-live="polite"></p>'+
       '<div class="form-actions"><button class="btn-quiet" id="sCancel">'+L("ยกเลิก")+'</button>'+
       '<button class="btn-sm" id="sSave">'+L("เพิ่ม")+'</button></div>'+
     '</div>', 'data-close-sheet="shared"');
@@ -469,4 +473,17 @@ function renderSummary(){
     '<div class="sum-total"><span>'+L("รวมทั้งหมด")+'</span><span class="mono">'+baht(r.grand)+' ฿</span></div>'+
     settleHTML(r)+
     '<a class="btn-main btn-block" style="margin-top:var(--s5)" href="'+billHref()+'">'+L("ดูใบสรุปยอด")+'</a>';
+}
+
+/** งาน 3.4: แสดงข้อความใต้ช่องที่ผิด (ไม่วาดแผ่นใหม่ ข้อความที่พิมพ์ไว้ไม่หาย) — ids = { ช่อง: id ของ input } · คืน true เมื่อมีช่องผิด */
+function showFieldErrors(errs, ids){
+  var first = null;
+  Object.keys(ids).forEach(function(k){
+    var input = document.getElementById(ids[k]), msg = document.getElementById(ids[k] + "Msg");
+    if (msg){ msg.textContent = errs[k] || ""; msg.className = "field-msg" + (errs[k] ? " error" : ""); }
+    if (input) input.setAttribute("aria-invalid", errs[k] ? "true" : "false");
+    if (errs[k] && !first) first = input;
+  });
+  if (first) first.focus();
+  return !!first;
 }

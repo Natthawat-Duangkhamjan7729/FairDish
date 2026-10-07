@@ -359,8 +359,8 @@ document.addEventListener("click", async function(e){
   if (t.id==="cSave"){
     var cl = document.getElementById("cLabel").value.trim();
     var cr = parseFloat(document.getElementById("cRate").value);
-    if (!cl) return toast(L("ใส่ชื่อค่าใช้จ่ายก่อน"),"error");
-    if (!(cr>=0)) return toast(L("ใส่เปอร์เซ็นต์เป็นตัวเลข"),"error");
+    // งาน 3.4: ตรวจทุกช่องพร้อมกัน แจ้งใต้ช่องที่ผิด (เดิมเป็นข้อความเด้ง และรับ % เกิน 100)
+    if (showFieldErrors(validateChargeForm(cl, document.getElementById("cRate").value), { label:"cLabel", rate:"cRate" })) return;
     state.charges.push({ id:nid(), label:cl, rate:cr, on:true, fixed:false });
     state.chargeForm=null;
     render();
@@ -373,8 +373,8 @@ document.addEventListener("click", async function(e){
   if (t.id==="sSave"){
     var sn = document.getElementById("sName").value.trim();
     var sp = parseFloat(document.getElementById("sPrice").value);
-    if (!sn) return toast(L("ใส่ชื่อรายการก่อน"),"error");
-    if (!(sp>=0)) return toast(L("ใส่ราคาเป็นตัวเลข"),"error");
+    // งาน 3.4: ตรวจทุกช่องพร้อมกัน แจ้งใต้ช่องที่ผิด (เดิมเป็นข้อความเด้ง และรับราคาเกิน 100,000)
+    if (showFieldErrors(validateSharedForm(sn, document.getElementById("sPrice").value), { name:"sName", price:"sPrice" })) return;
     state.shared.push({ id:nid(), name:sn, price:sp });
     state.sharedForm=null;
     render();
