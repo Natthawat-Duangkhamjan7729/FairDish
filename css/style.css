@@ -1383,6 +1383,8 @@ button.appbar-sub{padding-block:.22em}
     --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
     --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
     --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
+    --hero-bg:linear-gradient(165deg,#362C4D 0%,#2A2240 55%,#251D36 100%); --hero-edge:rgba(185,163,255,.38);
+    --hero-shadow:0 0 0 1px rgba(185,163,255,.06), 0 0 32px -6px rgba(150,115,255,.42), 0 28px 56px -28px rgba(0,0,0,.7); --hero-tab:none;
   }
 }
 :root[data-theme="dark"]{
@@ -1402,8 +1404,17 @@ button.appbar-sub{padding-block:.22em}
   --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
   --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
   --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
+  --hero-bg:linear-gradient(165deg,#362C4D 0%,#2A2240 55%,#251D36 100%); --hero-edge:rgba(185,163,255,.38);
+  --hero-shadow:0 0 0 1px rgba(185,163,255,.06), 0 0 32px -6px rgba(150,115,255,.42), 0 28px 56px -28px rgba(0,0,0,.7); --hero-tab:none;
 }
 :root[data-theme="light"]{color-scheme:light}
+
+/* v4.15: การ์ดบิลที่กำลังหารในหน้าหลัก — โหมดมืดเป็นการ์ดกระจกขอบม่วงเรือง ไม่มีแถบส้มด้านบน
+   (ตัวแปร --hero-* มีเฉพาะสองบล็อกโหมดมืดด้านบน โหมดสว่างใช้ค่าสำรองที่เป็นหน้าตาเดิม) */
+.active-card,.w-active{background:var(--hero-bg,var(--card));box-shadow:var(--hero-shadow,var(--shadow))}
+.active-card{border:1px solid var(--hero-edge,transparent)}
+.w-active{border-color:var(--hero-edge,var(--card-edge))}
+.active-card::before,.w-active::before{display:var(--hero-tab,block)}
 
 /* ---------------- แถบบอกว่าอยู่ใน Developer Beta (branch claude/dev-beta เท่านั้น) ---------------- */
 .sandbox-bar{background:var(--link-soft);color:var(--link);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
