@@ -1467,3 +1467,11 @@ button.appbar-sub{padding-block:.22em}
 .inapp-dialog .install-ico{font-weight:700;letter-spacing:1px}
 .inapp-copy{margin-bottom:var(--s2)}
 .inapp-skip{display:block;margin:var(--s3) auto 0}
+
+/* งาน 1.3: การตัดบรรทัดภาษาไทยในหน้าแรก (หน้าแนะนำ / หน้าหลัก มือถือและจอใหญ่) — ไม่เปลี่ยนข้อความหรือโครงสร้าง
+   หัวข้อไม่เหลือคำเดียวโดดบรรทัดท้าย · ย่อหน้า = pretty · ยอดเงินกับ ฿ อยู่บรรทัดเดียวกัน */
+/* หัวข้อ: pretty (ไม่เหลือคำเดียวโดดบรรทัดท้าย) — ไม่ใช้ balance เพราะกับภาษาไทยตัด "จบ / ทุกมื้อ" ที่ 320–768px และ 1180–1440px */
+.intro-title,.onb-title,.w-onb-main h1,.w-welcome h2{text-wrap:pretty}
+.intro-body,.onb-body,.w-onb-lead,.w-onb-step p,.w-welcome .muted,.kind-text span,.w-mascot-card span,.w-active-prog{text-wrap:pretty}
+.w-active-amt{white-space:nowrap}
+.w-active-sum{min-width:min-content}   /* กล่องยอดกว้างพอสำหรับยอดทั้งบรรทัด — วงกลมชื่อคนขึ้นบรรทัดใหม่แทน (.w-active-mid เป็น flex-wrap) */
