@@ -27,7 +27,8 @@
 | `qr.js` | `QR.encode()` / `QR.svg()` สร้าง QR code เอง (byte, เวอร์ชัน 1–15, ระดับแก้ผิด H) — ไม่แตะ DOM |
 | `seal.js` | v4.11: `Seal` เข้ารหัสบิลกลุ่ม AES-GCM (WebCrypto) — `lock()` / `open()` / `newKey()` ไม่แตะ DOM (tests/seal.test.js) |
 | `cloud.js` | `Cloud` เรียก RPC ของ Supabase ด้วย `fetch`, รหัส/ลิงก์กลุ่ม, "กลุ่มของฉัน" |
-| `menu-library.js` | คลังเมนูแนะนำ |
+| `menu-library.js` | คลังเมนูแนะนำ (`buildMenuLibrary()` → `{ name, norm, en, enNorm }`, `libName()` / `libPos()` แสดง/ค้นตามภาษา) |
+| `library-en.js` | v4.15: ชื่ออังกฤษของคลังเมนู (`menuEn()` ประกอบจาก `MENU_EN_BASE` × `MENU_EN_WORD`, ชื่อเต็มใน `MENU_EN_FULL`), `SHARED_EN`, `TRIP_EN` |
 | `shared-library.js` | รายการแนะนำค่าส่วนกลาง (แยกจากคลังเมนู) |
 | `utils.js` | `baht`, `esc`, ไอคอน |
 | `save.js` | `commit()` บันทึกข้อมูล |
@@ -112,6 +113,8 @@
   แท็บอื่นแก้ข้อมูลในเครื่อง → event `storage` ใน main.js อัปเดตตาม · ข้อความบรรทัดเดียวที่ตัดด้วย … ต้องอยู่ในกฎกันสระบนถูกตัดท้าย style.css
 - v4.2: **ห้ามเก็บเบอร์โทร เลขบัตรประชาชน หรือข้อมูลระบุตัวตนอื่นในข้อมูลบิล** (บิลกลุ่มอยู่บน Supabase และใครมีลิงก์ก็อ่านได้ — PDPA)
   `normalizeBill()` เก็บ members แค่ `{ id, name }`
+- v4.15: เพิ่มเมนู/ค่าส่วนกลาง/ค่าใช้จ่ายทริปในคลัง ต้องเพิ่มชื่ออังกฤษใน `js/library-en.js` ด้วย (tests/library.test.js เช็กว่าครบ)
+  โหมด EN แสดงและเลือกเป็นชื่ออังกฤษ แต่พิมพ์ไทยก็ค้นเจอ
 - แก้ฟังก์ชันใน `supabase/schema.sql` ต้องรัน SQL ใหม่ใน Supabase ด้วย
 
 ## ทดสอบ
