@@ -97,12 +97,39 @@ function homeIntroHTML(){
   '</section>';
 }
 /** v4.10: บิลเสร็จแล้ว = มีคนต้องโอน และติ๊กว่าโอนครบทุกคนแล้ว */
+/** v4.15: บิลในเครื่องตอนนี้ (ไม่ต้องรอ) — เปิดอยู่ = ข้อมูลสดจาก state, ไม่ได้เปิด = สำเนาที่อ่านไว้ (ui.navLocal)
+ *  ยังไม่เคยอ่าน = อ่านจากเครื่องแล้ววาดแถบซ้าย/หน้าประวัติใหม่ · ไม่มีข้อมูล = null */
+function localBillNow(){
+  if (ui.ctx === null && !ui.loading && !ui.tour) return billHasData(serialize()) ? serialize() : null;
+  if (ui.navLocal === undefined){
+    ui.navLocal = null;
+    Store.loadLocalBill().then(function(b){
+      ui.navLocal = b || null;
+      if (!billHasData(b)) return;
+      renderSideNav();
+      if (currentPath() === "/history" || currentPath() === "/groups") refreshHistoryView();
+    }).catch(function(){});
+  }
+  return billHasData(ui.navLocal) ? ui.navLocal : null;
+}
 function billDone(saved){
   var b = normalizeBill(saved), r = computeBill(b), s = settleBill(r, b);
   return !!(s.ok && paidProgress(s.transfers, b.paid).all);
 }
-function statusBadge(done){
-  return done ? '<span class="badge ok">'+L("เสร็จแล้ว")+'</span>' : '<span class="badge warn">'+L("กำลังหาร")+'</span>';
+function statusBadge(done, open){
+  var st = done ? '<span class="badge ok">'+L("เสร็จแล้ว")+'</span>' : '<span class="badge warn">'+L("กำลังหาร")+'</span>';
+  // v4.15: การ์ดหลายใบ — บอกว่าใบไหนคือบิลที่เปิดอยู่
+  return open ? '<span class="badges">'+st+'<span class="badge open">'+L("เปิดอยู่")+'</span></span>' : st;
+}
+/** v4.15: บิลในเครื่องกับบิลกลุ่มเป็นบิลเดียวกันไหม (คนกับรายการตรงกัน) — สร้างกลุ่มจากบิลนี้แล้วบิลในเครื่องยังค้าง
+ *  (เช่นเปิดแอปไว้หลายแท็บ แท็บเก่าบันทึกทับ) หน้าหลักจะได้ไม่ขึ้นบิลเดียวกันสองใบ */
+function sameBillContent(a, b){
+  function key(x){
+    var n = normalizeBill(x);
+    return JSON.stringify([n.kind, n.members.map(function(p){ return p.name; }).sort(),
+      n.menus.map(function(m){ return [m.name, m.price]; })]);
+  }
+  return !!(a && b) && key(a) === key(b);
 }
 /** ลิงก์/ชื่อของการ์ด — บิลในเครื่อง (ไม่ส่ง o) หรือบิลกลุ่ม o = { id, name } */
 function cardLinks(saved, o){
@@ -110,7 +137,7 @@ function cardLinks(saved, o){
            : { split:"#/split", bill:"#/bill", name:savedBillName(saved), hid:"h-active", group:false };
 }
 /** การ์ดความคืบหน้าในหน้าหลัก — บิลส่วนตัวในเครื่อง หรือบิลกลุ่ม (v4.10) */
-function activeBillHTML(saved, o){
+function activeBillHTML(saved, o, open){
   var c = cardLinks(saved, o);
   var b = normalizeBill(saved);
   var r = computeBill(b);
@@ -122,7 +149,7 @@ function activeBillHTML(saved, o){
       '<div class="progress"><i style="width:'+Math.round(prog.done / prog.total * 100)+'%"></i></div>'
     : '';
   return '<section class="active-card'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
-    '<div class="active-top">'+statusBadge(prog && prog.all)+'<span class="active-meta">'+meta+'</span></div>'+
+    '<div class="active-top">'+statusBadge(prog && prog.all, open)+'<span class="active-meta">'+meta+'</span></div>'+
     '<h2 id="'+c.hid+'" class="active-name">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
     '<div class="active-sum">'+baht(r.grand)+' ฿</div>'+
     progress+
@@ -315,10 +342,15 @@ function pageHistory(){
   var past = months.map(function(m){
     return '<h2 class="list-head">'+esc(m)+'</h2>'+byMonth[m].map(historyRowHTML).join("");
   }).join("");
-  var empty = !ui.myGroups.length && !ui.history.length;
+  // v4.15: บิลที่กำลังทำอยู่ขึ้นบนสุดด้วย (เดิมขึ้นแค่บิลที่เก็บเข้าประวัติแล้ว ผู้ใช้หาบิลล่าสุดไม่เจอ)
+  var cur = localBillNow(), curB = cur && normalizeBill(cur);
+  var open = cur ? billRow("#/bill", ktOf(curB.kind,"icon")+' '+esc(savedBillName(cur)),
+      '<span class="badge warn">'+L("กำลังหาร")+'</span> '+L("{n} คน", { n:curB.members.length }), baht(computeBill(curB).grand)) : '';
+  var empty = !ui.myGroups.length && !ui.history.length && !cur;
   return appBar({ title:L("ประวัติบิล"), right:settingsLink() })+
     '<div class="page">'+
       (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>' : '')+
+      (open ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+open : '')+
       (groups ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+groups : '')+
       join+
       past+
@@ -339,7 +371,7 @@ function pagePast(){
     '<div class="page">'+
       '<p class="past-when">'+L("เก็บเข้าประวัติเมื่อ {date}", { date:esc(longDate(h.at)) })+'</p>'+
       receiptHTML(r, { kind:b.kind })+
-      (s.ok && s.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(s, false, "h-past-tf", b.paid)+'</section>' : '')+
+      (s.ok && s.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(s, false, "h-past-tf", b.paid, 'data-hist-paid-all="'+esc(h.id)+'"')+'</section>' : '')+
       '<div class="btn-stack">'+
         '<button class="btn-main btn-block" data-restore-history="'+esc(h.id)+'">'+L("เปิดบิลนี้ทำต่อ")+'</button>'+
         '<button class="btn-danger btn-block" data-del-history="'+esc(h.id)+'">'+ICON_DEL+' '+L("ลบออกจากประวัติ")+'</button>'+
@@ -381,6 +413,12 @@ function pageMore(){
       '<div class="lang-switch theme-switch" role="group" aria-labelledby="h-theme">'+THEMES.map(function(t){
         return '<button type="button" data-theme-pick="'+t.id+'" aria-pressed="'+(ui.theme === t.id)+'">'+L(t.label)+'</button>';
       }).join("")+'</div>'+
+    '</section>'+
+    // v4.15 (Dev Beta ทดลอง): เลือกแบบแถบเมนูซ้ายของจอใหญ่
+    '<section class="step-card" aria-labelledby="h-navstyle">'+
+      '<div class="step-head"><h2 id="h-navstyle">'+L("แถบเมนูซ้าย (จอใหญ่)")+'</h2></div>'+
+      '<p class="hint">'+L("ทดลอง — A: หน้าหลัก / ประวัติ เข้าบิลจากการ์ดในหน้าหลัก · B: บิลที่เปิดอยู่ทุกใบเป็นหัวข้อ มีลิงก์หารบิลและใบสรุปยอดข้างใต้")+'</p>'+
+      navStyleSwitch()+
     '</section>'+
     '<h2 class="list-head">'+L("เกี่ยวกับ FairDish")+'</h2>'+
     link("#/how",L("วิธีใช้"),L("ทีละขั้น + คำถามที่ถูกถามบ่อย"))+

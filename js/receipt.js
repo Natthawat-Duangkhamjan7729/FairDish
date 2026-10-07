@@ -72,7 +72,7 @@ function settleHTML(r){
   var s = settleBill(r);
   var head = state.kind === "trip" ? tripPaidHTML(s) : mealPayerHTML(r, s);
   var body;
-  if (s.ok) body = transfersBlock(s, true, "h-sum-tf");
+  if (s.ok) body = transfersBlock(s, true, "h-sum-tf", null, 'data-paid-all="1"');
   else body = '<h3 class="settle-head" id="h-sum-tf">'+L("ใครโอนให้ใคร")+'</h3>'+
     '<p class="notice warn" style="margin:0">'+(s.reason === "unpaid"
       ? L("ยังไม่ได้ใส่ว่าใครจ่าย {n} รายการ ใส่ให้ครบในแท็บ{tab}แล้วจะรู้ว่าใครต้องโอนให้ใคร", { n:s.count, tab:kt("items") })
@@ -120,7 +120,8 @@ function tripPaidHTML(s){
  * รายการโอน — interactive = ติ๊กว่าโอนแล้วได้ (ข้อมูลอยู่ใน state.paid และบันทึกไปกับบิล/กลุ่ม)
  * paid ส่งมาเองได้ (บิลในประวัติ) ไม่ส่ง = ของบิลที่เปิดอยู่
  */
-function transfersBlock(s, interactive, headId, paid){
+/** allAttr (v4.15): ใส่ = มีแถว "ติ๊กว่าโอนครบทุกคน" ด้านบนรายการ เช่น 'data-paid-all="1"' (บิลที่ทำอยู่) / 'data-hist-paid-all="<id>"' (บิลในประวัติ) */
+function transfersBlock(s, interactive, headId, paid, allAttr){
   paid = paid || state.paid;
   var me = interactive ? myMemberId() : null;
   var prog = paidProgress(s.transfers, paid);
@@ -139,7 +140,13 @@ function transfersBlock(s, interactive, headId, paid){
   return '<div class="tf-head"><h3 class="settle-head" id="'+headId+'">'+L("ใครโอนให้ใคร")+'</h3>'+
       (s.transfers.length ? '<span class="tf-count">'+L("โอนแล้ว {done}/{total}", { done:prog.done, total:prog.total })+'</span>' : '')+'</div>'+
     (s.transfers.length
-      ? (interactive ? '<p class="hint">'+L("แตะช่องหน้าชื่อเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p>' : '')+'<div class="tf-list">'+rows+'</div>'+
+      ? (interactive ? '<p class="hint">'+L("แตะช่องหน้าชื่อเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p>' : '')+
+        (allAttr && s.transfers.length > 1
+          ? '<button class="tf-row tf-all'+(prog.all ? ' done' : '')+'" type="button" role="checkbox" aria-checked="'+prog.all+'" '+allAttr+'>'+
+              '<span class="tf-tick" aria-hidden="true"><span class="tf-box">'+(prog.all ? ICON_CHECK : '')+'</span></span>'+
+              '<span class="tf-who"><b>'+(prog.all ? L("โอนครบทุกคนแล้ว — แตะเพื่อเอาติ๊กออกทั้งหมด") : L("ติ๊กว่าโอนครบทุกคน"))+'</b></span></button>'
+          : '')+
+        '<div class="tf-list">'+rows+'</div>'+
         (s.transfers.length > 1 ? '<p class="tf-note">'+L("หักลบให้แล้ว โอนแค่ {n} ครั้งก็จบ", { n:s.transfers.length })+'</p>' : '')
       : '<p class="hint" style="margin:0">'+L("ไม่มีใครต้องโอน ทุกคนจ่ายพอดีกับส่วนของตัวเอง 👍")+'</p>');
 }
