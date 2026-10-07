@@ -1467,3 +1467,63 @@ button.appbar-sub{padding-block:.22em}
 .inapp-dialog .install-ico{font-weight:700;letter-spacing:1px}
 .inapp-copy{margin-bottom:var(--s2)}
 .inapp-skip{display:block;margin:var(--s3) auto 0}
+
+/* ---------------- งาน 1.1: หน้าแรกแบ่งเป็นส่วน (pages.js landing*HTML — ใช้ทั้งมือถือและจอใหญ่) ----------------
+   กว้างสูงสุด 1200px · ทุกส่วนห่างกันเท่ากัน (มือถือ --s7, จอใหญ่ --s8) · ใช้สีจากตัวแปรเดิมเท่านั้น */
+.lp-header,.lp-sec{max-width:1200px;margin-inline:auto}
+.page-home .lp-sec{margin-top:var(--s7)}
+.lp-header{border-bottom:1px solid var(--foot-line);padding-bottom:var(--s1)}
+.lp-nav{display:flex;flex-wrap:wrap;gap:0 var(--s4)}
+.lp-nav a{display:inline-flex;align-items:center;min-height:var(--tap-sm);font-size:var(--fs-small);font-weight:600;color:var(--ink-2)}
+.lp-nav a:hover{color:var(--link)}
+.lp-hero{display:grid;gap:var(--s5)}
+.lp-hero-title{font-size:var(--fs-display);line-height:1.3;text-wrap:balance}
+.lp-hero-body{margin-top:var(--s3);color:var(--ink-2);max-width:36em}
+.lp-btns{display:flex;flex-wrap:wrap;gap:var(--s3);margin-top:var(--s5)}
+.lp-btns>*{flex:1 1 180px;min-height:52px}
+.lp-btns.center{justify-content:center;max-width:520px;margin-inline:auto}
+.lp-note{margin-top:var(--s3);font-size:var(--fs-small);color:var(--ink-2)}
+.lp-hero-art{margin:0}
+.lp-mine .home-title{font-weight:600;margin-top:0}
+.lp-head{max-width:640px;margin-bottom:var(--s5)}
+.lp-head p{margin-top:var(--s2);color:var(--ink-2)}
+.lp-panel{border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--s5);background:var(--surface);box-shadow:var(--shadow);color:var(--ink-2)}
+.lp-grid{display:grid;gap:var(--s4);list-style:none;margin:0;padding:0}
+.lp-card{border:1px solid var(--card-edge);border-radius:var(--r-lg);padding:var(--s5);background:var(--surface);box-shadow:var(--shadow)}
+.lp-card h3{font-weight:600}
+.lp-card p{margin-top:var(--s2);color:var(--ink-2);font-size:var(--fs-small)}
+.lp-ico{display:grid;place-items:center;width:44px;height:44px;margin-bottom:var(--s3);border-radius:14px;background:var(--link-soft);font-size:22px;line-height:1}
+ol.lp-grid .lp-ico{background:var(--purple-grad);color:var(--on-fill);font-family:var(--font-num);font-size:var(--fs-body);font-weight:600;box-shadow:0 4px 0 var(--purple-edge)}
+.lp-sec.cta-box h2{font-weight:600}
+.lp-foot{border-top:1px solid var(--foot-line);padding-top:var(--s5);text-align:center;color:var(--ink-2);font-size:var(--fs-small)}
+.lp-foot-brand{display:inline-flex;align-items:center;gap:var(--s2);color:var(--ink)}
+.lp-foot-brand .logo-mark{width:32px;height:32px}
+.lp-foot-brand h2{font-size:var(--fs-title);font-weight:600}
+.lp-foot p{margin-top:var(--s2)}
+.lp-foot .lp-nav{justify-content:center;margin-top:var(--s1)}
+.lp-ver{font-family:var(--font-num)}
+@media(min-width:600px){
+  .wpage .lp-sec{margin-top:var(--s8)}
+  .lp-header{display:flex;align-items:center;gap:var(--s5)}
+  .lp-header .home-top{display:contents}
+  .lp-header .lp-nav{order:1}
+  .lp-header .lang-switch{order:2}
+  .w-head h2{font-family:var(--font-head);font-size:30px;font-weight:600;line-height:1.3;margin-right:auto}
+}
+@media(min-width:768px){
+  .lp-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lp-grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lp-problem{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:var(--s5);align-items:start}
+  .lp-problem .lp-head{margin-bottom:0}
+}
+@media(min-width:1024px){
+  .lp-hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;gap:var(--s7)}
+  .lp-hero-title{font-size:44px}
+  .lp-grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(min-width:600px){
+  /* ยังไม่มีบิล: ไม่มีการ์ดบิลด้านซ้าย — การ์ดเริ่มบิลเต็มแถว เรียงเป็นตาราง */
+  .w-home-grid:has(> #homeActive:empty){grid-template-columns:minmax(0,1fr)}
+  .w-home-grid:has(> #homeActive:empty) #homeActive{display:none}
+  .w-home-grid:has(> #homeActive:empty) .w-start{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+}

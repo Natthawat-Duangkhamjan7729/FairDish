@@ -619,5 +619,19 @@ EN = {
   "คนในทริป":"On this trip",
   "เพื่อนจะเห็นอะไร":"What friends will see",
   "บิลทริปเดียวกับคุณ":"The same trip bill as you",
-  "เปิดลิงก์แล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) จากนั้นใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้เลย ทุกคนเห็นยอดล่าสุดตรงกัน":"They open the link, pick (or add) their name, then add what they paid. Everyone sees the same latest totals"
+  "เปิดลิงก์แล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) จากนั้นใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้เลย ทุกคนเห็นยอดล่าสุดตรงกัน":"They open the link, pick (or add) their name, then add what they paid. Everyone sees the same latest totals",
+  // งาน 1.1: ส่วนของหน้าแรก
+  "เมนูหน้าแรก":"Home menu",
+  "เมนูท้ายหน้า":"Footer menu",
+  "ฟีเจอร์หลัก":"Key features",
+  "ยอดรวมลงตัวทุกสตางค์":"Totals add up to the last satang",
+  "กระจายเศษสตางค์ให้ยอดรายคนรวมกันเท่ากับยอดบิลพอดีเสมอ คิดค่าบริการและ VAT ให้อัตโนมัติ":"Leftover satang are spread so everyone's shares always add up to the exact bill, with service charge and VAT worked out for you",
+  "วิธีใช้ 3 ขั้น":"How it works in 3 steps",
+  "แต่ละคนได้อะไร":"What each person gets",
+  "คนหารบิล":"The bill splitter",
+  "สร้างบิล ใส่ชื่อคน เมนู และคนจ่าย แล้วได้ยอดรายคนพร้อมสรุปว่าใครโอนให้ใคร ส่งเข้ากลุ่มได้ทันที":"Create a bill, add people, dishes and who paid, then get each person's share and who pays whom, ready to send to the group",
+  "เพื่อนในกลุ่ม":"Friends in the group",
+  "เปิดลิงก์หรือสแกน QR เพื่อเข้าร่วม แล้วยืนยันเมนูของตัวเอง เห็นยอดที่ต้องจ่ายและที่มาของยอด ไม่ต้องสมัครสมาชิก":"Open the link or scan the QR to join, confirm your own dishes, and see what you owe and where it comes from. No sign-up",
+  "คนสร้างกลุ่ม":"The group creator",
+  "ชวนเพื่อนด้วยลิงก์หรือ QR ให้ทุกคนช่วยกันกรอกบิลเดียวกัน และยุบกลุ่มได้เมื่อไม่ใช้แล้ว":"Invite friends with a link or QR so everyone fills in the same bill, and close the group when it's no longer needed"
 };

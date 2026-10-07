@@ -777,7 +777,7 @@ async function fillHome(again){
   if (marked) saveMyGroups();
   if (!again) refreshHomeGroups();
   if (isWide()){                                        // v4.4: หน้าแรกจอใหญ่ (wide.js)
-    active.innerHTML = (has ? activeCardWide(saved, null, openLocal) : (groups.length ? "" : emptyCardWide()))+
+    active.innerHTML = (has ? activeCardWide(saved, null, openLocal) : "")+   // งาน 1.1: ไม่มีบิล = ไม่ใส่ emptyCardWide (ซ้ำกับ Hero)
       groups.map(function(g){ return activeCardWide(g.snap, { id:g.id, name:g.name }, openGroup(g)); }).join("");
     recent.innerHTML = recentCardsWide(skip);
     intro.innerHTML = "";
@@ -790,7 +790,7 @@ async function fillHome(again){
     ? '<div class="list-title"><h2>'+L("บิลล่าสุด")+'</h2><a class="link-btn" href="#/history">'+L("ดูทั้งหมด")+'</a></div>'+
       items.slice(0,3).map(function(x){ return x.html; }).join("")
     : "";
-  intro.innerHTML = (!has && !groups.length && !items.length) ? homeIntroHTML() : "";
+  intro.innerHTML = "";   // งาน 1.1: แนะนำแอปอยู่ในส่วน Hero ของหน้าแรกแล้ว (homeIntroHTML ไม่ใช้ที่หน้าหลัก)
   updateInstallButton();
 }
 

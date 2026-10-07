@@ -58,16 +58,15 @@ function pageHome(){
   if (ui.showOnb) return isWide() ? pageOnboardWide() : pageOnboard();
   if (needName()) return pageAskName();                // v4.6: หน้าถามชื่อ ต่อจากหน้าแนะนำ
   if (isWide()) return pageHomeWide();
+  // งาน 1.1: หน้าแรกเป็นส่วน ๆ — Header → Hero → บิลของฉัน → ปัญหา → ฟีเจอร์ → วิธีใช้ → แต่ละคนได้อะไร → ชวนเริ่ม → Footer
   return '<div class="page page-home">'+
-    '<div class="home-top">'+
-      '<img class="logo-mark" src="img/logo.png" alt="" width="40" height="40">'+
-      '<b class="home-brand">FairDish</b>'+
-      langSwitch()+
+    landingHeaderHTML(
       '<button class="install-btn" id="installBtn" type="button" aria-haspopup="dialog" hidden>'+ICON_INSTALL+'<span>'+L("ติดตั้งแอป")+'</span></button>'+
-      settingsLink()+
-    '</div>'+
+      settingsLink())+
+    landingHeroHTML()+
+    '<section class="lp-sec lp-mine" aria-labelledby="h-mine">'+
     helloHTML()+
-    '<h1 class="home-title">'+L("บิลของฉัน")+'</h1>'+
+    '<h2 class="home-title" id="h-mine">'+L("บิลของฉัน")+'</h2>'+
     '<div id="homeActive"></div>'+
     '<button class="new-bill" type="button" data-open-kind="1" aria-haspopup="dialog">'+
       '<span class="new-bill-ico">'+ICON_PLUS+'</span>'+
@@ -75,7 +74,98 @@ function pageHome(){
     '</button>'+
     '<div id="homeRecent"></div>'+
     '<div id="homeIntro"></div>'+
+    '</section>'+
+    landingRestHTML()+
   '</div>';
+}
+
+/* ---------------- งาน 1.1: ส่วนของหน้าแรก (ใช้ทั้งมือถือและจอใหญ่ — pageHomeWide ใน wide.js) ---------------- */
+/** Header: โลโก้ + ชื่อระบบ + เมนูสั้น (ไม่มีปุ่มเข้าสู่ระบบ เพราะ FairDish ไม่มีระบบบัญชี) — right = ปุ่มท้ายแถบของแต่ละจอ */
+function landingHeaderHTML(right){
+  return '<header class="lp-header">'+
+    '<div class="home-top">'+
+      '<img class="logo-mark" src="img/logo.png" alt="" width="40" height="40">'+
+      '<b class="home-brand">FairDish</b>'+
+      langSwitch()+(right || '')+
+    '</div>'+
+    '<nav class="lp-nav" aria-label="'+L("เมนูหน้าแรก")+'">'+
+      '<a href="#/how">'+L("วิธีใช้")+'</a><a href="#/history">'+L("ประวัติ")+'</a><a href="#/about">'+L("เกี่ยวกับ")+'</a>'+
+    '</nav>'+
+  '</header>';
+}
+/** Hero: หัวข้อ คำอธิบาย ปุ่มหลัก/รอง และใบสรุปยอดของระบบจริง (วาดด้วย demoReceiptHTML ตรงกับบิลตัวอย่าง) */
+function landingHeroHTML(){
+  return '<section class="lp-sec lp-hero" aria-labelledby="h-hero">'+
+    '<div class="lp-hero-text">'+
+      '<p class="eyebrow">'+L("หารบิลให้สนุกขึ้นอีกนิด")+'</p>'+
+      '<h1 id="h-hero" class="lp-hero-title">'+L("จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์")+'</h1>'+
+      '<p class="lp-hero-body">'+L("FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปว่าใครต้องโอนให้ใคร ส่งเข้ากลุ่มได้ทันที")+'</p>'+
+      '<div class="lp-btns">'+
+        '<button class="btn-main" type="button" data-open-kind="1" aria-haspopup="dialog">'+L("เริ่มบิลใหม่")+'</button>'+
+        '<button class="btn-line" type="button" data-start-demo="1">'+L("ลองกับข้อมูลตัวอย่าง")+'</button>'+
+      '</div>'+
+      '<p class="lp-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
+    '</div>'+
+    '<div class="intro-art lp-hero-art">'+
+      '<span class="blob purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v6a3 3 0 0 0 6 0V3M10 12v9M17 3v18M17 3c-2 1-3 4-3 7h3"/></svg></span>'+
+      '<span class="blob coral" aria-hidden="true">&#247;</span>'+
+      '<span class="blob mint" aria-hidden="true">'+ICON_CHECK+'</span>'+
+      demoReceiptHTML()+
+    '</div>'+
+  '</section>';
+}
+/** การ์ดหนึ่งใบในส่วนฟีเจอร์/วิธีใช้/บทบาท — ico = อีโมจิหรือเลขขั้น */
+function landingCard(ico, title, body){
+  return '<li class="lp-card"><span class="lp-ico" aria-hidden="true">'+ico+'</span><h3>'+title+'</h3><p>'+body+'</p></li>';
+}
+/** ส่วนที่ 3–8: ปัญหา → ฟีเจอร์หลัก → วิธีใช้ 3 ขั้น → แต่ละคนได้อะไร → ชวนเริ่ม → Footer */
+function landingRestHTML(){
+  return '<section class="lp-sec lp-problem" aria-labelledby="h-lp-problem">'+
+      '<div class="lp-head"><h2 id="h-lp-problem">'+L("ปัญหาที่ต้องการแก้")+'</h2>'+
+        '<p>'+L("โปรเจกต์ที่เริ่มจากคำถามง่าย ๆ ว่าทำไมคนสั่งน้ำเปล่าแก้วเดียวต้องจ่ายเท่าคนสั่งสเต๊ก")+'</p></div>'+
+      '<p class="lp-panel">'+L("การกินข้าวเป็นกลุ่มมักจบด้วยการหารเท่ากันทั้งโต๊ะ เพราะเร็วและไม่ต้องคิดมาก แต่คนที่กินน้อยหรือไม่ได้กินบางเมนูก็ต้องจ่ายมากกว่าที่ควร ความรู้สึกไม่เป็นธรรมสะสมจนกลายเป็นความขัดแย้งในกลุ่ม และการคิดเองก็ผิดพลาดง่ายเมื่อมีค่าบริการกับ VAT เข้ามา")+'</p>'+
+    '</section>'+
+    '<section class="lp-sec" aria-labelledby="h-lp-features">'+
+      '<div class="lp-head"><h2 id="h-lp-features">'+L("ฟีเจอร์หลัก")+'</h2></div>'+
+      '<ul class="lp-grid lp-grid-4">'+
+        landingCard("🍽️", L("หารเฉพาะคนที่กินจานนั้น"), L("แตะชื่อคนที่กินจานนั้น ระบบหารเฉพาะคนที่แตะไว้ ไม่ใช่ทั้งโต๊ะ ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน"))+
+        landingCard("🪙", L("ยอดรวมลงตัวทุกสตางค์"), L("กระจายเศษสตางค์ให้ยอดรายคนรวมกันเท่ากับยอดบิลพอดีเสมอ คิดค่าบริการและ VAT ให้อัตโนมัติ"))+
+        landingCard("✅", L("เพื่อนยืนยันเมนูเองได้"), L("ส่งลิงก์ให้เพื่อนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตให้ทันที"))+
+        landingCard("🔓", L("ใช้ได้ทันทีโดยไม่ต้องล็อกอิน"), L("เปิดแล้วใช้เลย ไม่เก็บข้อมูลส่วนตัว ไม่ต้องรอโหลดบัญชี"))+
+      '</ul>'+
+    '</section>'+
+    '<section class="lp-sec" aria-labelledby="h-lp-how">'+
+      '<div class="lp-head"><h2 id="h-lp-how">'+L("วิธีใช้ 3 ขั้น")+'</h2></div>'+
+      '<ol class="lp-grid lp-grid-3">'+
+        landingCard("1", L("ใครกินบ้าง"), L("พิมพ์ชื่อทุกคนที่ร่วมโต๊ะ กดเพิ่มทีละคน ชื่อเล่นสั้น ๆ อ่านง่ายที่สุดตอนดูบิล"))+
+        landingCard("2", L("รายการอาหาร"), L("ใส่ชื่อเมนูกับราคาต่อจาน แล้วแตะเลือกคนที่กินจานนั้น ถ้าทั้งโต๊ะกินกดปุ่มทุกคนได้เลย"))+
+        landingCard("3", L("สรุปยอด"), L("เลือกว่าใครจ่ายให้ร้าน แล้วรู้เลยว่าใครต้องโอนให้ใคร ติ๊กเมื่อโอนแล้ว ไม่มีใครต้องตามทวง"))+
+      '</ol>'+
+    '</section>'+
+    '<section class="lp-sec" aria-labelledby="h-lp-roles">'+
+      '<div class="lp-head"><h2 id="h-lp-roles">'+L("แต่ละคนได้อะไร")+'</h2></div>'+
+      '<ul class="lp-grid lp-grid-3">'+
+        landingCard("🧾", L("คนหารบิล"), L("สร้างบิล ใส่ชื่อคน เมนู และคนจ่าย แล้วได้ยอดรายคนพร้อมสรุปว่าใครโอนให้ใคร ส่งเข้ากลุ่มได้ทันที"))+
+        landingCard("🙋", L("เพื่อนในกลุ่ม"), L("เปิดลิงก์หรือสแกน QR เพื่อเข้าร่วม แล้วยืนยันเมนูของตัวเอง เห็นยอดที่ต้องจ่ายและที่มาของยอด ไม่ต้องสมัครสมาชิก"))+
+        landingCard("👑", L("คนสร้างกลุ่ม"), L("ชวนเพื่อนด้วยลิงก์หรือ QR ให้ทุกคนช่วยกันกรอกบิลเดียวกัน และยุบกลุ่มได้เมื่อไม่ใช้แล้ว"))+
+      '</ul>'+
+    '</section>'+
+    '<section class="lp-sec cta-box" aria-labelledby="h-lp-cta">'+
+      '<h2 id="h-lp-cta">'+L("พร้อมลองแล้ว")+'</h2>'+
+      '<p>'+L("มีข้อมูลตัวอย่างให้กดใส่ในหน้าหารบิล ลองดูผลก่อนใช้จริงได้")+'</p>'+
+      '<div class="lp-btns center">'+
+        '<button class="btn-main" type="button" data-open-kind="1" aria-haspopup="dialog">'+L("เริ่มบิลใหม่")+'</button>'+
+        '<button class="btn-line" type="button" data-start-demo="1">'+L("ลองกับข้อมูลตัวอย่าง")+'</button>'+
+      '</div>'+
+    '</section>'+
+    '<footer class="lp-sec lp-foot" aria-labelledby="h-lp-foot">'+
+      '<div class="lp-foot-brand"><img class="logo-mark" src="img/logo.png" alt="" width="32" height="32"><h2 id="h-lp-foot">FairDish</h2></div>'+
+      '<p>'+L("ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น")+'</p>'+
+      '<nav class="lp-nav" aria-label="'+L("เมนูท้ายหน้า")+'">'+
+        '<a href="#/how">'+L("วิธีใช้")+'</a><a href="#/about">'+L("เกี่ยวกับ")+'</a><a href="#/more">'+L("ตั้งค่า")+'</a>'+
+      '</nav>'+
+      '<p class="lp-ver">FairDish v'+APP_VERSION+'</p>'+
+    '</footer>';
 }
 /** แนะนำแอปสำหรับคนที่เพิ่งเปิดครั้งแรก (ยังไม่มีบิลเลย) */
 function homeIntroHTML(){
