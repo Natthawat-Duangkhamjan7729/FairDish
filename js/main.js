@@ -154,6 +154,7 @@ window.addEventListener("storage", async function(e){
     try { ui.myGroups = await Store.loadGroups(); } catch(err){ return; }
     if (path === "/history" || path === "/groups") refreshHistoryView();
   } else if (e.key === Store.key){
+    ui.navLocal = undefined;
     if (ui.ctx !== null || ui.tour) return;           // แท็บนี้ไม่ได้เปิดบิลในเครื่องอยู่ — ตอนเปิดจะโหลดใหม่เองอยู่แล้ว
     var busy = state.menuForm || state.sharedForm || state.chargeForm || ui.editingMember || ui.sheet || ui.save === "saving" || typingInView();
     if ((path === "/split" || path === "/bill") && !busy) loadContext(null);
@@ -177,6 +178,7 @@ async function boot(){
     var prof = await Store.loadProfile();
     if (prof){ ui.myName = cleanMyName(prof.name).slice(0, MAX_NAME); ui.nameAsked = !!prof.asked; }
   } catch(e){}
+  try { ui.navStyle = (await Store.readRaw(NAV_STYLE_KEY)) === "b" ? "b" : "a"; } catch(e){}
   try { ui.installNudgeOff = (await Store.readRaw(INSTALL_NUDGE_KEY)) === "off"; } catch(e){}
   updateInstallButton();
   detectCamera();                     // v4.12: ไม่รอ — แผ่นเลือกประเภทบิลใช้ตอนผู้ใช้กดเปิด

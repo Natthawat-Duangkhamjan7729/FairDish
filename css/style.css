@@ -865,6 +865,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .badge.changed{background:var(--danger-soft);color:var(--danger)}
 .badge.open{background:var(--link-soft);color:var(--link)}
 .badges{display:inline-flex;flex-wrap:wrap;gap:var(--s1)}
+.sn-bill{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none}
 
 /* v4.1: หน้าที่เพื่อนเห็น (#/g/<id>/me) */
 .page-guest{padding-top:var(--s2)}
@@ -1357,7 +1358,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 /* v4.15: ข้อความบรรทัดเดียวที่ตัดด้วย … (overflow:hidden) ตัดสระบนของภาษาไทย (ิ ี ึ ื และวรรณยุกต์ที่ซ้อนอยู่บนสระ) ทิ้ง
    ขยายพื้นที่ที่ไม่ถูกตัดขึ้น-ลงด้วย padding แล้วหักคืนด้วย margin ติดลบ — ตำแหน่งข้อความไม่เปลี่ยน */
 .r-line .who,.chip .nm,.group-title h2,.suggest .s-name,.home-top .home-brand,.payer-name,
-.appbar-title h1,.appbar-sub,.list-body b,.t-label,.status-row b,.ws-pname b,.w-hist-row .body b,.tour-tip.mini h2{
+.appbar-title h1,.appbar-sub,.list-body b,.sn-bill,.t-label,.status-row b,.ws-pname b,.w-hist-row .body b,.tour-tip.mini h2{
   padding-block:.22em;margin-block:-.22em
 }
 button.appbar-sub{padding-block:.22em}

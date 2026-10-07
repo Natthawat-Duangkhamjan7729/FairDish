@@ -394,6 +394,12 @@ function pageMore(){
         return '<button type="button" data-theme-pick="'+t.id+'" aria-pressed="'+(ui.theme === t.id)+'">'+L(t.label)+'</button>';
       }).join("")+'</div>'+
     '</section>'+
+    // v4.15 (Dev Beta ทดลอง): เลือกแบบแถบเมนูซ้ายของจอใหญ่
+    '<section class="step-card" aria-labelledby="h-navstyle">'+
+      '<div class="step-head"><h2 id="h-navstyle">'+L("แถบเมนูซ้าย (จอใหญ่)")+'</h2></div>'+
+      '<p class="hint">'+L("ทดลอง — A: หน้าหลัก / ประวัติ เข้าบิลจากการ์ดในหน้าหลัก · B: มีชื่อบิลที่เปิดอยู่ พร้อมลิงก์หารบิลและใบสรุปยอด")+'</p>'+
+      navStyleSwitch()+
+    '</section>'+
     '<h2 class="list-head">'+L("เกี่ยวกับ FairDish")+'</h2>'+
     link("#/how",L("วิธีใช้"),L("ทีละขั้น + คำถามที่ถูกถามบ่อย"))+
     link("#/about",L("เกี่ยวกับ"),L("ทีมผู้จัดทำและขอบเขตของเวอร์ชันนี้"))+

@@ -46,19 +46,56 @@ function sideNavHTML(){
   };
   var paid = openBillPaidText();
   var share = "";   // v4.11: ชวนเพื่อนอยู่ที่ปุ่มขวาบนของหน้าหารบิล/ท้ายใบสรุปยอดอย่างเดียว (เปิดเป็นหน้าต่าง)
+  // v4.15 (ทดลอง): แบบ A = ไม่มีลิงก์บิลที่เปิดอยู่ (เข้าบิลจากการ์ดในหน้าหลัก เหมือนมือถือ)
+  //                แบบ B = หัวข้อเป็นชื่อบิลจริง ขึ้นเฉพาะเมื่อมีบิลที่เริ่มทำแล้ว
+  var open = ui.navStyle === "b" ? navOpenBill() : null;
+  var openPart = !open ? '' :
+    '<div class="sn-label sn-bill" title="'+esc(open.name)+'">'+open.icon+' '+esc(open.name)+'</div>'+
+    item("split", splitHref(), ICON_FORK, L("หารบิล"))+
+    item("bill", billHref(), ICON_COPY, '<span class="sn-long">'+L("ใบสรุปยอด")+'</span><span class="sn-short">'+L("สรุปยอด")+'</span>',
+      paid ? '<span class="sn-badge mono">'+paid+'</span>' : '');
   return '<a class="sn-brand" href="#/"><img src="img/logo.png" alt="" width="36" height="36"><b>FairDish</b></a>'+
     '<button class="sn-new" type="button" data-open-kind="1" aria-haspopup="dialog" aria-label="'+L("เริ่มบิลใหม่")+'">'+ICON_PLUS+'<span class="sn-text">'+L("เริ่มบิลใหม่")+'</span></button>'+
     item("home", "#/", ICON_HOME, L("หน้าหลัก"))+
-    '<div class="sn-label">'+L("บิลที่เปิดอยู่")+'</div>'+
-    item("split", splitHref(), ICON_FORK, L("หารบิล"))+
-    item("bill", billHref(), ICON_COPY, '<span class="sn-long">'+L("ใบสรุปยอด")+'</span><span class="sn-short">'+L("สรุปยอด")+'</span>',
-      paid ? '<span class="sn-badge mono">'+paid+'</span>' : '')+
+    openPart+
     share+
     '<div class="sn-sep" aria-hidden="true"></div>'+
     item("history", "#/history", ICON_CLOCK, L("ประวัติ"))+
     '<div class="sn-tip"><img src="img/mascot.png" alt="" width="62" height="62"><b>'+L("เคล็ดลับ")+'</b>'+
       '<span>'+L("กด {key} ในหน้าหารบิลเพื่อเพิ่มเมนูได้ทันที", { key:kbd("M") })+'</span></div>'+
     item("more", "#/more", ICON_SETTINGS, L("ตั้งค่า"));
+}
+/** v4.15 (ทดลองแบบ B): บิลที่ลิงก์ "หารบิล / ใบสรุปยอด" พาไป { name, icon } — ยังไม่มีบิลที่เริ่มทำ = null
+ *  ยังไม่ได้โหลดบิลไหน (เพิ่งเปิดแอป) = บิลในเครื่อง อ่านครั้งเดียวแล้ววาดแถบใหม่ */
+function navOpenBill(){
+  if (ui.ctx !== undefined && !ui.loading){
+    if (!ui.ctx && !billHasData(serialize())) return null;
+    return { name:billName(), icon:ktOf(state.kind, "icon") };
+  }
+  if (ui.ctx === undefined){
+    if (ui.navLocal === undefined){
+      ui.navLocal = null;
+      Store.loadLocalBill().then(function(b){ ui.navLocal = b; renderSideNav(); }).catch(function(){});
+      return null;
+    }
+    var b = ui.navLocal;
+    return billHasData(b) ? { name:savedBillName(b), icon:ktOf(normalizeBill(b).kind, "icon") } : null;
+  }
+  return null;
+}
+/** v4.15 (ทดลอง): สลับแบบแถบซ้าย A / B — จำไว้ในเครื่อง */
+var NAV_STYLE_KEY = "fairdish:navstyle:v1";
+async function setNavStyle(v){
+  ui.navStyle = v === "b" ? "b" : "a";
+  try { await Store.writeRaw(NAV_STYLE_KEY, ui.navStyle); } catch(e){}
+  renderSideNav();
+  if (currentPath() === "/more"){ var y = window.scrollY; document.getElementById("view").innerHTML = pageMore(); jumpTo(y); }
+}
+function navStyleSwitch(){
+  return '<div class="lang-switch theme-switch" role="group" aria-label="'+L("แถบเมนูซ้าย (จอใหญ่)")+'">'+
+    [["a","แบบ A"],["b","แบบ B"]].map(function(o){
+      return '<button type="button" data-nav-style="'+o[0]+'" aria-pressed="'+(ui.navStyle === o[0])+'">'+L(o[1])+'</button>';
+    }).join("")+'</div>';
 }
 /** วาดแถบซ้าย — ซ่อนบนมือถือ ตอนหน้าแนะนำ และหน้าที่เพื่อนเปิดมายืนยันเมนู (#/g/<id>/me) */
 function renderSideNav(){

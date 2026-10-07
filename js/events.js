@@ -118,7 +118,7 @@ document.addEventListener("click", async function(e){
             "[data-charge],[data-del-charge],[data-del-shared],"+
             "#menuOpen,#mSave,#mCancel,#sharedOpen,#sSave,#sCancel,#chargeOpen,#cSave,#cCancel,"+
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
-            "[data-step],[data-group-panel],[data-theme-pick],[data-pay],"+
+            "[data-step],[data-group-panel],[data-theme-pick],[data-nav-style],[data-pay],"+
             "[data-open-kind],[data-new-kind],[data-trip-go],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
             "[data-paid],[data-show-done],[data-show-receipt],[data-restore-history],[data-del-history],#inviteBtn,"+
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
@@ -252,6 +252,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-step"))) return setStep(v, t.getAttribute("role")==="tab");
   if (t.getAttribute("data-group-panel")){ ui.groupPanel = !ui.groupPanel; return renderGroupBar(); }
   if ((v = t.getAttribute("data-theme-pick"))) return setTheme(v);
+  if ((v = t.getAttribute("data-nav-style"))) return setNavStyle(v);
 
   /* v2.0: กลุ่ม */
   if (t.id==="groupJoin") return joinGroup();
