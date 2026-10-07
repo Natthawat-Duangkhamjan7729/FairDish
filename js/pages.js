@@ -98,7 +98,8 @@ function landingHeroHTML(){
   return '<section class="lp-sec lp-hero" aria-labelledby="h-hero">'+
     '<div class="lp-hero-text">'+
       '<p class="eyebrow">'+L("หารบิลให้สนุกขึ้นอีกนิด")+'</p>'+
-      '<h1 id="h-hero" class="lp-hero-title">'+L("จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์")+'</h1>'+
+      // งาน 1.2: ตัดบรรทัดที่ช่องว่างเท่านั้น (ภาษาไทยไม่ตัดกลางวลี "จบทุกมื้อ")
+      '<h1 id="h-hero" class="lp-hero-title">'+L("จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์").split(" ").map(function(w){ return '<span class="lp-nw">'+w+'</span>'; }).join(" ")+'</h1>'+
       '<p class="lp-hero-body">'+L("FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปว่าใครต้องโอนให้ใคร ส่งเข้ากลุ่มได้ทันที")+'</p>'+
       '<div class="lp-btns">'+
         '<button class="btn-main" type="button" data-open-kind="1" aria-haspopup="dialog">'+L("เริ่มบิลใหม่")+'</button>'+
