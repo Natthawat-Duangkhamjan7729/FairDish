@@ -106,20 +106,9 @@ function statusBadge(done){
 }
 /** ลิงก์/ชื่อของการ์ด — บิลในเครื่อง (ไม่ส่ง o) หรือบิลกลุ่ม o = { id, name } */
 function cardLinks(saved, o){
-  var c = o ? { split:"#/g/"+o.id, bill:"#/g/"+o.id+"/bill", name:o.name, hid:"h-active-"+o.id, group:true }
-            : { split:"#/split", bill:"#/bill", name:savedBillName(saved), hid:"h-active", group:false };
-  c.ready = billReady(saved);
-  c.open = c.ready ? c.bill : c.split;
-  return c;
+  return o ? { split:"#/g/"+o.id, bill:"#/g/"+o.id+"/bill", name:o.name, hid:"h-active-"+o.id, group:true }
+           : { split:"#/split", bill:"#/bill", name:savedBillName(saved), hid:"h-active", group:false };
 }
-/** v4.16: เปิดบิลจากที่ไหนก็ไปที่เดียวกัน — มีทั้งคนและรายการแล้ว = ใบสรุปยอด, ยังไม่ครบ = หน้าหารบิล (ทำต่อ) */
-function billReady(saved){
-  return !!(saved && (saved.members || []).length && (saved.menus || []).length);
-}
-/** ลิงก์เปิดบิลกลุ่มตามกฎเดียวกัน (ใช้ข้อมูลที่จำไว้ g.snap) */
-function groupOpenHref(g){ return "#/g/"+g.id+(billReady(g.snap) ? "/bill" : ""); }
-/** ป้ายปุ่มเปิดบิล — บอกว่ากดแล้วไปไหน */
-function openLabel(ready){ return ready ? L("ดูใบสรุปยอด") : L("ทำต่อ"); }
 /** การ์ดความคืบหน้าในหน้าหลัก — บิลส่วนตัวในเครื่อง หรือบิลกลุ่ม (v4.10) */
 function activeBillHTML(saved, o){
   var c = cardLinks(saved, o);
@@ -137,7 +126,10 @@ function activeBillHTML(saved, o){
     '<h2 id="'+c.hid+'" class="active-name">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
     '<div class="active-sum">'+baht(r.grand)+' ฿</div>'+
     progress+
-    '<a class="btn-main btn-block" href="'+c.open+'">'+openLabel(c.ready)+'</a>'+   // v4.16: ปุ่มเดียว ไปตามกฎ billReady()
+    '<div class="btn-pair">'+
+      '<a class="btn-main" href="'+c.split+'">'+L("ทำต่อ")+'</a>'+
+      '<a class="btn-line" href="'+c.bill+'">'+L("ใบสรุปยอด")+'</a>'+
+    '</div>'+
   '</section>';
 }
 /** แถวบิลในรายการ (บิลล่าสุด / ประวัติ) */
@@ -153,7 +145,7 @@ function historyRowHTML(h){
     L("{date} · {n} คน", { date:esc(shortDate(h.at)), n:b.members.length }), baht(computeBill(b).grand));
 }
 function groupRowHTML(g){
-  return billRow(esc(groupOpenHref(g)), ktOf(g.kind,"icon")+' '+esc(g.name),
+  return billRow('#/g/'+esc(g.id), ktOf(g.kind,"icon")+' '+esc(g.name),
     '<span class="tag-group">'+ICON_USERS+' '+L("บิลกลุ่ม")+'</span>'+(g.done ? ' · '+L("เสร็จแล้ว") : '')+
     (g.at ? ' · '+L("เปิดล่าสุด {date}", { date:esc(shortDate(g.at)) }) : ''), '');
 }
@@ -179,31 +171,6 @@ function stepTab(st){
   return '<button type="button" role="tab" id="tab-'+st.id+'" aria-controls="panel-'+st.id+'" aria-selected="'+on+'" tabindex="'+(on?0:-1)+'" data-step="'+st.id+'">'+
     st.label+' <span class="tab-count" id="count-'+st.id+'"></span></button>';
 }
-/** v4.16: แถบขั้นตอนบนมือถือ = เส้นทางเดียว คน → เมนู → ส่วนกลาง → สรุป
-    ในหน้าหารบิล: ขั้นสุดท้าย "สรุป" เป็นลิงก์ไปใบสรุปยอด · ในใบสรุปยอด (onBill): "สรุป" ถูกเลือก ขั้นอื่นพากลับไปหน้าหารบิลที่ขั้นนั้น
-    มื้อในทริปไม่มี "สรุป" (ขั้นสุดท้ายคือกลับไปที่ทริป) */
-function stepBarHTML(onBill){
-  var tabs = onBill
-    ? steps().map(function(st){ return '<a class="step-go" href="'+splitHref()+'" data-goto-step="'+st.id+'">'+st.label+'</a>'; }).join("")
-    : steps().map(stepTab).join("");
-  var sum = ui.tripStash ? '' : (onBill
-    ? '<span class="step-go on" aria-current="step">'+L("สรุป")+'</span>'
-    : '<a class="step-go" href="'+billHref()+'">'+L("สรุป")+'</a>');
-  return '<nav class="step-tabs" aria-label="'+L("ขั้นตอนการหารบิล")+'">'+
-    (onBill ? tabs : '<div class="step-tablist" role="tablist" aria-label="'+L("ขั้นตอนการหารบิล")+'">'+tabs+'</div>')+sum+'</nav>';
-}
-/** ปุ่ม "ถัดไป" ท้ายแต่ละขั้น — ขั้นสุดท้ายไม่มี (แถบล่างมีปุ่ม "ดูใบสรุปยอด" / "กลับไปที่ทริป" อยู่แล้ว) */
-function stepNextHTML(id){
-  if (ui.loading) return "";
-  var list = steps(), i = -1;
-  list.forEach(function(st, k){ if (st.id === id) i = k; });
-  if (i < 0 || i >= list.length - 1) return "";
-  if (id === "members" && !state.members.length) return "";
-  if (id === "menus" && !state.menus.length) return "";
-  var nxt = list[i + 1];
-  var label = id === "members" ? kt("next") : L("ถัดไป: {step} ›", { step:nxt.label });
-  return '<button class="btn-line btn-block step-next" type="button" data-step="'+nxt.id+'">'+label+'</button>';
-}
 function stepPanel(id, title, aside, body){
   var i = 0;
   steps().forEach(function(st, k){ if (st.id === id) i = k + 1; });
@@ -226,7 +193,7 @@ function pageSplit(){
   return bar+
   '<div class="page page-app">'+
     (inMeal ? '<div id="mealHead"></div>' : '<div id="groupBar"></div>')+
-    stepBarHTML(false)+
+    '<div class="step-tabs" role="tablist" aria-label="'+L("ขั้นตอนการหารบิล")+'">'+steps().map(stepTab).join("")+'</div>'+
 
     stepPanel("members", kt("people"), "memberCount",
       '<div class="field-row">'+
@@ -239,12 +206,11 @@ function pageSplit(){
       '<p class="field-msg muted" id="memberMsg" aria-live="polite"></p>'+
       '<div id="memberList"></div>'+
       '<div id="memberExtra"></div>'+
-      '<div id="memberNext" class="step-next-slot"></div>')+
+      '<div id="memberNext"></div>')+
 
     stepPanel("menus", kt("itemsTitle"), "menuMeta",
       '<div id="menuNoMembers"></div>'+
-      '<div id="menuList"></div><div id="menuFormSlot"></div>'+
-      '<div id="menuNext" class="step-next-slot"></div>')+
+      '<div id="menuList"></div><div id="menuFormSlot"></div>')+
 
     (state.kind === "trip" ? '' : stepPanel("shared", L("ค่าส่วนกลาง"), "",
       '<p class="hint">'+L("คิดเป็น % จากยอดของแต่ละคน")+'</p>'+
@@ -285,7 +251,6 @@ function pageBill(){
   if (isWide()) return pageBillWide(r, s, prog);         // v4.4: ใบเสร็จซ้าย ใครจ่าย/ใครโอนขวา (wide.js)
   var mine = myShare();
   return bar + '<div class="page">'+
-      stepBarHTML(true)+                                   // v4.16: อยู่ขั้นไหนของเส้นทางเดียวกัน
       (r.orphan>0 ? '<div class="notice warn" style="margin:0 0 var(--s3)"><p>'+L("มี {n} {what} จึงยังไม่ถูกรวมในบิลนี้", { n:r.orphan, what:kt("orphan") })+'</p></div>' : '')+
       (prog.all ? '<button class="done-banner" type="button" data-show-done="1">🎉 <b>'+L("ทุกคนโอนครบแล้ว")+'</b><span>'+(state.kind === "trip" ? L("ดูหน้าจบทริป ›") : L("ดูหน้าจบมื้อ ›"))+'</span></button>' : '')+
       (mine ? '<div class="my-total my-total-bill"><span class="my-label">'+L("ยอดของคุณ ({name})", { name:esc(nameOf(mine.id)) })+

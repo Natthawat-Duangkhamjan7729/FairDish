@@ -8,7 +8,7 @@ const vm = require("node:vm");
 
 function loadApp(){
   const ctx = vm.createContext({});
-  for (const f of ["config.js", "i18n.js", "state.js", "cloud.js", "calc.js", "save.js", "confirm.js"]){
+  for (const f of ["config.js", "i18n.js", "state.js", "cloud.js", "save.js", "confirm.js"]){
     const file = path.join(__dirname, "..", "js", f);
     vm.runInContext(fs.readFileSync(file, "utf8"), ctx, { filename: file });
   }

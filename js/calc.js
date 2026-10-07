@@ -138,39 +138,23 @@ function settle(r, payers){
    ========================================================= */
 /** รวมยอดที่แต่ละคนจ่ายจาก payer ของแต่ละรายการ → { payers:[{id, amount}], missing:จำนวนรายการที่ยังไม่ระบุคนจ่าย }
  *  นับเฉพาะรายการที่ถูกคิดในบิล (มีคนมีส่วนอย่างน้อย 1 คน) ค่าส่วนกลางไม่มีคนจ่ายจึงนับเป็น missing */
-/** v4.15: คนจ่ายของรายการ — payer เป็นรหัสคนเดียว (string) หรือหลายคน (array) → array เสมอ */
-function payerIds(m){
-  var p = m && m.payer;
-  if (Array.isArray(p)) return p.filter(function(x, i){ return x && p.indexOf(x) === i; }).map(String);
-  return p ? [String(p)] : [];
-}
-/** array ของรหัสคนจ่าย → ค่าที่เก็บใน payer (คนเดียว = string, หลายคน = array, ไม่มี = null) */
-function packPayer(ids){
-  ids = (ids || []).filter(function(x, i){ return x && ids.indexOf(x) === i; });
-  return ids.length > 1 ? ids : (ids[0] || null);
-}
 function itemPayers(b){
   b = b || state;
   var known = {};
   b.members.forEach(function(p){ known[p.id] = true; });
   var paid = {}, missing = 0;
-  // หลายคนจ่ายรายการเดียว = หารเท่ากันเป็นสตางค์ เศษให้คนแรก ๆ รวมแล้วเท่ายอดรายการพอดี
-  function add(m, cents){
-    var ids = payerIds(m).filter(function(id){ return known[id]; });
-    if (!ids.length){ missing++; return; }
-    var base = Math.floor(cents / ids.length), rem = cents - base * ids.length;
-    ids.forEach(function(id, i){ paid[id] = (paid[id] || 0) + base + (i < rem ? 1 : 0); });
-  }
   b.menus.forEach(function(m){
     if (m.type === "meal"){
       var md = mealOf(m);
       var cents = Math.round(computeBill({ members:b.members, menus:md.menus, shared:md.shared, charges:md.charges, kind:"meal" }).grand * 100);
       if (!cents) return;                                   // มื้อว่าง ไม่ต้องมีคนจ่าย
-      add(m, cents);
+      if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + cents;
+      else missing++;
       return;
     }
     if (!m.eaters.some(function(id){ return known[id]; })) return;
-    add(m, Math.round(m.price * 100));
+    if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + Math.round(m.price * 100);
+    else missing++;
   });
   missing += b.shared.length;
   return { payers: Object.keys(paid).map(function(id){ return { id:id, amount:paid[id] / 100 }; }), missing: missing };

@@ -30,8 +30,7 @@ function normalizeBill(saved){
     .map(function(p){ return { id:String(p.id), name:String(p.name || "") }; });
   b.menus = (Array.isArray(saved.menus) ? saved.menus : []).map(function(m){
     var item = { id:m.id, name:m.name, price:Number(m.price)||0, eaters:m.eaters||[] };
-    var payer = packPayer(payerIds(m));                 // v4.15: หลายคนจ่ายได้ (array)
-    if (payer) item.payer = payer;
+    if (m.payer) item.payer = String(m.payer);
     if (m.type === "meal"){
       var md = m.meal || {};
       item.type = "meal";
