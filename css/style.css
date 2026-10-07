@@ -261,7 +261,6 @@ section+section{margin-top:var(--s7)}
 /* ---------------- หน้าแอป ---------------- */
 .app-col{max-width:540px;margin:0 auto}
 .step-card{position:relative;background:var(--card);border:1px solid var(--card-edge);border-radius:var(--r-md);padding:var(--s5) var(--s4);margin-top:var(--s2);margin-bottom:var(--s4);box-shadow:var(--shadow)}
-.step-card::before{content:"";position:absolute;top:-7px;right:44px;width:88px;height:9px;border-radius:5px 5px 0 0;background:var(--coral-grad)}
 .step-head{display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s5)}
 .step-num{position:relative;width:38px;height:38px;border-radius:12px;flex:0 0 auto;background:var(--purple-grad);color:var(--on-fill);font-family:var(--font-num);font-size:var(--fs-small);font-weight:600;display:grid;place-items:center;box-shadow:0 4px 0 var(--purple-edge)}
 .step-num::after{content:"";position:absolute;right:-5px;bottom:-5px;width:11px;height:11px;border-radius:50%;background:var(--yellow-dot);border:2px solid var(--card)}
@@ -667,7 +666,6 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .home-brand{font-family:var(--font-head);font-size:var(--fs-title);font-weight:600;letter-spacing:-.2px;margin-right:auto}
 .home-title{font-size:30px;line-height:1.3;margin:var(--s4) 0 var(--s4)}
 .active-card{position:relative;background:var(--card);border-radius:var(--r-md);padding:22px 18px 18px;margin-top:var(--s2);box-shadow:var(--shadow)}
-.active-card::before,.done-card::before{content:"";position:absolute;top:-7px;right:44px;width:88px;height:9px;border-radius:5px 5px 0 0;background:var(--coral-grad)}
 .active-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
 .badge{display:inline-block;border-radius:var(--r-pill);padding:2px var(--s3);font-size:13px;font-weight:600;white-space:nowrap}
 .badge.warn{background:var(--secondary);color:var(--secondary-ink)}
@@ -797,7 +795,6 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .done-head h2{font-size:30px;font-weight:600;line-height:1.3;margin-top:14px}
 .done-head p{margin-top:6px;color:var(--ink-2);font-size:15px}
 .done-card{position:relative;background:var(--card);border-radius:var(--r-md);padding:20px var(--s4) var(--s3);margin-top:22px;box-shadow:var(--shadow)}
-.done-card::before{background:var(--mint-grad)}
 .done-top{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s2)}
 .done-top b{font-family:var(--font-head);font-size:17px;font-weight:600;overflow-wrap:anywhere}
 .done-top .mono{font-weight:600;white-space:nowrap}
@@ -1081,7 +1078,6 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   /* หน้าแรก */
   .w-home-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:stretch}
   .w-active{position:relative;background:var(--card);border:1px solid var(--card-edge);border-radius:var(--r-md);padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column}
-  .w-active::before{content:"";position:absolute;top:-7px;right:44px;width:88px;height:9px;border-radius:5px 5px 0 0;background:var(--coral-grad)}
   .w-active .active-top{justify-content:flex-start;gap:var(--s2)}
   .w-active-mid{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-top:10px}
   .w-active-sum{flex:1;min-width:220px}
@@ -1411,7 +1407,7 @@ button.appbar-sub{padding-block:.22em}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#17121F; --surface:#211A2E; --surface-2:#2A2139; --card:#241C33; --card-edge:rgba(255,255,255,.04);
+    --bg:#17121F; --surface:#211A2E; --surface-2:#2A2139; --card:#241C33; --card-edge:rgba(185,163,255,.2);
     --line:#382D4C; --line-2:#4A3D63;
     --ink:#F2ECFA; --ink-2:#C7BDD8; --ink-3:#A398B7;
     --primary-soft:#163A30; --primary-ink:#7EDDB9;
@@ -1427,12 +1423,12 @@ button.appbar-sub{padding-block:.22em}
     --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
     --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
     --hero-bg:linear-gradient(165deg,#362C4D 0%,#2A2240 55%,#251D36 100%); --hero-edge:rgba(185,163,255,.38);
-    --hero-shadow:0 0 0 1px rgba(185,163,255,.06), 0 0 32px -6px rgba(150,115,255,.42), 0 28px 56px -28px rgba(0,0,0,.7); --hero-tab:none;
+    --hero-shadow:0 0 0 1px rgba(185,163,255,.06), 0 0 32px -6px rgba(150,115,255,.42), 0 28px 56px -28px rgba(0,0,0,.7);
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#17121F; --surface:#211A2E; --surface-2:#2A2139; --card:#241C33; --card-edge:rgba(255,255,255,.04);
+  --bg:#17121F; --surface:#211A2E; --surface-2:#2A2139; --card:#241C33; --card-edge:rgba(185,163,255,.2);
   --line:#382D4C; --line-2:#4A3D63;
   --ink:#F2ECFA; --ink-2:#C7BDD8; --ink-3:#A398B7;
   --primary-soft:#163A30; --primary-ink:#7EDDB9;
@@ -1448,16 +1444,18 @@ button.appbar-sub{padding-block:.22em}
   --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
   --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
   --hero-bg:linear-gradient(165deg,#362C4D 0%,#2A2240 55%,#251D36 100%); --hero-edge:rgba(185,163,255,.38);
-  --hero-shadow:0 0 0 1px rgba(185,163,255,.06), 0 0 32px -6px rgba(150,115,255,.42), 0 28px 56px -28px rgba(0,0,0,.7); --hero-tab:none;
+  --hero-shadow:0 0 0 1px rgba(185,163,255,.06), 0 0 32px -6px rgba(150,115,255,.42), 0 28px 56px -28px rgba(0,0,0,.7);
 }
 :root[data-theme="light"]{color-scheme:light}
 
-/* v4.15: การ์ดบิลที่กำลังหารในหน้าหลัก — โหมดมืดเป็นการ์ดกระจกขอบม่วงเรือง ไม่มีแถบส้มด้านบน
+/* v4.15: เอาแถบสีส้ม/ชมพูบนหัวการ์ดออกทุกใบ · การ์ดทุกใบมีขอบ var(--card-edge) — โหมดมืดเป็นเส้นม่วงจาง ๆ แยกการ์ดออกจากพื้นดำ
+   (โหมดสว่างเป็นขอบขาวบนการ์ดขาว หน้าตาเหมือนเดิม) */
+.active-card,.done-card,.share-card,.guest-card,.guest-done,.onb-card,.w-card,.w-onb-dish,.w-onb-step,.ws-shared{border:1px solid var(--card-edge)}
+/* v4.15: การ์ดบิลที่กำลังหารในหน้าหลัก — โหมดมืดเป็นการ์ดกระจกขอบม่วงเรือง
    (ตัวแปร --hero-* มีเฉพาะสองบล็อกโหมดมืดด้านบน โหมดสว่างใช้ค่าสำรองที่เป็นหน้าตาเดิม) */
 .active-card,.w-active{background:var(--hero-bg,var(--card));box-shadow:var(--hero-shadow,var(--shadow))}
 .active-card{border:1px solid var(--hero-edge,transparent)}
 .w-active{border-color:var(--hero-edge,var(--card-edge))}
-.active-card::before,.w-active::before{display:var(--hero-tab,block)}
 
 /* ---------------- แถบบอกว่าอยู่ใน Developer Beta (branch claude/dev-beta เท่านั้น) ---------------- */
 .sandbox-bar{background:var(--link-soft);color:var(--link);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
