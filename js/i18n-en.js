@@ -16,7 +16,7 @@ EN = {
   "ภาษา":"Language", "ธีม":"Theme", "ตามเครื่อง":"System", "สว่าง":"Light", "มืด":"Dark",
   "ปิด":"Close", "ยกเลิก":"Cancel", "บันทึก":"Save", "เพิ่ม":"Add", "ลบ":"Delete", "ลบออก":"Remove", "คัดลอก":"Copy",
   "แถบเมนูซ้าย (จอใหญ่)":"Side menu (large screens)", "แบบ A":"Style A", "แบบ B":"Style B",
-  "ทดลอง — A: หน้าหลัก / ประวัติ เข้าบิลจากการ์ดในหน้าหลัก · B: มีชื่อบิลที่เปิดอยู่ พร้อมลิงก์หารบิลและใบสรุปยอด":"Experiment — A: Home / History, open bills from the cards on Home · B: shows the open bill's name with Split and Summary links",
+  "ทดลอง — A: หน้าหลัก / ประวัติ เข้าบิลจากการ์ดในหน้าหลัก · B: บิลที่เปิดอยู่ทุกใบเป็นหัวข้อ มีลิงก์หารบิลและใบสรุปยอดข้างใต้":"Experiment — A: Home / History, open bills from the cards on Home · B: every open bill is a heading with Split and Summary links under it",
   "เลิกทำ":"Undo", "เอาคืน":"Restore", "เปิดอยู่":"Open now",
   "เลือกได้หลายคน":"pick one or more", "{name} จ่ายคนละเท่ากัน":"{name} paid, split equally", "ลองอีกครั้ง":"Try again", "ถัดไป":"Next", "ข้าม":"Skip", "ทุกคน":"Everyone", "ทุกคน ({n})":"Everyone ({n})",
   "บาท":"THB", "{amt} บาท":"{amt} THB", "ฉัน":"me", "ฉัน {amt}":"me {amt}", "{n} คน":"{n} people", "{n} เมนู":"{n} dishes",

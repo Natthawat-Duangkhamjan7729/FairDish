@@ -47,13 +47,8 @@ function sideNavHTML(){
   var paid = openBillPaidText();
   var share = "";   // v4.11: ชวนเพื่อนอยู่ที่ปุ่มขวาบนของหน้าหารบิล/ท้ายใบสรุปยอดอย่างเดียว (เปิดเป็นหน้าต่าง)
   // v4.15 (ทดลอง): แบบ A = ไม่มีลิงก์บิลที่เปิดอยู่ (เข้าบิลจากการ์ดในหน้าหลัก เหมือนมือถือ)
-  //                แบบ B = หัวข้อเป็นชื่อบิลจริง ขึ้นเฉพาะเมื่อมีบิลที่เริ่มทำแล้ว
-  var open = ui.navStyle === "b" ? navOpenBill() : null;
-  var openPart = !open ? '' :
-    '<div class="sn-label sn-bill" title="'+esc(open.name)+'">'+open.icon+' '+esc(open.name)+'</div>'+
-    item("split", splitHref(), ICON_FORK, L("หารบิล"))+
-    item("bill", billHref(), ICON_COPY, '<span class="sn-long">'+L("ใบสรุปยอด")+'</span><span class="sn-short">'+L("สรุปยอด")+'</span>',
-      paid ? '<span class="sn-badge mono">'+paid+'</span>' : '');
+  //                แบบ B = บิลที่เปิดอยู่ทุกใบเป็นหัวข้อใหญ่ (ชื่อบิลจริง) มีลิงก์หารบิล / ใบสรุปยอดตัวเล็กข้างใต้
+  var openPart = ui.navStyle === "b" ? navBillsHTML(path) : '';
   return '<a class="sn-brand" href="#/"><img src="img/logo.png" alt="" width="36" height="36"><b>FairDish</b></a>'+
     '<button class="sn-new" type="button" data-open-kind="1" aria-haspopup="dialog" aria-label="'+L("เริ่มบิลใหม่")+'">'+ICON_PLUS+'<span class="sn-text">'+L("เริ่มบิลใหม่")+'</span></button>'+
     item("home", "#/", ICON_HOME, L("หน้าหลัก"))+
@@ -65,23 +60,65 @@ function sideNavHTML(){
       '<span>'+L("กด {key} ในหน้าหารบิลเพื่อเพิ่มเมนูได้ทันที", { key:kbd("M") })+'</span></div>'+
     item("more", "#/more", ICON_SETTINGS, L("ตั้งค่า"));
 }
-/** v4.15 (ทดลองแบบ B): บิลที่ลิงก์ "หารบิล / ใบสรุปยอด" พาไป { name, icon } — ยังไม่มีบิลที่เริ่มทำ = null
- *  ยังไม่ได้โหลดบิลไหน (เพิ่งเปิดแอป) = บิลในเครื่อง อ่านครั้งเดียวแล้ววาดแถบใหม่ */
-function navOpenBill(){
-  if (ui.ctx !== undefined && !ui.loading){
-    if (!ui.ctx && !billHasData(serialize())) return null;
-    return { name:billName(), icon:ktOf(state.kind, "icon") };
-  }
-  if (ui.ctx === undefined){
+/** "โอนแล้ว x/y" ของบิลใดก็ได้ (ไม่รู้คนจ่าย = "") */
+function paidTextOf(data){
+  var b = normalizeBill(data);
+  if (!b.members.length) return "";
+  var s = settleBill(computeBill(b), b);
+  if (!s.ok || !s.transfers.length) return "";
+  var p = paidProgress(s.transfers, b.paid);
+  return p.done + "/" + p.total;
+}
+/** v4.15 (ทดลองแบบ B): บิลที่เปิดค้างอยู่ทุกใบ = บิลในเครื่อง (ถ้ามีข้อมูล) + บิลกลุ่มที่ขึ้นการ์ดในหน้าหลัก
+ *  [{ key, name, icon, split, bill, paid, current }] — บิลที่เปิดอยู่ตอนนี้ใช้ข้อมูลสดจาก state */
+function navOpenBills(){
+  var live = ui.ctx !== undefined && !ui.loading && !ui.groupError;
+  var list = [];
+  var local = null;
+  if (live && ui.ctx === null) local = serialize();
+  else {
     if (ui.navLocal === undefined){
       ui.navLocal = null;
-      Store.loadLocalBill().then(function(b){ ui.navLocal = b; renderSideNav(); }).catch(function(){});
-      return null;
+      Store.loadLocalBill().then(function(b){ ui.navLocal = b || null; renderSideNav(); }).catch(function(){});
     }
-    var b = ui.navLocal;
-    return billHasData(b) ? { name:savedBillName(b), icon:ktOf(normalizeBill(b).kind, "icon") } : null;
+    local = ui.navLocal;
   }
-  return null;
+  var groups = homeGroups().slice();
+  if (live && ui.ctx && !groups.some(function(g){ return g.id === ui.ctx; })){
+    var cur = myGroup(ui.ctx);
+    if (cur) groups.unshift(cur);                     // กลุ่มที่เปิดอยู่แต่ไม่ได้ขึ้นการ์ดในหน้าหลัก (เก่า/เสร็จแล้ว) ก็ยังต้องกลับไปได้
+  }
+  var snapOf = function(g){ return (live && ui.ctx === g.id) ? serialize() : g.snap; };
+  if (billHasData(local) && !groups.some(function(g){ return sameBillContent(local, snapOf(g)); })){
+    var lb = normalizeBill(local);
+    list.push({ key:"local", name:savedBillName(local), icon:ktOf(lb.kind, "icon"), split:"#/split", bill:"#/bill",
+      paid:paidTextOf(local), current:ui.ctx === null });
+  }
+  groups.forEach(function(g){
+    var data = snapOf(g);
+    if (!billHasData(data)) return;
+    list.push({ key:g.id, name:(live && ui.ctx === g.id && Store.groupName) || g.name, icon:ktOf(normalizeBill(data).kind, "icon"),
+      split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", paid:paidTextOf(data), current:ui.ctx === g.id, group:true });
+  });
+  return list;
+}
+function navBillsHTML(path){
+  var bills = navOpenBills();
+  if (!bills.length) return '';
+  return '<div class="sn-label">'+L("บิลที่เปิดอยู่")+'</div>'+bills.map(function(b){
+    var here = b.current && (path === "/split" || path === "/bill");
+    var sub = function(href, on, label, extra){
+      return '<a class="sn-sub'+(on ? ' on' : '')+'" href="'+href+'"'+(on ? ' aria-current="page"' : '')+'>'+label+(extra || '')+'</a>';
+    };
+    return '<div class="sn-bill'+(here ? ' here' : '')+'">'+
+      '<a class="sn-bhead" href="'+b.split+'" title="'+esc(b.name)+'">'+
+        '<span class="sn-bico" aria-hidden="true">'+b.icon+'</span><span class="sn-bname">'+esc(b.name)+'</span>'+
+        (b.group ? '<span class="sn-bgroup" title="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>' : '')+'</a>'+
+      '<div class="sn-subs">'+
+        sub(b.split, here && path === "/split", L("หารบิล"))+
+        sub(b.bill, here && path === "/bill", L("ใบสรุปยอด"), b.paid ? ' <span class="sn-badge mono">'+b.paid+'</span>' : '')+
+      '</div></div>';
+  }).join("");
 }
 /** v4.15 (ทดลอง): สลับแบบแถบซ้าย A / B — จำไว้ในเครื่อง */
 var NAV_STYLE_KEY = "fairdish:navstyle:v1";

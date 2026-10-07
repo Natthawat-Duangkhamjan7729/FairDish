@@ -865,7 +865,6 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .badge.changed{background:var(--danger-soft);color:var(--danger)}
 .badge.open{background:var(--link-soft);color:var(--link)}
 .badges{display:inline-flex;flex-wrap:wrap;gap:var(--s1)}
-.sn-bill{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none}
 
 /* v4.1: หน้าที่เพื่อนเห็น (#/g/<id>/me) */
 .page-guest{padding-top:var(--s2)}
@@ -1003,6 +1002,15 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-item.on{background:var(--link-soft);color:var(--link)}
   .sn-badge{position:absolute;top:4px;right:2px;font-size:10px;line-height:1.5;padding:0 5px;border-radius:var(--r-pill);background:var(--secondary);color:var(--secondary-ink)}
   .sidenav .sn-item:last-child{margin-top:auto}
+  /* v4.15 (ทดลองแบบ B): บิลที่เปิดอยู่ — แถบไอคอนแสดงแค่ไอคอนบิล + ชื่อสั้น ลิงก์ย่อยซ่อน (เข้าใบสรุปจากหน้าหารบิลได้) */
+  .sidenav{overflow-y:auto}
+  .sn-bill{width:72px}
+  .sn-bhead{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:60px;justify-content:center;padding:4px;border-radius:16px;color:var(--ink-2);font-size:11px;font-weight:600}
+  .sn-bhead:hover{background:var(--surface-2);color:var(--ink)}
+  .sn-bill.here .sn-bhead{background:var(--link-soft);color:var(--link)}
+  .sn-bico{font-size:22px;line-height:1.2}
+  .sn-bname{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sn-bgroup,.sn-subs{display:none}
 
   /* หัวของแต่ละหน้า */
   .wpage{padding:var(--wpad-y) var(--wpad-x) var(--s7);max-width:1240px;margin:0 auto}
@@ -1304,6 +1312,18 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-tip b{display:block;font-size:13px}
   .sn-tip span{display:block;font-size:12px;line-height:1.5;color:var(--ink-2)}
   .sidenav .sn-item:last-child{margin-top:8px}
+  .sn-bill{width:auto;margin-bottom:6px}
+  .sn-bhead{flex-direction:row;justify-content:flex-start;gap:10px;min-height:50px;padding:0 12px;border-radius:14px;font-family:var(--font-head);font-size:16px;color:var(--ink)}
+  .sn-bico{font-size:20px}
+  .sn-bname{flex:1;min-width:0}
+  .sn-bgroup{display:inline-flex;color:var(--ink-3)}
+  .sn-bgroup svg{width:16px;height:16px}
+  .sn-subs{display:flex;flex-direction:column;gap:2px;margin:2px 0 0 26px;padding-left:12px;border-left:2px solid var(--line)}
+  .sn-bill.here .sn-subs{border-left-color:var(--link-line)}
+  .sn-sub{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 10px;border-radius:10px;font-size:14px;color:var(--ink-2)}
+  .sn-sub:hover{background:var(--surface-2);color:var(--ink)}
+  .sn-sub.on{background:var(--link-soft);color:var(--link);font-weight:600}
+  .sn-sub .sn-badge{margin-left:auto}
   .w-onb-text{padding:40px 72px 48px 40px}
   .w-onb-main h1{font-size:48px}
   .w-onb-mascot{width:min(480px,70%)}
@@ -1358,7 +1378,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 /* v4.15: ข้อความบรรทัดเดียวที่ตัดด้วย … (overflow:hidden) ตัดสระบนของภาษาไทย (ิ ี ึ ื และวรรณยุกต์ที่ซ้อนอยู่บนสระ) ทิ้ง
    ขยายพื้นที่ที่ไม่ถูกตัดขึ้น-ลงด้วย padding แล้วหักคืนด้วย margin ติดลบ — ตำแหน่งข้อความไม่เปลี่ยน */
 .r-line .who,.chip .nm,.group-title h2,.suggest .s-name,.home-top .home-brand,.payer-name,
-.appbar-title h1,.appbar-sub,.list-body b,.sn-bill,.t-label,.status-row b,.ws-pname b,.w-hist-row .body b,.tour-tip.mini h2{
+.appbar-title h1,.appbar-sub,.list-body b,.sn-bname,.t-label,.status-row b,.ws-pname b,.w-hist-row .body b,.tour-tip.mini h2{
   padding-block:.22em;margin-block:-.22em
 }
 button.appbar-sub{padding-block:.22em}
