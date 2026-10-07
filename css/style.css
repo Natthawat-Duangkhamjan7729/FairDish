@@ -1405,6 +1405,10 @@ button.appbar-sub{padding-block:.22em}
 }
 :root[data-theme="light"]{color-scheme:light}
 
+/* ---------------- แถบบอกว่าอยู่ใน Developer Beta (branch claude/dev-beta เท่านั้น) ---------------- */
+.sandbox-bar{background:var(--link-soft);color:var(--link);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
+.sandbox-bar a{text-decoration:underline;margin-left:var(--s2)}
+
 .inapp-text{line-height:1.6;margin-bottom:var(--s4)}
 .inapp-dialog .install-steps{margin-bottom:var(--s4)}
 .inapp-dialog .install-ico{font-weight:700;letter-spacing:1px}
