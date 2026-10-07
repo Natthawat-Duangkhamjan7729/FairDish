@@ -130,7 +130,7 @@ document.addEventListener("click", async function(e){
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
             "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
-            "[data-scan-close],[data-scan-paste],[data-dissolve],[data-dissolve-ok],[data-open-join],[data-share-close],[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
+            "[data-scan-close],[data-scan-paste],[data-dissolve],[data-dissolve-ok],[data-del-local],[data-del-local-ok],[data-open-join],[data-share-close],[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
             "[data-onb-start],[data-tour-start],[data-tour-next],[data-tour-skip],[data-tour-done],[data-tour-back],[data-tour-install]";
   var t = e.target.closest ? e.target.closest(sel) : null;
   if (!t) return;
@@ -222,6 +222,8 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-scan-close")) return closeScanDialog();
   if (t.getAttribute("data-scan-paste")) return openJoinSheet();
   if (t.getAttribute("data-dissolve")) return openDissolveSheet();       // v4.11: ยุบกลุ่ม
+  if (t.getAttribute("data-del-local")) return openDeleteLocalSheet();   // v4.15: ลบบิลที่กำลังหาร (ถามก่อน)
+  if (t.getAttribute("data-del-local-ok")) return deleteLocalBill();
   if (t.getAttribute("data-dissolve-ok")) return dissolveGroup();          // v4.11: สแกน/วางลิงก์เข้ากลุ่ม
   if (t.getAttribute("data-me-join")) return joinAsMe();                // v4.9: เข้าร่วมกลุ่ม
   if (t.getAttribute("data-guest-join")) return guestJoin();
