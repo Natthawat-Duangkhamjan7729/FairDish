@@ -1400,3 +1400,6 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .inapp-dialog .install-ico{font-weight:700;letter-spacing:1px}
 .inapp-copy{margin-bottom:var(--s2)}
 .inapp-skip{display:block;margin:var(--s3) auto 0}
+/* ---------------- แถบบอกว่าอยู่ใน Developer Beta (branch claude/dev-beta เท่านั้น) ---------------- */
+.sandbox-bar{background:var(--link-soft);color:var(--link);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
+.sandbox-bar a{text-decoration:underline;margin-left:var(--s2)}
