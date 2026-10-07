@@ -371,7 +371,7 @@ function pagePast(){
     '<div class="page">'+
       '<p class="past-when">'+L("เก็บเข้าประวัติเมื่อ {date}", { date:esc(longDate(h.at)) })+'</p>'+
       receiptHTML(r, { kind:b.kind })+
-      (s.ok && s.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(s, false, "h-past-tf", b.paid)+'</section>' : '')+
+      (s.ok && s.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(s, false, "h-past-tf", b.paid, 'data-hist-paid-all="'+esc(h.id)+'"')+'</section>' : '')+
       '<div class="btn-stack">'+
         '<button class="btn-main btn-block" data-restore-history="'+esc(h.id)+'">'+L("เปิดบิลนี้ทำต่อ")+'</button>'+
         '<button class="btn-danger btn-block" data-del-history="'+esc(h.id)+'">'+ICON_DEL+' '+L("ลบออกจากประวัติ")+'</button>'+

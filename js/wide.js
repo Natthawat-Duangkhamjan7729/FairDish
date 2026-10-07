@@ -848,7 +848,7 @@ function renderHistoryWide(){
     detail.innerHTML = '<div class="w-hist-inner">'+
       '<p class="past-when"><span class="badge warn">'+L("กำลังหาร")+'</span> '+L("บิลที่ทำอยู่ตอนนี้ ยังไม่ได้เก็บเข้าประวัติ")+'</p>'+
       receiptHTML(lr, { kind:lb.kind })+
-      (ls.ok && ls.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(ls, false, "h-past-tf", lb.paid)+'</section>' : '')+
+      (ls.ok && ls.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(ls, false, "h-past-tf", lb.paid, (ui.ctx === null && !ui.loading) ? 'data-paid-all="1"' : '')+'</section>' : '')+
       '<div class="btn-stack"><a class="btn-main btn-block" href="#/split">'+L("ทำต่อ")+'</a>'+
         '<a class="btn-line btn-block" href="#/bill">'+L("ใบสรุปยอด")+'</a></div></div>';
     return;
@@ -858,7 +858,7 @@ function renderHistoryWide(){
   detail.innerHTML = '<div class="w-hist-inner">'+
     '<p class="past-when">'+L("เก็บเข้าประวัติเมื่อ {date}", { date:esc(longDate(h.at)) })+'</p>'+
     receiptHTML(r, { kind:b.kind })+
-    (s.ok && s.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(s, false, "h-past-tf", b.paid)+'</section>' : '')+
+    (s.ok && s.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(s, false, "h-past-tf", b.paid, 'data-hist-paid-all="'+esc(h.id)+'"')+'</section>' : '')+
     '<div class="btn-stack">'+
       '<button class="btn-main btn-block" data-restore-history="'+esc(h.id)+'">'+L("เปิดบิลนี้ทำต่อ")+'</button>'+
       '<button class="btn-danger btn-block" data-del-history="'+esc(h.id)+'">'+ICON_DEL+' '+L("ลบออกจากประวัติ")+'</button>'+

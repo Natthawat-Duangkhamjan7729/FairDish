@@ -915,9 +915,9 @@ async function restoreHistory(id, step){
  *  (เดิมใส่แค่โครงหน้า รายการจึงหายหมด และลบจากหน้า #/history ที่เปิดอยู่แล้วหน้าไม่เปลี่ยน รายการที่ลบยังค้างอยู่) */
 function refreshHistoryView(){
   var path = currentPath();
-  if (path !== "/history" && path !== "/groups") return;
+  if (path !== "/history" && path !== "/groups" && path !== "/h") return;
   var y = window.scrollY;
-  document.getElementById("view").innerHTML = pageHistory();
+  document.getElementById("view").innerHTML = path === "/h" ? pagePast() : pageHistory();
   if (isWide()) renderHistoryWide();
   jumpTo(y);
 }
@@ -1185,6 +1185,39 @@ async function togglePaid(key){
   await commit();
 }
 
+/** v4.15: ติ๊กว่าโอนครบทุกคนในครั้งเดียว (ติ๊กครบอยู่แล้ว = เอาติ๊กออกทั้งหมด) */
+async function togglePaidAll(){
+  var s = settleBill(compute());
+  if (!s.ok || !s.transfers.length) return;
+  var all = paidProgress(s.transfers, state.paid).all, next = {};
+  if (!all) s.transfers.forEach(function(t){ next[transferKey(t)] = true; });
+  state.paid = next;
+  if (!all && (currentPath() === "/bill" || currentPath() === "/split")){
+    ui.showDone = true;
+    if (currentPath() !== "/bill") location.hash = billHref();
+    else { document.getElementById("view").innerHTML = pageBill(); renderSideNav(); jumpTo(0); }
+  } else if (currentPath() === "/history" || currentPath() === "/h"){ refreshHistoryView(); renderSideNav(); }
+  else rerenderBill();
+  await commit(all ? L("เอาติ๊กออกทั้งหมดแล้ว") : null);
+}
+/** v4.15: ติ๊กโอนครบ / เอาติ๊กออกทั้งหมด ของบิลในประวัติ (ไม่ต้องเปิดบิลกลับมาก่อน) */
+async function togglePaidAllHistory(id){
+  await reloadHistory();
+  var h = ui.history.filter(function(x){ return x.id === id; })[0];
+  if (!h) return;
+  var b = normalizeBill(h.data), s = settleBill(computeBill(b), b);
+  if (!s.ok || !s.transfers.length) return;
+  var all = paidProgress(s.transfers, b.paid).all, next = {};
+  if (!all) s.transfers.forEach(function(t){ next[transferKey(t)] = true; });
+  var data = {};
+  Object.keys(h.data).forEach(function(k){ data[k] = h.data[k]; });
+  data.paid = next;
+  h.data = data;
+  try { await Store.saveHistory(ui.history); } catch(e){ return toast(L("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ"),"error"); }
+  refreshHistoryView();
+  renderSideNav();                                     // บิลที่โอนครบแล้วออกจากแถบซ้าย
+  toast(all ? L("เอาติ๊กออกทั้งหมดแล้ว") : L("ติ๊ก {name} ว่าโอนครบทุกคนแล้ว 🎉", { name:h.name }),"ok");
+}
 /* ---- v3.2: ชวนเพื่อนเข้ากลุ่มจากบิลส่วนตัว = ย้ายบิลนี้ขึ้นกลุ่ม ---- */
 /** hostName: ชื่อคนสร้างกลุ่ม ("" = ไม่ใส่) · ไม่ส่งมา = ใช้ชื่อที่ให้เราเรียก ยังไม่มีชื่อ = ถามก่อนสร้าง */
 async function inviteFromBill(hostName){
