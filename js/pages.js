@@ -432,21 +432,7 @@ function pageHow(){
       '<div class="stp"><b>3</b><h3>'+L("ค่าส่วนกลาง")+'</h3><p>'+L("เปิดค่าบริการหรือ VAT ตามที่ร้านคิด ส่วนน้ำเปล่า น้ำแข็ง ข้าวเหนียว ใส่เป็นรายการหารเท่ากัน")+'</p></div>'+
       '<div class="stp"><b>4</b><h3>'+L("สรุปยอด")+'</h3><p>'+L("เลือกว่าใครจ่ายให้ร้าน แล้วรู้เลยว่าใครต้องโอนให้ใคร ติ๊กเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p></div>'+
     '</div>'+
-    '<section><div class="sec-head"><h2>'+L("บิลใบเดียวกัน สองวิธีคิด")+'</h2>'+
-      '<p>'+L("มื้ออีสานร้านหน้ามอ: 8 คน 10 เมนู รวมข้าวเหนียวกับน้ำ 1,110 บาท")+'</p></div>'+
-      '<div class="compare">'+
-        '<div class="cmp bad"><h3>'+L("หารเท่ากันทั้งโต๊ะ")+'</h3><div class="tag">'+L("1,110 ÷ 8 = ทุกคนจ่ายเท่ากัน")+'</div>'+
-          '<ul><li><span>'+L("โฟรค์ — กิน 2 เมนู")+'</span><span>138.75</span></li>'+
-          '<li><span>'+L("ยูกะ — ไม่กินเผ็ด 3 เมนู")+'</span><span>138.75</span></li>'+
-          '<li><span>'+L("ไอซ์ — กิน 6 เมนู มีซอยจุ๊")+'</span><span>138.75</span></li></ul>'+
-          '<p class="foot">'+L("โฟรค์จ่ายเกินไป 77.09 บาท ส่วนไอซ์จ่ายขาดไป 111.25 บาท ทั้งที่ไม่มีใครตั้งใจเอาเปรียบกัน")+'</p></div>'+
-        '<div class="cmp good"><h3>'+L("หารด้วย FairDish")+'</h3><div class="tag">'+L("คิดจากเมนูที่แต่ละคนกินจริง")+'</div>'+
-          '<ul><li><span>'+L("โฟรค์ — กิน 2 เมนู")+'</span><span>61.66</span></li>'+
-          '<li><span>'+L("ยูกะ — ไม่กินเผ็ด 3 เมนู")+'</span><span>121.67</span></li>'+
-          '<li><span>'+L("ไอซ์ — กิน 6 เมนู มีซอยจุ๊")+'</span><span>250.00</span></li></ul>'+
-          '<p class="foot">'+L("ยอดรายคนรวมกันได้ 1,110.00 บาทพอดี ไม่มีเศษสตางค์หาย และทุกคนกดดูได้ว่ายอดของตัวเองมาจากเมนูไหน")+'</p></div>'+
-      '</div>'+
-    '</section>'+
+    howCompareHTML()+
     '<section><div class="sec-head"><h2>'+L("สามคำถามที่ถูกถามบ่อย")+'</h2></div>'+
       '<div class="split2">'+
         '<div class="panel"><h3>'+L("เศษสตางค์หายไปไหน")+'</h3><p>'+L("ไม่หาย FairDish กระจายเศษสตางค์ให้ยอดรายคนรวมกันเท่ากับยอดบิลเป๊ะเสมอ ไม่ต้องมีใครควักเพิ่มทีหลัง")+'</p></div>'+
@@ -460,6 +446,30 @@ function pageHow(){
   '</div>';
 }
 
+/** งาน 3.1: "บิลใบเดียวกัน สองวิธีคิด" — ทุกตัวเลขคำนวณจากบิลตัวอย่าง (demoSummary) ด้วย computeBill() */
+function howCompareHTML(){
+  var d = demoSummary(), r = d.r, n = r.n;
+  var equal = Math.round(r.grand / n * 100) / 100;
+  var fork = d.by[L("โฟรค์")], yuka = d.by[L("ยูกะ")], ice = d.by[L("ไอซ์")];
+  var labels = [
+    L("{name} — กิน {n} เมนู", { name:esc(fork.name), n:fork.items.length }),
+    L("{name} — ไม่กินเผ็ด {n} เมนู", { name:esc(yuka.name), n:yuka.items.length }),
+    L("{name} — กิน {n} เมนู มีซอยจุ๊", { name:esc(ice.name), n:ice.items.length })
+  ];
+  function rows(vals){ return '<ul>'+labels.map(function(t, k){ return '<li><span>'+t+'</span><span>'+baht(vals[k])+'</span></li>'; }).join("")+'</ul>'; }
+  return '<section><div class="sec-head"><h2>'+L("บิลใบเดียวกัน สองวิธีคิด")+'</h2>'+
+      '<p>'+L("มื้ออีสานร้านหน้ามอ: {n} คน {k} เมนู รวมข้าวเหนียวกับน้ำ {total} บาท", { n:n, k:d.bill.menus.length, total:baht(r.grand) })+'</p></div>'+
+      '<div class="compare">'+
+        '<div class="cmp bad"><h3>'+L("หารเท่ากันทั้งโต๊ะ")+'</h3><div class="tag">'+L("{total} ÷ {n} = ทุกคนจ่ายเท่ากัน", { total:baht(r.grand), n:n })+'</div>'+
+          rows([equal, equal, equal])+
+          '<p class="foot">'+L("{a}จ่ายเกินไป {over} บาท ส่วน{b}จ่ายขาดไป {short} บาท ทั้งที่ไม่มีใครตั้งใจเอาเปรียบกัน",
+            { a:esc(fork.name), over:baht(equal - fork.rounded), b:esc(ice.name), short:baht(ice.rounded - equal) })+'</p></div>'+
+        '<div class="cmp good"><h3>'+L("หารด้วย FairDish")+'</h3><div class="tag">'+L("คิดจากเมนูที่แต่ละคนกินจริง")+'</div>'+
+          rows([fork.rounded, yuka.rounded, ice.rounded])+
+          '<p class="foot">'+L("ยอดรายคนรวมกันได้ {total} บาทพอดี ไม่มีเศษสตางค์หาย และทุกคนกดดูได้ว่ายอดของตัวเองมาจากเมนูไหน", { total:baht(r.grand) })+'</p></div>'+
+      '</div>'+
+    '</section>';
+}
 function pageAbout(){
   return appBar({ back:"#/more", title:L("เกี่ยวกับ") })+
     '<div class="page">'+
@@ -499,27 +509,32 @@ var ONBOARD = [
    "เพื่อนเปิดลิงก์หรือสแกน QR แล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตภายใน 3 วินาที"]
 ];
 function onboardArt(i){
+  var d = demoSummary();   // งาน 3.1: ตัวเลขในภาพคำนวณจากบิลตัวอย่าง (ไม่เขียนตายตัว)
   if (i === 0){
-    var rows = [[L("มาร์ค"),"151.67"],[L("ไอซ์"),"250.00"],[L("โฟรค์"),"61.66"]];
+    var rows = ["มาร์ค","ไอซ์","โฟรค์"].map(function(n){ return [esc(L(n)), baht(d.by[L(n)].rounded)]; });
     return '<div class="onb-art onb-art-0">'+
       '<span class="onb-circle sun" aria-hidden="true"></span>'+
       '<span class="blob purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v6a3 3 0 0 0 6 0V3M10 12v9M17 3v18M17 3c-2 1-3 4-3 7h3"/></svg></span>'+
       '<span class="blob coral" aria-hidden="true">&#247;</span>'+
       '<span class="blob mint" aria-hidden="true">'+ICON_CHECK+'</span>'+
       '<div class="receipt-wrap"><div class="receipt">'+
-        '<div class="r-title">'+L("ใบสรุปยอด")+'</div><div class="r-meta">'+L("8 คน · ร้านส้มตำหน้ามอ")+'</div>'+
+        '<div class="r-title">'+L("ใบสรุปยอด")+'</div><div class="r-meta">'+L("{n} คน · {name}", { n:d.r.n, name:esc(d.bill.name) })+'</div>'+
         rows.map(function(r){ return '<div class="r-line"><span class="who">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>'; }).join("")+
-        '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>1,110.00 ฿</span></div>'+
+        '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>'+baht(d.r.grand)+' ฿</span></div>'+
       '</div><div class="receipt-edge"></div></div></div>';
   }
   if (i === 1){
-    var chips = [[L("มาร์ค"),1],[L("พูม"),1],[L("ยูกะ"),0],[L("ไอซ์"),1],[L("โม"),1]];
+    var dish = d.menu("ลาบหมู");
+    var chips = ["มาร์ค","พูม","ยูกะ","ไอซ์","โม"].map(function(n){
+      var p = d.bill.members.filter(function(x){ return x.name === L(n); })[0];
+      return [esc(p.name), dish.eaters.indexOf(p.id) >= 0 ? 1 : 0];
+    });
     return '<div class="onb-art"><span class="onb-circle mint" aria-hidden="true"></span>'+
-      '<div class="onb-card"><div class="onb-dish"><b>'+L("ลาบหมู")+'</b><span class="mono">80.00</span></div>'+
+      '<div class="onb-card"><div class="onb-dish"><b>'+esc(dish.name)+'</b><span class="mono">'+baht(dish.price)+'</span></div>'+
       '<div class="pick" aria-hidden="true"><button class="all" tabindex="-1">'+L("ทุกคน")+'</button>'+chips.map(function(c){
         return '<button tabindex="-1" aria-pressed="'+(c[1] ? "true" : "false")+'">'+c[0]+'</button>';
       }).join("")+'</div>'+
-      '<p class="form-preview">'+L("หาร 4 คน · คนละ 20.00 บาท")+'</p></div></div>';
+      '<p class="form-preview">'+L("หาร {n} คน · คนละ {amt} บาท", { n:dish.eaters.length, amt:baht(dish.price / dish.eaters.length) })+'</p></div></div>';
   }
   var st = [[L("ยูกะ"),"ok",L("ยืนยันแล้ว")],[L("โฟรค์"),"ok",L("ยืนยันแล้ว")],[L("ชาเน่"),"warn",L("รอยืนยัน")]];
   return '<div class="onb-art"><span class="onb-circle lilac" aria-hidden="true"></span>'+

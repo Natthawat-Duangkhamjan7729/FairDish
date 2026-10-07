@@ -1439,36 +1439,9 @@ async function setTheme(theme){
 
 async function loadDemo(){
   if (state.kind === "trip") return loadTripDemo();
-  state.members=[]; state.menus=[]; state.shared=[];
-  [L("มาร์ค"),L("พูม"),L("ไอซ์"),L("ชาเน่"),L("โม"),L("ยูกะ"),L("โฟรค์"),L("เจ้าสัว")].forEach(function(n){
-    state.members.push({ id:nid(), name:n });
-  });
-  function ids(){
-    return Array.prototype.slice.call(arguments).map(function(n){
-      var f = state.members.filter(function(m){ return m.name===n; })[0];
-      return f ? f.id : null;
-    }).filter(Boolean);
-  }
-  // มื้ออีสานร้านหน้ามอ 8 คน — แต่ละคนกินไม่เท่ากันแบบที่เกิดจริง
-  var all = [L("มาร์ค"),L("พูม"),L("ไอซ์"),L("ชาเน่"),L("โม"),L("ยูกะ"),L("โฟรค์"),L("เจ้าสัว")];
-  state.menus = [
-    { id:nid(), name:L("ตำไทย"), price:50, eaters:ids(L("ชาเน่"),L("ยูกะ"),L("โฟรค์")) },
-    { id:nid(), name:L("ตำปูปลาร้า"), price:50, eaters:ids(L("มาร์ค"),L("พูม"),L("เจ้าสัว")) },
-    { id:nid(), name:L("ตำซั่ว"), price:60, eaters:ids(L("ไอซ์"),L("มาร์ค")) },
-    { id:nid(), name:L("ไก่ย่างเขาสวนกวาง"), price:180, eaters:ids.apply(null, all) },
-    { id:nid(), name:L("คอหมูย่าง"), price:120, eaters:ids(L("มาร์ค"),L("ไอซ์"),L("เจ้าสัว")) },
-    { id:nid(), name:L("ลาบหมู"), price:80, eaters:ids(L("มาร์ค"),L("พูม"),L("ไอซ์"),L("โม")) },
-    { id:nid(), name:L("ต้มแซ่บกระดูกอ่อน"), price:120, eaters:ids(L("ไอซ์"),L("เจ้าสัว"),L("โม")) },
-    { id:nid(), name:L("ไส้กรอกอีสาน"), price:60, eaters:ids(L("ชาเน่"),L("โม")) },
-    { id:nid(), name:L("ไข่เจียวหมูสับ"), price:60, eaters:ids(L("ยูกะ")) },
-    { id:nid(), name:L("ซอยจุ๊"), price:150, eaters:ids(L("ไอซ์"),L("เจ้าสัว")) }
-  ];
-  state.shared = [
-    { id:nid(), name:L("ข้าวเหนียว 4 กระติ๊บ"), price:60 },
-    { id:nid(), name:L("น้ำแข็ง"), price:20 },
-    { id:nid(), name:L("โค้กขวดใหญ่ 2 ขวด"), price:70 },
-    { id:nid(), name:L("น้ำเปล่าขวดใหญ่ 2 ขวด"), price:30 }
-  ];
+  // งาน 3.1: ข้อมูลบิลตัวอย่างอยู่ที่ demoMealData() (state.js) แหล่งเดียว — ภาพตัวอย่างในหน้าแรก/หน้าแนะนำ/วิธีใช้คำนวณจากชุดเดียวกัน
+  var demo = demoMealData();
+  state.members = demo.members; state.menus = demo.menus; state.shared = demo.shared;
   state.charges.forEach(function(c){ c.on=false; });   // ร้านอีสานทั่วไปไม่คิดค่าบริการ / VAT
   state.payers = [];
   state.paid = {};

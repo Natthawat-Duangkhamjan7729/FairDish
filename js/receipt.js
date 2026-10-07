@@ -49,21 +49,26 @@ function receiptHTML(r, opts){
     barcode(r.grand)+
   '</div><div class="receipt-edge"></div></div>';
 }
+/** งาน 3.1: ยอดของบิลตัวอย่าง (demoMealData() ใน state.js) คำนวณจริงด้วย computeBill()
+ *  → { bill, r, by:{ ชื่อ: แถวใน r.list }, menu(ชื่อ) } ใช้ทำภาพตัวอย่างทุกจุด ไม่มีตัวเลขเขียนตายตัว */
+function demoSummary(){
+  var b = demoMealData(), r = computeBill(b), by = {};
+  r.list.forEach(function(p){ by[p.name] = p; });
+  return { bill:b, r:r, by:by, menu:function(name){ return b.menus.filter(function(m){ return m.name === L(name); })[0]; } };
+}
 function demoReceiptHTML(){
-  // ตรงกับปุ่ม "ใส่ข้อมูลตัวอย่าง" (loadDemo) — แก้ข้อมูลตัวอย่างแล้วต้องแก้ตรงนี้ด้วย
-  var rows = [["มาร์ค",151.67],["พูม",81.66],["ไอซ์",250.00],["ชาเน่",91.67],
-              ["โม",135.00],["ยูกะ",121.67],["โฟรค์",61.66],["เจ้าสัว",216.67]];
-  var lines = rows.map(function(p){
+  var d = demoSummary(), r = d.r;
+  var lines = r.list.map(function(p){
     return '<div class="r-line"><span class="caret" style="visibility:hidden">&#9654;</span>'+
-      '<span class="who">'+p[0]+'</span><span class="val">'+baht(p[1])+'</span></div>';
+      '<span class="who">'+esc(p.name)+'</span><span class="val">'+baht(p.rounded)+'</span></div>';
   }).join("");
   return '<div class="receipt-wrap reveal"><div class="receipt">'+
     '<div class="r-title">'+L("ใบสรุปยอด")+'</div>'+
-    '<div class="r-meta">'+L("8 คน · 10 เมนู · ร้านส้มตำหน้ามอ")+'</div>'+lines+
-    '<div class="r-sum"><div><span>'+L("ค่าอาหาร")+'</span><span>930.00</span></div>'+
-    '<div><span>'+L("ค่าส่วนกลาง")+'</span><span>180.00</span></div></div>'+
-    '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>1,110.00 ฿</span></div>'+
-    barcode(1110)+'</div><div class="receipt-edge"></div></div>';
+    '<div class="r-meta">'+L("{n} คน · {k} เมนู · {name}", { n:r.n, k:d.bill.menus.length, name:esc(d.bill.name) })+'</div>'+lines+
+    '<div class="r-sum"><div><span>'+L("ค่าอาหาร")+'</span><span>'+baht(r.foodTotal)+'</span></div>'+
+    '<div><span>'+L("ค่าส่วนกลาง")+'</span><span>'+baht(r.sharedTotal)+'</span></div></div>'+
+    '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>'+baht(r.grand)+' ฿</span></div>'+
+    barcode(r.grand)+'</div><div class="receipt-edge"></div></div>';
 }
 
 /* ---- v2.5 / v3.2: ใครจ่ายให้ร้าน + ใครโอนให้ใคร (อยู่ในแท็บสรุปของหน้าหารบิล) ---- */

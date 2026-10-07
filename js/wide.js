@@ -148,17 +148,20 @@ async function sideInvite(){
    หน้าแนะนำ (หน้าเดียว)
    ========================================================= */
 function pageOnboardWide(){
+  var d = demoSummary(), dish = d.menu("ลาบหมู");   // งาน 3.1: ตัวเลขในภาพคำนวณจากบิลตัวอย่าง
+  function who(n){ return d.bill.members.filter(function(x){ return x.name === L(n); })[0]; }
   return '<div class="w-onb">'+
     '<div class="w-onb-art" aria-hidden="true">'+
       '<i class="w-onb-sun"></i><i class="w-onb-ring"></i>'+
       '<span class="w-onb-brand"><img src="img/logo.png" alt="" width="40" height="40"><b>FairDish</b></span>'+
       '<img class="w-onb-mascot" src="img/mascot.png" alt="" width="480" height="480">'+
       '<div class="w-onb-receipt"><span class="w-onb-tag">'+L("ใบสรุปยอด")+'</span>'+
-        '<div><span>มาร์ค</span><span class="mono">151.67</span></div><div><span>ไอซ์</span><span class="mono">250.00</span></div>'+
-        '<div class="tot"><span>'+L("รวมทั้งหมด")+'</span><span class="mono">1,110.00 ฿</span></div></div>'+
-      '<div class="w-onb-dish"><div class="top"><b>ลาบหมู</b><span class="mono">80.00</span></div>'+
-        '<div class="chips"><span class="on">มาร์ค</span><span class="on">พูม</span><span>ยูกะ</span></div>'+
-        '<p>'+L("หาร {n} คน · คนละ {amt} บาท", { n:4, amt:"20.00" })+'</p></div>'+
+        ["มาร์ค","ไอซ์"].map(function(n){ return '<div><span>'+esc(L(n))+'</span><span class="mono">'+baht(d.by[L(n)].rounded)+'</span></div>'; }).join("")+
+        '<div class="tot"><span>'+L("รวมทั้งหมด")+'</span><span class="mono">'+baht(d.r.grand)+' ฿</span></div></div>'+
+      '<div class="w-onb-dish"><div class="top"><b>'+esc(dish.name)+'</b><span class="mono">'+baht(dish.price)+'</span></div>'+
+        '<div class="chips">'+["มาร์ค","พูม","ยูกะ","ไอซ์","โม"].map(function(n){ var p = who(n);
+          return '<span'+(dish.eaters.indexOf(p.id) >= 0 ? ' class="on"' : '')+'>'+esc(p.name)+'</span>'; }).join("")+'</div>'+
+        '<p>'+L("หาร {n} คน · คนละ {amt} บาท", { n:dish.eaters.length, amt:baht(dish.price / dish.eaters.length) })+'</p></div>'+
     '</div>'+
     '<div class="w-onb-text">'+
       '<div class="w-onb-top">'+langSwitch()+'<button class="link-btn" type="button" data-onb-skip="1">'+L("ข้าม")+'</button></div>'+

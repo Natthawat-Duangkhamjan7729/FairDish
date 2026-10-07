@@ -80,7 +80,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.16.4";
+var APP_VERSION = "4.16.5";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */
@@ -118,4 +118,31 @@ var HISTORY_LIMIT = 50;
 /** ชื่อบิลตั้งต้น เช่น "มื้อ 4 ต.ค." — ตอนบิลมาถึงโต๊ะไม่มีใครอยากคิดชื่อ */
 function defaultBillName(kind, date){
   return ktOf(kind || "meal", "groupPrefix") + " " + shortDate(date || new Date());
+}
+
+/* ---- งาน 3.1: บิลตัวอย่างแหล่งเดียว ----
+   ปุ่ม "ดูบิลตัวอย่าง 8 คน" (loadDemo) ใส่บิลนี้ลงบิลในเครื่อง และภาพตัวอย่างในหน้าแรก / หน้าแนะนำ / หน้าวิธีใช้
+   คำนวณยอดจากบิลนี้ด้วย computeBill() (demoSummary() ใน receipt.js) — แก้ตรงนี้ที่เดียว ทุกภาพเปลี่ยนตาม
+   มื้ออีสานร้านหน้ามอ 8 คน แต่ละคนกินไม่เท่ากันแบบที่เกิดจริง (ไม่มีค่าบริการ/VAT) */
+function demoMealData(){
+  var names = ["มาร์ค","พูม","ไอซ์","ชาเน่","โม","ยูกะ","โฟรค์","เจ้าสัว"];
+  var members = names.map(function(n){ return { id:nid(), name:L(n) }; });
+  function ids(list){ return list.map(function(n){ return members[names.indexOf(n)].id; }); }
+  var menus = [
+    ["ตำไทย", 50, ["ชาเน่","ยูกะ","โฟรค์"]],
+    ["ตำปูปลาร้า", 50, ["มาร์ค","พูม","เจ้าสัว"]],
+    ["ตำซั่ว", 60, ["ไอซ์","มาร์ค"]],
+    ["ไก่ย่างเขาสวนกวาง", 180, names],
+    ["คอหมูย่าง", 120, ["มาร์ค","ไอซ์","เจ้าสัว"]],
+    ["ลาบหมู", 80, ["มาร์ค","พูม","ไอซ์","โม"]],
+    ["ต้มแซ่บกระดูกอ่อน", 120, ["ไอซ์","เจ้าสัว","โม"]],
+    ["ไส้กรอกอีสาน", 60, ["ชาเน่","โม"]],
+    ["ไข่เจียวหมูสับ", 60, ["ยูกะ"]],
+    ["ซอยจุ๊", 150, ["ไอซ์","เจ้าสัว"]]
+  ].map(function(m){ return { id:nid(), name:L(m[0]), price:m[1], eaters:ids(m[2]) }; });
+  var shared = [["ข้าวเหนียว 4 กระติ๊บ", 60], ["น้ำแข็ง", 20], ["โค้กขวดใหญ่ 2 ขวด", 70], ["น้ำเปล่าขวดใหญ่ 2 ขวด", 30]]
+    .map(function(s){ return { id:nid(), name:L(s[0]), price:s[1] }; });
+  var charges = defaultCharges();
+  charges.forEach(function(c){ c.on = false; });   // ร้านอีสานทั่วไปไม่คิดค่าบริการ / VAT
+  return { kind:"meal", name:L("ร้านส้มตำหน้ามอ"), members:members, menus:menus, shared:shared, charges:charges, payers:[], paid:{} };
 }
