@@ -64,6 +64,7 @@ function refreshView(){
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();
   renderSideNav();                    // v4.4: ลิงก์บิลที่เปิดอยู่ + ป้ายโอนแล้ว ในแถบซ้าย
   refreshShareDialog();               // v4.11
+  paintNewCounts();                   // งาน 4.3
   if (path==="/me") rerenderGuest(true);
   if (path==="/share"){ document.getElementById("view").innerHTML = pageShare(); fitShareQr(); }
   if (ui.inviteAfterLoad && ui.ctx === null && !ui.loading){ ui.inviteAfterLoad = false; inviteFromBill(); }   // v4.5.3: กดชวนเพื่อนตอนยังไม่ได้โหลดบิล

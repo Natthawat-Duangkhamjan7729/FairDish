@@ -611,6 +611,7 @@ async function joinAsMe(){
   state.members.push({ id:id, name:name });
   var g = myGroup(ui.ctx);
   if (g){ g.me = id; g.asked = true; saveMyGroups(); }
+  logEvent("join", { who:id, by:id });             // งาน 4.3
   render();
   await commit(L("เข้าร่วมกลุ่มแล้ว สวัสดี {name} 👋", { name:name }));
   render();
@@ -1217,6 +1218,9 @@ async function togglePaid(key){
   if (!state.paid[key]) next[key] = true;
   state.paid = next;
   var prog = paidProgress(s.transfers, state.paid);
+  var tf = s.transfers[keys.indexOf(key)];         // งาน 4.3: ใครติ๊ก การโอนไหน เมื่อไร
+  logEvent(next[key] ? "paid" : "unpaid", { who:tf.from, to:tf.to, amt:tf.amount });
+  if (prog.all && next[key]) logEvent("done");
   if (prog.all && next[key]){
     ui.showDone = true;
     if (currentPath() !== "/bill") location.hash = billHref();
@@ -1232,6 +1236,8 @@ async function togglePaidAll(){
   var all = paidProgress(s.transfers, state.paid).all, next = {};
   if (!all) s.transfers.forEach(function(t){ next[transferKey(t)] = true; });
   state.paid = next;
+  logEvent(all ? "unpaidAll" : "paidAll");         // งาน 4.3
+  if (!all) logEvent("done");
   if (!all && (currentPath() === "/bill" || currentPath() === "/split")){
     ui.showDone = true;
     if (currentPath() !== "/bill") location.hash = billHref();
@@ -1278,6 +1284,7 @@ async function inviteFromBill(hostName){
     else { meId = nid(); data.members = [{ id:meId, name:hostName }].concat(data.members); }   // ไม่แตะ state จนกว่าจะสร้างกลุ่มสำเร็จ
   }
   var name = billName().slice(0, MAX_GROUP_NAME);
+  addLog(data, "create", { by:meId });             // งาน 4.3: เริ่มประวัติของกลุ่ม
   ui.creatingGroup = true;
   if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>'+L("กำลังสร้างกลุ่ม"); }
   try {

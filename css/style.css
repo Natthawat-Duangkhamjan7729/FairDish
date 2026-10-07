@@ -785,6 +785,9 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .tf-names b{font-weight:600}
 .tf-status{display:block;font-size:13px;color:var(--ink-2)}
 .tf-row.done .tf-status{color:var(--primary-ink);font-weight:600}
+.tf-status.badge{display:inline-block;margin-top:3px;padding:1px var(--s2);font-size:12px}   /* งาน 4.3: สถานะการโอนเป็นป้ายสี */
+.tf-row.done .tf-status.badge{color:var(--primary-ink)}
+.tf-status.badge.warn{color:var(--secondary-ink)}
 .tf-all{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}   /* v4.15: แถวติ๊กทั้งหมด */
 .tf-all:not(.done){border-style:dashed}
 .tf-row.me .tf-names b{color:var(--primary-ink)}
@@ -889,6 +892,18 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   box-shadow:0 3px 0 var(--chip-line);font-size:15px;font-weight:600;color:var(--primary-ink)}
 .guest-who button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--chip-line)}
 .guest-tick{font-size:13px}
+.guest-who .badge{margin-left:6px;font-size:12px;border:1px solid currentColor}   /* งาน 4.3: ป้ายสถานะการยืนยันของแต่ละชื่อ */
+/* งาน 4.3: ประวัติการเปลี่ยนสถานะในหน้าต่างชวนเพื่อน + ตัวเลขรายการใหม่บนปุ่มชวนเพื่อน */
+.log-title{justify-content:flex-start;gap:var(--s2)}
+.log-list{list-style:none;margin:0;padding:0;max-height:300px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--r-sm)}
+.log-row{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-top:1px solid var(--line);font-size:var(--fs-small)}
+.log-row:first-child{border-top:0}
+.log-row.new{background:var(--link-soft)}
+.log-time{color:var(--ink-2);font-size:12px;white-space:nowrap}
+.log-row .badge{font-size:12px;padding:1px var(--s2)}
+.log-text{min-width:0;overflow-wrap:anywhere}
+.new-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:var(--r-pill);
+  background:var(--danger-fill);color:var(--on-fill);font-size:12px;font-weight:700;line-height:1}
 .guest-add{margin-top:var(--s5);padding-top:var(--s4);border-top:1px dashed var(--line-2)}
 .guest-add .label{display:block;font-size:var(--fs-small);font-weight:600;color:var(--ink-2);margin-bottom:var(--s2)}
 .guest-hello{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);margin:0 var(--s1) var(--s1)}

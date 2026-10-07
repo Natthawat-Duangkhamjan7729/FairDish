@@ -139,7 +139,7 @@ function transfersBlock(s, interactive, headId, paid, allAttr){
         ? '<button class="tf-tick" type="button" role="checkbox" data-paid="'+esc(k)+'" aria-checked="'+done+'" aria-label="'+L("{from} โอนให้ {to} แล้ว", { from:esc(t.fromName), to:esc(t.toName) })+'">'+box+'</button>'
         : '<span class="tf-tick" aria-hidden="true">'+box+'</span>')+
       '<span class="tf-who"><span class="tf-names"><b>'+esc(t.fromName)+'</b> <span class="tf-arrow" aria-label="'+L("โอนให้")+'">→</span> <b>'+esc(t.toName)+'</b></span>'+
-        '<span class="tf-status">'+(done ? L("โอนแล้ว") : L("ยังไม่ได้โอน"))+'</span></span>'+
+        '<span class="tf-status badge '+(done ? 'ok' : 'warn')+'">'+(done ? L("โอนแล้ว") : L("ยังไม่ได้โอน"))+'</span></span>'+
       '<span class="tf-amt">'+baht(t.amount)+'</span></div>';
   }).join("");
   return '<div class="tf-head"><h3 class="settle-head" id="'+headId+'">'+L("ใครโอนให้ใคร")+'</h3>'+

@@ -619,5 +619,17 @@ EN = {
   "คนในทริป":"On this trip",
   "เพื่อนจะเห็นอะไร":"What friends will see",
   "บิลทริปเดียวกับคุณ":"The same trip bill as you",
-  "เปิดลิงก์แล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) จากนั้นใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้เลย ทุกคนเห็นยอดล่าสุดตรงกัน":"They open the link, pick (or add) their name, then add what they paid. Everyone sees the same latest totals"
+  "เปิดลิงก์แล้วเลือกชื่อตัวเอง (หรือเพิ่มชื่อ) จากนั้นใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้เลย ทุกคนเห็นยอดล่าสุดตรงกัน":"They open the link, pick (or add) their name, then add what they paid. Everyone sees the same latest totals",
+  /* ---- งาน 4.3: ประวัติการเปลี่ยนสถานะ + รายการใหม่ ---- */
+  "คนที่ออกจากบิลแล้ว":"someone who left the bill", "{by} สร้างกลุ่มนี้":"{by} created this group", "สร้างกลุ่มนี้แล้ว":"Group created",
+  "{name} เข้ากลุ่ม":"{name} joined", "{name} ยืนยันเมนู":"{name} confirmed their dishes",
+  "{by} ติ๊กว่า {from} โอนให้ {to} {amt} บาทแล้ว":"{by} marked {from} → {to} ({amt} THB) as paid",
+  "มีคนติ๊กว่า {from} โอนให้ {to} {amt} บาทแล้ว":"Someone marked {from} → {to} ({amt} THB) as paid",
+  "เอาติ๊กออก":"Unmarked", "{by} เอาติ๊ก {from} โอนให้ {to} ออก":"{by} unmarked {from} → {to}",
+  "มีคนเอาติ๊ก {from} โอนให้ {to} ออก":"Someone unmarked {from} → {to}",
+  "{by} ติ๊กว่าโอนครบทุกคน":"{by} marked everyone as paid", "มีคนติ๊กว่าโอนครบทุกคน":"Someone marked everyone as paid",
+  "{by} เอาติ๊กโอนออกทั้งหมด":"{by} cleared all payment ticks", "มีคนเอาติ๊กโอนออกทั้งหมด":"Someone cleared all payment ticks",
+  "โอนครบทุกคน บิลนี้เสร็จแล้ว":"Everyone has paid. This bill is done", "ความเคลื่อนไหว":"Activity", "ใหม่ {n}":"{n} new",
+  "ยังไม่มีความเคลื่อนไหว เพื่อนเข้ากลุ่ม ยืนยันเมนู หรือติ๊กโอนแล้วจะขึ้นตรงนี้":"No activity yet. Joins, confirmations and payment ticks will show up here",
+  "{n} รายการใหม่":"{n} new updates", "เริ่มกลุ่ม":"Created", "สมาชิกใหม่":"New member",
 };

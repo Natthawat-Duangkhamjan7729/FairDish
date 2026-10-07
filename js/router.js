@@ -95,6 +95,7 @@ function route(){
   if (path==="/share") fitShareQr();
   if ((path==="/history" || path==="/groups" || path==="/h") && isWide()) renderHistoryWide();
   renderSideNav();
+  paintNewCounts();                    // งาน 4.3: ตัวเลขรายการใหม่บนปุ่มชวนเพื่อน
   renderInApp();                       // v4.12: ลิงก์ "เปิดในเบราว์เซอร์" ต้องพาไปหน้าปัจจุบัน
   syncSheetLock();
   jumpTo(0);

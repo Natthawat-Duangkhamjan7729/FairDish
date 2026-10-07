@@ -14,6 +14,7 @@ function render(){
   renderStepTabs(); renderTotalBar(); renderAppBarSub();
   if (wsActive()) renderWsHead();
   renderSideNav();                    // v4.4: ป้ายโอนแล้ว x/y ในแถบซ้าย
+  paintNewCounts();                   // งาน 4.3: ตัวเลขรายการใหม่บนปุ่มชวนเพื่อน
 }
 
 /* ---- v3.2: แผ่นล่างจอ (เพิ่ม/แก้เมนู, ค่าส่วนกลาง, ค่าบริการ, เลือกประเภทบิล) ---- */
