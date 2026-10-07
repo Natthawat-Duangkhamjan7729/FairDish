@@ -895,7 +895,8 @@ async function startNewBill(kind, demo, name){
     toast(L("เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ"),"error");
   }
 }
-async function restoreHistory(id){
+/** step: "summary" (ค่าเริ่มต้น) = เปิดที่ใบสรุปยอด · "members" = เปิดที่หน้าหารบิล (v4.15 แถบซ้ายแบบ B) */
+async function restoreHistory(id, step){
   if (ui.tour) tourEnd(false);
   await reloadHistory();
   var h = ui.history.filter(function(x){ return x.id === id; })[0];
@@ -903,7 +904,7 @@ async function restoreHistory(id){
   try {
     ui.history = ui.history.filter(function(x){ return x.id !== id; });
     await Store.saveHistory(ui.history);
-    var archived = await replaceLocalBill(h.data, "summary");
+    var archived = await replaceLocalBill(h.data, step || "summary");
     toast(archived ? L("เปิด {name} แล้ว (บิลที่ทำค้างไว้ย้ายเข้าประวัติ)", { name:h.name }) : L("เปิด {name} แล้ว", { name:h.name }),"ok");
   } catch(err){
     toast(L("เปิดบิลไม่สำเร็จ ลองอีกครั้ง"),"error");

@@ -97,6 +97,21 @@ function homeIntroHTML(){
   '</section>';
 }
 /** v4.10: บิลเสร็จแล้ว = มีคนต้องโอน และติ๊กว่าโอนครบทุกคนแล้ว */
+/** v4.15: บิลในเครื่องตอนนี้ (ไม่ต้องรอ) — เปิดอยู่ = ข้อมูลสดจาก state, ไม่ได้เปิด = สำเนาที่อ่านไว้ (ui.navLocal)
+ *  ยังไม่เคยอ่าน = อ่านจากเครื่องแล้ววาดแถบซ้าย/หน้าประวัติใหม่ · ไม่มีข้อมูล = null */
+function localBillNow(){
+  if (ui.ctx === null && !ui.loading && !ui.tour) return billHasData(serialize()) ? serialize() : null;
+  if (ui.navLocal === undefined){
+    ui.navLocal = null;
+    Store.loadLocalBill().then(function(b){
+      ui.navLocal = b || null;
+      if (!billHasData(b)) return;
+      renderSideNav();
+      if (currentPath() === "/history" || currentPath() === "/groups") refreshHistoryView();
+    }).catch(function(){});
+  }
+  return billHasData(ui.navLocal) ? ui.navLocal : null;
+}
 function billDone(saved){
   var b = normalizeBill(saved), r = computeBill(b), s = settleBill(r, b);
   return !!(s.ok && paidProgress(s.transfers, b.paid).all);
@@ -327,10 +342,15 @@ function pageHistory(){
   var past = months.map(function(m){
     return '<h2 class="list-head">'+esc(m)+'</h2>'+byMonth[m].map(historyRowHTML).join("");
   }).join("");
-  var empty = !ui.myGroups.length && !ui.history.length;
+  // v4.15: บิลที่กำลังทำอยู่ขึ้นบนสุดด้วย (เดิมขึ้นแค่บิลที่เก็บเข้าประวัติแล้ว ผู้ใช้หาบิลล่าสุดไม่เจอ)
+  var cur = localBillNow(), curB = cur && normalizeBill(cur);
+  var open = cur ? billRow("#/bill", ktOf(curB.kind,"icon")+' '+esc(savedBillName(cur)),
+      '<span class="badge warn">'+L("กำลังหาร")+'</span> '+L("{n} คน", { n:curB.members.length }), baht(computeBill(curB).grand)) : '';
+  var empty = !ui.myGroups.length && !ui.history.length && !cur;
   return appBar({ title:L("ประวัติบิล"), right:settingsLink() })+
     '<div class="page">'+
       (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>' : '')+
+      (open ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+open : '')+
       (groups ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+groups : '')+
       join+
       past+

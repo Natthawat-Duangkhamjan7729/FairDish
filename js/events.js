@@ -120,7 +120,7 @@ document.addEventListener("click", async function(e){
             "#copyBtn,#demoBtn,#resetBtn,#cancelReset,#confirmReset,#memberAdd,#retrySave,"+
             "[data-step],[data-group-panel],[data-theme-pick],[data-nav-style],[data-pay],"+
             "[data-open-kind],[data-new-kind],[data-trip-go],[data-start-demo],[data-close-global],[data-close-sheet],[data-rename],#billNameSave,"+
-            "[data-paid],[data-show-done],[data-show-receipt],[data-restore-history],[data-del-history],#inviteBtn,"+
+            "[data-paid],[data-show-done],[data-show-receipt],[data-restore-history],[data-del-history],[data-nav-open],#inviteBtn,"+
             "[data-open-meal],[data-add-meal],[data-back-trip],[data-meal-pay],[data-del-meal],"+
             "#installBtn,#installClose,#installNow,#installCopyLink,#inappSkip,#inappClose,"+
             "[data-me-pick],[data-me-close],[data-me-add],#shareImgBtn,#nudgeInstall,#nudgeClose,[data-payer],[data-payer-open],"+
@@ -175,6 +175,7 @@ document.addEventListener("click", async function(e){
   if (t.getAttribute("data-show-done")){ ui.showDone = true; document.getElementById("view").innerHTML = pageBill(); return jumpTo(0); }
   if (t.getAttribute("data-show-receipt")){ ui.showDone = false; ui.noReveal = true; document.getElementById("view").innerHTML = pageBill(); ui.noReveal = false; return jumpTo(0); }
   if ((v = t.getAttribute("data-restore-history"))) return restoreHistory(v);
+  if ((v = t.getAttribute("data-nav-open"))){ v = v.split(":"); return restoreHistory(v[0], v[1] === "bill" ? "summary" : "members"); }   // v4.15: แถบซ้ายแบบ B
   if ((v = t.getAttribute("data-del-history"))) return deleteHistory(v);
 
   /* v4.5: สอนใช้แบบกดจริง */

@@ -17,6 +17,7 @@ EN = {
   "ปิด":"Close", "ยกเลิก":"Cancel", "บันทึก":"Save", "เพิ่ม":"Add", "ลบ":"Delete", "ลบออก":"Remove", "คัดลอก":"Copy",
   "แถบเมนูซ้าย (จอใหญ่)":"Side menu (large screens)", "แบบ A":"Style A", "แบบ B":"Style B",
   "ทดลอง — A: หน้าหลัก / ประวัติ เข้าบิลจากการ์ดในหน้าหลัก · B: บิลที่เปิดอยู่ทุกใบเป็นหัวข้อ มีลิงก์หารบิลและใบสรุปยอดข้างใต้":"Experiment — A: Home / History, open bills from the cards on Home · B: every open bill is a heading with Split and Summary links under it",
+  "กำลังหาร · {n} คน":"In progress · {n} people", "บิลที่ทำอยู่ตอนนี้ ยังไม่ได้เก็บเข้าประวัติ":"The bill you're working on — not archived yet",
   "เลิกทำ":"Undo", "เอาคืน":"Restore", "เปิดอยู่":"Open now",
   "เลือกได้หลายคน":"pick one or more", "{name} จ่ายคนละเท่ากัน":"{name} paid, split equally", "ลองอีกครั้ง":"Try again", "ถัดไป":"Next", "ข้าม":"Skip", "ทุกคน":"Everyone", "ทุกคน ({n})":"Everyone ({n})",
   "บาท":"THB", "{amt} บาท":"{amt} THB", "ฉัน":"me", "ฉัน {amt}":"me {amt}", "{n} คน":"{n} people", "{n} เมนู":"{n} dishes",
@@ -427,7 +428,7 @@ EN = {
   "ไม่เก็บเบอร์โทรหรือเลขบัตรประชาชน":"No phone or ID numbers collected",
   "FairDish เก็บแค่ชื่อเล่นและรายการในบิล ไม่ขอข้อมูลที่ใช้ระบุตัวตน":"FairDish only keeps nicknames and bill items. It never asks for identifying details.",
   /* v4.4: จอใหญ่ (wide.js) */
-  "บิลที่เปิดอยู่":"Open bill",
+  "บิลที่เปิดอยู่":"Open bills",
   "เคล็ดลับ":"Tip",
   "กด {key} ในหน้าหารบิลเพื่อเพิ่มเมนูได้ทันที":"Press {key} on the split page to add a dish right away",
   "หารตามเมนูที่กิน มีค่าบริการ/VAT":"Split by what each person ate, with service charge/VAT",

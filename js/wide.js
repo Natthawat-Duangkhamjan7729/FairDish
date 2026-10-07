@@ -74,15 +74,7 @@ function paidTextOf(data){
 function navOpenBills(){
   var live = ui.ctx !== undefined && !ui.loading && !ui.groupError;
   var list = [];
-  var local = null;
-  if (live && ui.ctx === null) local = serialize();
-  else {
-    if (ui.navLocal === undefined){
-      ui.navLocal = null;
-      Store.loadLocalBill().then(function(b){ ui.navLocal = b || null; renderSideNav(); }).catch(function(){});
-    }
-    local = ui.navLocal;
-  }
+  var local = localBillNow();
   var groups = homeGroups().slice();
   if (live && ui.ctx && !groups.some(function(g){ return g.id === ui.ctx; })){
     var cur = myGroup(ui.ctx);
@@ -100,23 +92,30 @@ function navOpenBills(){
     list.push({ key:g.id, name:(live && ui.ctx === g.id && Store.groupName) || g.name, icon:ktOf(normalizeBill(data).kind, "icon"),
       split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", paid:paidTextOf(data), current:ui.ctx === g.id, group:true });
   });
+  // v4.15: บิลในประวัติที่ยังไม่จบ (ยังโอนไม่ครบ) ก็นับว่าเปิดค้างอยู่ — กดแล้วสลับมาเป็นบิลที่ทำอยู่ (บิลเดิมเข้าประวัติแทน)
+  ui.history.filter(function(h){ return !billDone(h.data); }).slice(0, NAV_HIST_MAX).forEach(function(h){
+    list.push({ key:h.id, name:h.name, icon:ktOf(normalizeBill(h.data).kind, "icon"), hist:true, paid:paidTextOf(h.data) });
+  });
   return list;
 }
+var NAV_HIST_MAX = 6;
 function navBillsHTML(path){
   var bills = navOpenBills();
   if (!bills.length) return '';
   return '<div class="sn-label">'+L("บิลที่เปิดอยู่")+'</div>'+bills.map(function(b){
     var here = b.current && (path === "/split" || path === "/bill");
-    var sub = function(href, on, label, extra){
-      return '<a class="sn-sub'+(on ? ' on' : '')+'" href="'+href+'"'+(on ? ' aria-current="page"' : '')+'>'+label+(extra || '')+'</a>';
+    // บิลในประวัติเป็นปุ่ม (ต้องสลับเป็นบิลที่ทำอยู่ก่อน) บิลอื่นเป็นลิงก์ปกติ
+    var go = function(where, cls, on, inner, title){
+      var attrs = ' class="'+cls+(on ? ' on' : '')+'"'+(title ? ' title="'+esc(title)+'"' : '')+(on ? ' aria-current="page"' : '');
+      return b.hist ? '<button type="button"'+attrs+' data-nav-open="'+esc(b.key)+':'+where+'">'+inner+'</button>'
+                    : '<a'+attrs+' href="'+(where === "bill" ? b.bill : b.split)+'">'+inner+'</a>';
     };
     return '<div class="sn-bill'+(here ? ' here' : '')+'">'+
-      '<a class="sn-bhead" href="'+b.split+'" title="'+esc(b.name)+'">'+
-        '<span class="sn-bico" aria-hidden="true">'+b.icon+'</span><span class="sn-bname">'+esc(b.name)+'</span>'+
-        (b.group ? '<span class="sn-bgroup" title="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>' : '')+'</a>'+
+      go("split", "sn-bhead", false, '<span class="sn-bico" aria-hidden="true">'+b.icon+'</span><span class="sn-bname">'+esc(b.name)+'</span>'+
+        (b.group ? '<span class="sn-bgroup" title="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>' : ''), b.name)+
       '<div class="sn-subs">'+
-        sub(b.split, here && path === "/split", L("หารบิล"))+
-        sub(b.bill, here && path === "/bill", L("ใบสรุปยอด"), b.paid ? ' <span class="sn-badge mono">'+b.paid+'</span>' : '')+
+        go("split", "sn-sub", here && path === "/split", L("หารบิล"))+
+        go("bill", "sn-sub", here && path === "/bill", L("ใบสรุปยอด")+(b.paid ? ' <span class="sn-badge mono">'+b.paid+'</span>' : ''))+
       '</div></div>';
   }).join("");
 }
@@ -771,7 +770,14 @@ function histFiltered(){
   var e = billEntries();
   var q = normText(ui.histQ || ""), f = ui.histFilter || "all";
   var ok = function(x){ return (!q || normText(x.name).indexOf(q) >= 0) && (f === "all" || x.kind === f); };
-  return { groups:e.groups.filter(ok), hist:e.hist.filter(ok), any:e.groups.length + e.hist.length > 0 };
+  // v4.15: บิลที่กำลังทำอยู่ขึ้นบนสุด (เดิมหน้าประวัติไม่มีบิลล่าสุด)
+  var cur = localBillNow(), open = [];
+  if (cur){
+    var cb = normalizeBill(cur);
+    open.push({ id:"local", local:cur, kind:cb.kind, icon:ktOf(cb.kind,"icon"), name:savedBillName(cur), at:Date.now(),
+      sub:L("กำลังหาร · {n} คน", { n:cb.members.length }), amt:baht(computeBill(cb).grand), href:"#/bill" });
+  }
+  return { open:open.filter(ok), groups:e.groups.filter(ok), hist:e.hist.filter(ok), any:open.length + e.groups.length + e.hist.length > 0 };
 }
 function pageHistoryWide(selId){
   if (selId) ui.histSel = selId;
@@ -805,7 +811,7 @@ function renderHistoryWide(){
   var list = document.getElementById("histList"), detail = document.getElementById("histDetail");
   if (!list || !detail) return;
   var d = histFiltered();
-  var all = d.groups.concat(d.hist);
+  var all = d.open.concat(d.groups, d.hist);
   if (!all.some(function(x){ return x.id === ui.histSel; })) ui.histSel = all.length ? all[0].id : null;
   var months = [], byMonth = {};
   d.hist.forEach(function(x){
@@ -816,7 +822,8 @@ function renderHistoryWide(){
   list.innerHTML = !d.any
     ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'
     : (!all.length ? '<p class="w-empty-search">'+L("ไม่พบบิลที่ค้นหา")+'</p>'
-      : (d.groups.length ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+d.groups.map(histRowHTML).join("") : '')+
+      : (d.open.length ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+d.open.map(histRowHTML).join("") : '')+
+        (d.groups.length ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+d.groups.map(histRowHTML).join("") : '')+
         months.map(function(m){ return '<h2 class="list-head">'+esc(m)+'</h2>'+byMonth[m].map(histRowHTML).join(""); }).join(""));
   Array.prototype.forEach.call(document.querySelectorAll("[data-hist-filter]"), function(b){
     b.setAttribute("aria-pressed", String(b.getAttribute("data-hist-filter") === (ui.histFilter || "all")));
@@ -829,6 +836,16 @@ function renderHistoryWide(){
       '<p class="muted">'+L("บิลกลุ่มอยู่บนเซิร์ฟเวอร์ เปิดเพื่อดูยอดล่าสุดที่เพื่อนแก้")+'</p></div>'+
       '<div class="btn-stack"><a class="btn-main btn-block" href="'+x.href+'">'+L("เปิดบิลกลุ่ม")+'</a>'+
       '<button class="btn-line btn-block" data-forget-group="'+esc(x.group.id)+'">'+L("เอาออกจากรายการ")+'</button></div></div>';
+    return;
+  }
+  if (x.local){
+    var lb = normalizeBill(x.local), lr = computeBill(lb), ls = settleBill(lr, lb);
+    detail.innerHTML = '<div class="w-hist-inner">'+
+      '<p class="past-when"><span class="badge warn">'+L("กำลังหาร")+'</span> '+L("บิลที่ทำอยู่ตอนนี้ ยังไม่ได้เก็บเข้าประวัติ")+'</p>'+
+      receiptHTML(lr, { kind:lb.kind })+
+      (ls.ok && ls.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(ls, false, "h-past-tf", lb.paid)+'</section>' : '')+
+      '<div class="btn-stack"><a class="btn-main btn-block" href="#/split">'+L("ทำต่อ")+'</a>'+
+        '<a class="btn-line btn-block" href="#/bill">'+L("ใบสรุปยอด")+'</a></div></div>';
     return;
   }
   var h = x.hist, b = normalizeBill(h.data);

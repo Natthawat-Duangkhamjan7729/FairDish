@@ -1011,6 +1011,8 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-bico{font-size:22px;line-height:1.2}
   .sn-bname{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sn-bgroup,.sn-subs{display:none}
+  button.sn-bhead,button.sn-sub{width:100%;font:inherit;font-size:inherit;cursor:pointer}
+  button.sn-bhead{font-weight:600}
 
   /* หัวของแต่ละหน้า */
   .wpage{padding:var(--wpad-y) var(--wpad-x) var(--s7);max-width:1240px;margin:0 auto}
@@ -1324,6 +1326,8 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-sub:hover{background:var(--surface-2);color:var(--ink)}
   .sn-sub.on{background:var(--link-soft);color:var(--link);font-weight:600}
   .sn-sub .sn-badge{margin-left:auto}
+  button.sn-bhead{font-family:var(--font-head);font-size:16px;font-weight:600;color:var(--ink);text-align:left}
+  button.sn-sub{font-size:14px;text-align:left}
   .w-onb-text{padding:40px 72px 48px 40px}
   .w-onb-main h1{font-size:48px}
   .w-onb-mascot{width:min(480px,70%)}
