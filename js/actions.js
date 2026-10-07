@@ -139,9 +139,11 @@ function menuSuggestions(query){
   var q = normText(query);
   var seen = {}, hits = [];
   if (state.kind === "trip") return tripSuggestions(q);
-  function consider(name, norm, price, remembered, tierBase){
+  // v4.15: alt = ชื่อไทยของรายการคลังตอนแสดงเป็นอังกฤษ — พิมพ์ไทยในโหมด EN ก็ยังเจอ
+  function consider(name, norm, price, remembered, tierBase, alt){
     if (seen[norm]) return;
     var pos = q ? norm.indexOf(q) : 0;
+    if (q && pos < 0 && alt) pos = alt.indexOf(q);
     if (q && pos < 0) return;
     seen[norm] = true;
     hits.push({
@@ -164,21 +166,29 @@ function menuSuggestions(query){
   mem.forEach(function(m){
     consider(m.name, normText(m.name), m.price, true, 0);
   });
+  var en = LANG === "en";
   MENU_LIBRARY.forEach(function(l){
-    consider(l.name, l.norm, null, false, 2);
+    if (en && l.en) consider(l.en, l.enNorm, null, false, 2, l.norm);
+    else consider(l.name, l.norm, null, false, 2);
   });
   hits.sort(function(a,b){
-    return a.tier - b.tier || a.len - b.len || a.name.localeCompare(b.name, "th");
+    return a.tier - b.tier || a.len - b.len || a.name.localeCompare(b.name, LANG);
   });
   return { items:hits.slice(0, SUGGEST_LIMIT), total:hits.length };
 }
 
 function highlight(name, query){
-  var q = String(query||"").trim();
+  var q = normText(query);
   if (!q) return esc(name);
-  var i = normText(name).indexOf(normText(q));
+  // v4.15: normText ตัดช่องว่าง แต่ชื่ออังกฤษมีช่องว่าง — จำตำแหน่งจริงของแต่ละตัวอักษรไว้ ตัวหนาจะได้ตรงคำที่พิมพ์
+  var pos = [], flat = "";
+  for (var k = 0; k < name.length; k++){
+    if (!/\s/.test(name[k])){ pos.push(k); flat += name[k].toLowerCase(); }
+  }
+  var i = flat.indexOf(q);
   if (i < 0) return esc(name);
-  return esc(name.slice(0,i))+"<b>"+esc(name.slice(i,i+q.length))+"</b>"+esc(name.slice(i+q.length));
+  var a = pos[i], b = pos[i + q.length - 1] + 1;
+  return esc(name.slice(0,a))+"<b>"+esc(name.slice(a,b))+"</b>"+esc(name.slice(b));
 }
 
 function renderSuggestions(){
@@ -258,8 +268,8 @@ function pickSuggestion(i){
 /** จำเมนูที่เพิ่งบันทึกไว้ใช้ครั้งต่อไป — ล้มเหลวก็ไม่กระทบบิลที่บันทึกแล้ว */
 /** v3.0: ทริปใช้คลังค่าใช้จ่ายทริป (ไม่มีราคาจำ) — ยังไม่พิมพ์ = รายการยอดนิยม */
 function tripSuggestions(q){
-  var hits = TRIP_LIBRARY.filter(function(l){ return q ? l.norm.indexOf(q) >= 0 : l.popular; })
-    .map(function(l){ return { name:l.name, price:null, remembered:false, tier:(q && l.norm.indexOf(q) === 0) ? 0 : 1, len:l.name.length }; });
+  var hits = TRIP_LIBRARY.filter(function(l){ return q ? libPos(l, q) >= 0 : l.popular; })
+    .map(function(l){ var n = libName(l); return { name:n, price:null, remembered:false, tier:(q && libPos(l, q) === 0) ? 0 : 1, len:n.length }; });
   hits.sort(function(a,b){ return a.tier - b.tier || a.len - b.len; });
   return { items:hits.slice(0, SUGGEST_LIMIT), total:hits.length };
 }

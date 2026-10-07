@@ -24,7 +24,7 @@ var SHARED_LIBRARY = (function(){
   SHARED_GROUPS.forEach(function(g){
     g.names.forEach(function(n){
       var k = normText(n);
-      if (!seen[k]){ seen[k] = true; out.push({ name:n, norm:k }); }
+      if (!seen[k]){ seen[k] = true; out.push({ name:n, norm:k, en:SHARED_EN[n] || "", enNorm:normText(SHARED_EN[n]) }); }
     });
   });
   return out;
@@ -34,10 +34,10 @@ ui.sharedSuggest = { open:false, items:[], active:-1 };
 
 function sharedSuggestions(query){
   var q = normText(query);
-  if (!q) return SHARED_POPULAR.map(function(n){ return { name:n }; });
-  var hits = SHARED_LIBRARY.filter(function(l){ return l.norm.indexOf(q) >= 0; })
-    .map(function(l){ return { name:l.name, tier:l.norm.indexOf(q)===0 ? 0 : 1, len:l.name.length }; });
-  hits.sort(function(a,b){ return a.tier - b.tier || a.len - b.len || a.name.localeCompare(b.name, "th"); });
+  if (!q) return SHARED_POPULAR.map(function(n){ return { name:LANG === "en" && SHARED_EN[n] || n }; });
+  var hits = SHARED_LIBRARY.filter(function(l){ return libPos(l, q) >= 0; })
+    .map(function(l){ var n = libName(l); return { name:n, tier:libPos(l, q)===0 ? 0 : 1, len:n.length }; });
+  hits.sort(function(a,b){ return a.tier - b.tier || a.len - b.len || a.name.localeCompare(b.name, LANG); });
   return hits.slice(0, SUGGEST_LIMIT);
 }
 
@@ -50,8 +50,8 @@ function renderSharedSuggestions(){
   ui.sharedSuggest.items = items;
   if (ui.sharedSuggest.active >= items.length) ui.sharedSuggest.active = -1;
   if (!items.length){ box.innerHTML = ""; input.setAttribute("aria-expanded","false"); return; }
-  var head = String(query||"").trim() ? "รายการแนะนำ "+items.length+" รายการ" : "ค่าส่วนกลางที่ใช้บ่อย";
-  box.innerHTML = '<div class="suggest" role="listbox" aria-label="ค่าส่วนกลางแนะนำ">'+
+  var head = String(query||"").trim() ? L("รายการแนะนำ {n} รายการ", { n:items.length }) : L("ค่าส่วนกลางที่ใช้บ่อย");
+  box.innerHTML = '<div class="suggest" role="listbox" aria-label="'+L("ค่าส่วนกลางแนะนำ")+'">'+
     '<div class="s-head">'+head+'</div>'+
     items.map(function(it,i){
       return '<button type="button" role="option" id="sSuggest'+i+'" data-ssuggest="'+i+'" aria-selected="'+(i===ui.sharedSuggest.active)+'">'+
@@ -114,4 +114,4 @@ var TRIP_LIBRARY = [
   "ค่าอาหาร","มื้อเช้า","มื้อกลางวัน","มื้อเย็น","ค่าเครื่องดื่ม","กาแฟ","ขนม","ของใช้ในทริป",
   "ค่าเข้าชม","ค่าบัตรเข้าอุทยาน","ค่ากิจกรรม","ค่าไกด์","ค่าทัวร์","ค่าดำน้ำ","ค่าเช่าอุปกรณ์",
   "ของฝาก","ซิมเน็ต","ค่าประกันการเดินทาง","ทิป"
-].map(function(n){ return { name:n, norm:normText(n), popular:TRIP_POPULAR.indexOf(n) >= 0 }; });
+].map(function(n){ return { name:n, norm:normText(n), en:TRIP_EN[n] || "", enNorm:normText(TRIP_EN[n]), popular:TRIP_POPULAR.indexOf(n) >= 0 }; });
