@@ -1448,6 +1448,10 @@ button.appbar-sub{padding-block:.22em}
 }
 :root[data-theme="light"]{color-scheme:light}
 
+/* ---------------- แถบบอกว่าอยู่ใน Beta (branch claude/playground เท่านั้น) ---------------- */
+.sandbox-bar{background:var(--secondary-soft);color:var(--secondary-ink);font-size:var(--fs-small);font-weight:600;text-align:center;padding:var(--s2) var(--s4)}
+.sandbox-bar a{text-decoration:underline;margin-left:var(--s2)}
+
 /* v4.15: เอาแถบสีส้ม/ชมพูบนหัวการ์ดออกทุกใบ · การ์ดทุกใบมีขอบ var(--card-edge) — โหมดมืดเป็นเส้นม่วงจาง ๆ แยกการ์ดออกจากพื้นดำ
    (โหมดสว่างเป็นขอบขาวบนการ์ดขาว หน้าตาเหมือนเดิม) */
 .active-card,.done-card,.share-card,.guest-card,.guest-done,.onb-card,.w-card,.w-onb-dish,.w-onb-step,.ws-shared{border:1px solid var(--card-edge)}

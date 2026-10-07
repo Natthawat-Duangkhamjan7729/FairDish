@@ -6,6 +6,8 @@ EN = {
   /* ---- ทั่วไป / เมนูหลัก ---- */
   "หน้าแรก":"Home", "ประวัติ":"History", "ใบสรุปยอด":"Summary", "กลุ่ม":"Groups", "วิธีใช้":"How it works", "อื่น ๆ":"More",
   "หารบิล":"Split", "เกี่ยวกับ":"About", "ติดตั้ง":"Install", "เมนูหลัก":"Main menu", "FairDish หน้าแรก":"FairDish home",
+  "ฟีเจอร์ใหม่ก่อนขึ้นตัวเต็ม ข้อมูลแยกจากตัวเต็ม":"New features before the main site. Data is separate from the main site.",
+  "ไปตัวเต็ม":"Go to main site",
   "ผลงานกลุ่ม คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยขอนแก่น":"A student project, Faculty of Humanities and Social Sciences, Khon Kaen University",
   "FairDish — จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์":"FairDish — pay for what you ate, fair every meal",
   "หารบิล · FairDish":"Split · FairDish", "ใบสรุปยอด · FairDish":"Summary · FairDish", "กลุ่ม · FairDish":"Groups · FairDish",
