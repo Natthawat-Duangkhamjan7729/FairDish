@@ -975,6 +975,36 @@ async function openKindSheet(){
   var first = document.querySelector("[data-new-kind]");
   if (first) first.focus({ preventScroll:true });
 }
+/* ---- v4.15: ลบบิลที่กำลังหาร (บิลในเครื่อง) จากหน้าประวัติ — ถามยืนยันก่อน ลบแล้วกด "เอาคืน" ได้ ---- */
+async function openDeleteLocalSheet(){
+  var saved = null;
+  try { saved = await Store.loadLocalBill(); } catch(e){}
+  if (!billHasData(saved)) return;
+  ui.sheet = "dellocal";
+  renderGlobalSheet('<h2 class="sheet-title" id="delLocalTitle">'+L("ลบบิล {name} ไหม?", { name:esc(savedBillName(saved)) })+'</h2>'+
+    '<p class="sheet-sub">'+L("บิลนี้กำลังหารอยู่และยังไม่ได้เก็บเข้าประวัติ ลบแล้วคนและรายการทั้งหมดในบิลนี้จะหายไป")+'</p>'+
+    '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
+    '<button class="btn-danger" type="button" data-del-local-ok="1">'+ICON_DEL+' '+L("ลบบิล")+'</button></div>', "delLocalTitle");
+}
+async function deleteLocalBill(){
+  closeGlobalSheet();
+  var saved = null;
+  try { saved = await Store.loadLocalBill(); } catch(e){}
+  if (!billHasData(saved)) return;
+  var put = async function(data){
+    await Store.saveLocalBill(data);
+    if (ui.ctx === null && !ui.loading) applyBill(data);   // บิลในเครื่องเปิดอยู่ในหน่วยความจำ — ใส่ข้อมูลใหม่ด้วย
+    refreshHistoryView();
+    renderSideNav();
+    if (currentPath() === "/") fillHome(true);
+  };
+  try { await put(emptyBill(normalizeBill(saved).kind)); }
+  catch(e){ return toast(L("ลบบิลไม่สำเร็จ ลองอีกครั้ง"),"error"); }
+  ui.histSel = null;
+  refreshHistoryView();
+  toast(L("ลบ {name} แล้ว", { name:savedBillName(saved) }),"ok",{ label:L("เอาคืน"), action:function(){ put(saved).catch(function(){}); } });
+}
+
 /* ---- v4.11: ยุบกลุ่ม (คนสร้างเท่านั้น) — เก็บสำเนาไว้ในประวัติของเราก่อน แล้วลบบนเซิร์ฟเวอร์ ---- */
 function canDissolve(){ var g = ui.ctx && myGroup(ui.ctx); return !!(g && g.owner && Cloud.ready() && !ui.loading); }
 function openDissolveSheet(){

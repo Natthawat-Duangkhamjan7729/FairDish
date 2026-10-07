@@ -835,7 +835,8 @@ function renderHistoryWide(){
       receiptHTML(lr, { kind:lb.kind })+
       (ls.ok && ls.transfers.length ? '<section class="bill-transfers" aria-labelledby="h-past-tf">'+transfersBlock(ls, false, "h-past-tf", lb.paid, (ui.ctx === null && !ui.loading) ? 'data-paid-all="1"' : '')+'</section>' : '')+
       '<div class="btn-stack"><a class="btn-main btn-block" href="#/split">'+L("ทำต่อ")+'</a>'+
-        '<a class="btn-line btn-block" href="#/bill">'+L("ใบสรุปยอด")+'</a></div></div>';
+        '<a class="btn-line btn-block" href="#/bill">'+L("ใบสรุปยอด")+'</a>'+
+        '<button class="btn-danger btn-block" type="button" data-del-local="1">'+ICON_DEL+' '+L("ลบบิลนี้")+'</button></div></div>';
     return;
   }
   var h = x.hist, b = normalizeBill(h.data);

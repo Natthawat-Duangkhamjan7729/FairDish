@@ -18,6 +18,8 @@ EN = {
   "กำลังหาร · {n} คน":"In progress · {n} people", "บิลที่ทำอยู่ตอนนี้ ยังไม่ได้เก็บเข้าประวัติ":"The bill you're working on — not archived yet",
   "ติ๊กว่าโอนครบทุกคน":"Mark everyone as paid", "โอนครบทุกคนแล้ว — แตะเพื่อเอาติ๊กออกทั้งหมด":"Everyone has paid — tap to clear all ticks",
   "เอาติ๊กออกทั้งหมดแล้ว":"Cleared all ticks", "ติ๊ก {name} ว่าโอนครบทุกคนแล้ว 🎉":"Marked everyone in {name} as paid 🎉",
+  "ลบบิล {name} ไหม?":"Delete {name}?", "บิลนี้กำลังหารอยู่และยังไม่ได้เก็บเข้าประวัติ ลบแล้วคนและรายการทั้งหมดในบิลนี้จะหายไป":"This bill is in progress and not archived. Deleting it removes everyone and every item in it.",
+  "ลบบิล":"Delete bill", "ลบบิลนี้":"Delete this bill", "ลบบิลไม่สำเร็จ ลองอีกครั้ง":"Couldn't delete the bill. Try again.",
   "เลิกทำ":"Undo", "เอาคืน":"Restore", "เปิดอยู่":"Open now",
   "เลือกได้หลายคน":"pick one or more", "{name} จ่ายคนละเท่ากัน":"{name} paid, split equally", "ลองอีกครั้ง":"Try again", "ถัดไป":"Next", "ข้าม":"Skip", "ทุกคน":"Everyone", "ทุกคน ({n})":"Everyone ({n})",
   "บาท":"THB", "{amt} บาท":"{amt} THB", "ฉัน":"me", "ฉัน {amt}":"me {amt}", "{n} คน":"{n} people", "{n} เมนู":"{n} dishes",
