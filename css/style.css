@@ -76,6 +76,11 @@
   --deco-dots:#D9C6F2;
   --coral-ink:#B3354A;           /* งาน 1.5: คอรัลเข้มสำหรับตัวอักษร/เส้นไอคอน (คอรัล #FF6D7A อ่านไม่ผ่าน WCAG บนพื้นครีม) */
   --coral-soft:#FFE6E9;          /* งาน 1.5: พื้นคอรัลอ่อนหลังไอคอน */
+  /* v4.16.4: ชุดสีของหน้าแรก (body.is-home) — ครีมอมคอรัลให้เข้ากับคอรัล/มิ้นต์/พลัม แทนครีมอมเหลือง */
+  --home-bg:#FFF7F1; --home-surface:#FFFCF9; --home-card:#FFFFFF; --home-card-edge:rgba(255,255,255,.9);
+  --home-line:#F1E2D8; --home-line-2:#E2CCC0;
+  --home-nav-bg:rgba(255,247,241,.86); --home-tabbar-bg:rgba(255,252,249,.94);
+  --home-hero-bg:#FFFFFF; --home-hero-edge:transparent; --home-hero-shadow:0 2px 4px rgba(49,34,77,.05), 0 24px 48px -28px rgba(49,34,77,.28);
   --deco-ring:#FFD9DE;
   --deco-sun:#FFE7A3;
 
@@ -1423,6 +1428,11 @@ button.appbar-sub{padding-block:.22em}
     --glow-1:rgba(255,109,122,.14); --glow-2:rgba(61,191,146,.10); --glow-3:rgba(240,163,60,.08);
     --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
     --coral-ink:#FF9AA4; --coral-soft:rgba(255,109,122,.16);
+    /* v4.16.4: หน้าแรกโหมดมืด = พลัมอมคอรัล ขอบ/แสงเรืองคอรัล (แทนม่วงอมน้ำเงิน) */
+    --home-bg:#1A1319; --home-surface:#231922; --home-card:#2A1F2A; --home-card-edge:rgba(255,154,164,.14);
+    --home-line:#3B2B38; --home-line-2:#4D3A49; --home-nav-bg:rgba(26,19,25,.84); --home-tabbar-bg:rgba(35,25,34,.95);
+    --home-hero-bg:#2D202C; --home-hero-edge:rgba(255,109,122,.30);
+    --home-hero-shadow:0 0 0 1px rgba(255,109,122,.06), 0 0 30px -8px rgba(255,109,122,.26), 0 28px 56px -28px rgba(0,0,0,.7);
     --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
     --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
     --hero-bg:linear-gradient(165deg,#362C4D 0%,#2A2240 55%,#251D36 100%); --hero-edge:rgba(185,163,255,.38);
@@ -1445,6 +1455,11 @@ button.appbar-sub{padding-block:.22em}
   --glow-1:rgba(255,109,122,.14); --glow-2:rgba(61,191,146,.10); --glow-3:rgba(240,163,60,.08);
   --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
   --coral-ink:#FF9AA4; --coral-soft:rgba(255,109,122,.16);
+  /* v4.16.4: หน้าแรกโหมดมืด = พลัมอมคอรัล ขอบ/แสงเรืองคอรัล (แทนม่วงอมน้ำเงิน) */
+  --home-bg:#1A1319; --home-surface:#231922; --home-card:#2A1F2A; --home-card-edge:rgba(255,154,164,.14);
+  --home-line:#3B2B38; --home-line-2:#4D3A49; --home-nav-bg:rgba(26,19,25,.84); --home-tabbar-bg:rgba(35,25,34,.95);
+  --home-hero-bg:#2D202C; --home-hero-edge:rgba(255,109,122,.30);
+  --home-hero-shadow:0 0 0 1px rgba(255,109,122,.06), 0 0 30px -8px rgba(255,109,122,.26), 0 28px 56px -28px rgba(0,0,0,.7);
   --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
   --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
   --hero-bg:linear-gradient(165deg,#362C4D 0%,#2A2240 55%,#251D36 100%); --hero-edge:rgba(185,163,255,.38);
@@ -1517,3 +1532,9 @@ body.is-home .intro .receipt-wrap{max-width:none}
 .w-welcome-shot .receipt-wrap{max-width:none;margin:0}
 /* ภาพตัวอย่างในหน้าแนะนำ: ชิปชื่อที่เลือกเป็นมิ้นต์ (สีชิปสมาชิก) แทน gradient ม่วง */
 body.is-home .w-onb-dish .chips .on,body.is-home .onb-card .pick button[aria-pressed=true]{background:var(--primary-soft);color:var(--primary-ink);border-color:transparent;box-shadow:none}
+/* v4.16.4: หน้าแรกใช้ชุดสี --home-* (ครีมอมคอรัล / พลัมอมคอรัล) — หน้าอื่นใช้ชุดเดิม */
+body.is-home{
+  --bg:var(--home-bg); --surface:var(--home-surface); --card:var(--home-card); --card-edge:var(--home-card-edge);
+  --line:var(--home-line); --line-2:var(--home-line-2); --nav-bg:var(--home-nav-bg); --tabbar-bg:var(--home-tabbar-bg);
+  --hero-bg:var(--home-hero-bg); --hero-edge:var(--home-hero-edge); --hero-shadow:var(--home-hero-shadow);
+}
