@@ -28,3 +28,13 @@ test("ไม่มีชื่อฟังก์ชันระดับบน�
   }
   assert.deepEqual(dup, []);
 });
+
+// งาน 6.1: ขนาดตัวอักษรมาจาก type scale เดียว — นอก :root ห้ามเขียน font-size เป็นตัวเลขตายตัว
+test("CSS: font-size ทุกจุดใช้ตัวแปร type scale (ไม่มีขนาดตายตัวนอก :root)", () => {
+  const css = fs.readFileSync(path.join(__dirname, "..", "css", "style.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const bad = [];
+  const re = /font-size\s*:\s*([^;}]+)/g;
+  let m;
+  while ((m = re.exec(css))) if (!/^(var\(--(fs|icon)-[a-z0-9-]+\)|inherit)\s*$/.test(m[1].trim())) bad.push(m[0]);
+  assert.deepEqual(bad, []);
+});
