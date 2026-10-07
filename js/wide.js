@@ -46,9 +46,8 @@ function sideNavHTML(){
   };
   var paid = openBillPaidText();
   var share = "";   // v4.11: ชวนเพื่อนอยู่ที่ปุ่มขวาบนของหน้าหารบิล/ท้ายใบสรุปยอดอย่างเดียว (เปิดเป็นหน้าต่าง)
-  // v4.15 (ทดลอง): แบบ A = ไม่มีลิงก์บิลที่เปิดอยู่ (เข้าบิลจากการ์ดในหน้าหลัก เหมือนมือถือ)
-  //                แบบ B = บิลที่เปิดอยู่ทุกใบเป็นหัวข้อใหญ่ (ชื่อบิลจริง) มีลิงก์หารบิล / ใบสรุปยอดตัวเล็กข้างใต้
-  var openPart = ui.navStyle === "b" ? navBillsHTML(path) : '';
+  // v4.15: บิลที่ยังไม่จบทุกใบเป็นหัวข้อ (ชื่อบิลจริง) มีลิงก์หารบิล / ใบสรุปยอดตัวเล็กข้างใต้ (เดิมเป็นลิงก์ "บิลที่เปิดอยู่" ใบเดียว)
+  var openPart = navBillsHTML(path);
   return '<a class="sn-brand" href="#/"><img src="img/logo.png" alt="" width="36" height="36"><b>FairDish</b></a>'+
     '<button class="sn-new" type="button" data-open-kind="1" aria-haspopup="dialog" aria-label="'+L("เริ่มบิลใหม่")+'">'+ICON_PLUS+'<span class="sn-text">'+L("เริ่มบิลใหม่")+'</span></button>'+
     item("home", "#/", ICON_HOME, L("หน้าหลัก"))+
@@ -69,7 +68,7 @@ function paidTextOf(data){
   var p = paidProgress(s.transfers, b.paid);
   return p.done + "/" + p.total;
 }
-/** v4.15 (ทดลองแบบ B): บิลที่เปิดค้างอยู่ทุกใบ = บิลในเครื่อง (ถ้ามีข้อมูล) + บิลกลุ่มที่ขึ้นการ์ดในหน้าหลัก
+/** v4.15: บิลที่เปิดค้างอยู่ทุกใบ = บิลในเครื่อง (ถ้ามีข้อมูล) + บิลกลุ่มที่ขึ้นการ์ดในหน้าหลัก
  *  [{ key, name, icon, split, bill, paid, current }] — บิลที่เปิดอยู่ตอนนี้ใช้ข้อมูลสดจาก state */
 function navOpenBills(){
   var live = ui.ctx !== undefined && !ui.loading && !ui.groupError;
@@ -123,20 +122,6 @@ function navBillsHTML(path){
         go("bill", "sn-sub", here && path === "/bill", ICON_COPY+'<span class="sn-long">'+L("ใบสรุปยอด")+'</span><span class="sn-short">'+L("สรุปยอด")+'</span>'+(b.paid ? ' <span class="sn-badge mono">'+b.paid+'</span>' : ''))+
       '</div></div>';
   }).join("");
-}
-/** v4.15 (ทดลอง): สลับแบบแถบซ้าย A / B — จำไว้ในเครื่อง */
-var NAV_STYLE_KEY = "fairdish:navstyle:v1";
-async function setNavStyle(v){
-  ui.navStyle = v === "b" ? "b" : "a";
-  try { await Store.writeRaw(NAV_STYLE_KEY, ui.navStyle); } catch(e){}
-  renderSideNav();
-  if (currentPath() === "/more"){ var y = window.scrollY; document.getElementById("view").innerHTML = pageMore(); jumpTo(y); }
-}
-function navStyleSwitch(){
-  return '<div class="lang-switch theme-switch" role="group" aria-label="'+L("แถบเมนูซ้าย (จอใหญ่)")+'">'+
-    [["a","แบบ A"],["b","แบบ B"]].map(function(o){
-      return '<button type="button" data-nav-style="'+o[0]+'" aria-pressed="'+(ui.navStyle === o[0])+'">'+L(o[1])+'</button>';
-    }).join("")+'</div>';
 }
 /** วาดแถบซ้าย — ซ่อนบนมือถือ ตอนหน้าแนะนำ และหน้าที่เพื่อนเปิดมายืนยันเมนู (#/g/<id>/me) */
 function renderSideNav(){
