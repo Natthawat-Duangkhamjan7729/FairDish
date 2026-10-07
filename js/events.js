@@ -455,3 +455,14 @@ document.addEventListener("drop", function(e){
 document.addEventListener("focusin", function(e){
   if (e.target && e.target.id === "wsName" && !(ui.wsSuggest && ui.wsSuggest.open)) openWsSuggest();
 });
+
+/* v4.15: แถบซ้ายแบบ B บนจอสัมผัส — แตะชื่อบิลครั้งแรกเพื่อกางเมนูย่อย (navTouch() ใน wide.js) */
+document.addEventListener("click", function(e){
+  var head = e.target.closest && e.target.closest("#sidenav .sn-bhead");
+  if (!head || !navTouch()) return;
+  var box = head.closest(".sn-bill");
+  if (!box || box.classList.contains("open")) return;
+  e.preventDefault(); e.stopPropagation();
+  ui.navOpenKey = box.getAttribute("data-nav-key");
+  renderSideNav();
+}, true);

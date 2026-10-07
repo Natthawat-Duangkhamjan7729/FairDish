@@ -78,17 +78,18 @@ function navOpenBills(){
   var groups = homeGroups().slice();
   if (live && ui.ctx && !groups.some(function(g){ return g.id === ui.ctx; })){
     var cur = myGroup(ui.ctx);
-    if (cur) groups.unshift(cur);                     // กลุ่มที่เปิดอยู่แต่ไม่ได้ขึ้นการ์ดในหน้าหลัก (เก่า/เสร็จแล้ว) ก็ยังต้องกลับไปได้
+    if (cur) groups.unshift(cur);                     // กลุ่มที่เปิดอยู่แต่ไม่ได้ขึ้นการ์ดในหน้าหลัก (เก่าเกิน 30 วัน) ก็ยังต้องกลับไปได้
   }
   var snapOf = function(g){ return (live && ui.ctx === g.id) ? serialize() : g.snap; };
-  if (billHasData(local) && !groups.some(function(g){ return sameBillContent(local, snapOf(g)); })){
+  // v4.15: บิลที่ติ๊กโอนครบแล้ว (จบแล้ว) ไม่อยู่ในแถบซ้าย
+  if (billHasData(local) && !billDone(local) && !groups.some(function(g){ return sameBillContent(local, snapOf(g)); })){
     var lb = normalizeBill(local);
     list.push({ key:"local", name:savedBillName(local), icon:ktOf(lb.kind, "icon"), split:"#/split", bill:"#/bill",
       paid:paidTextOf(local), current:ui.ctx === null });
   }
   groups.forEach(function(g){
     var data = snapOf(g);
-    if (!billHasData(data)) return;
+    if (!billHasData(data) || billDone(data)) return;
     list.push({ key:g.id, name:(live && ui.ctx === g.id && Store.groupName) || g.name, icon:ktOf(normalizeBill(data).kind, "icon"),
       split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", paid:paidTextOf(data), current:ui.ctx === g.id, group:true });
   });
@@ -99,6 +100,10 @@ function navOpenBills(){
   return list;
 }
 var NAV_HIST_MAX = 6;
+/** v4.15: จอสัมผัส (ชี้เมาส์ไม่ได้) แตะชื่อบิลครั้งแรก = กางเมนูย่อย ไม่เปิดบิลทันที · กางอยู่แล้วแตะอีกครั้ง = เปิดหน้าหารบิล */
+function navTouch(){ return !!(window.matchMedia && matchMedia("(hover: none)").matches); }
+/** (ตัวรับการแตะอยู่ใน events.js) */
+
 function navBillsHTML(path){
   var bills = navOpenBills();
   if (!bills.length) return '';
@@ -110,12 +115,15 @@ function navBillsHTML(path){
       return b.hist ? '<button type="button"'+attrs+' data-nav-open="'+esc(b.key)+':'+where+'">'+inner+'</button>'
                     : '<a'+attrs+' href="'+(where === "bill" ? b.bill : b.split)+'">'+inner+'</a>';
     };
-    return '<div class="sn-bill'+(here ? ' here' : '')+'">'+
+    // v4.15: แต่ละบิลเป็น dropdown — คอมชี้เมาส์แล้วกางเอง แท็บเล็ต/จอสัมผัสแตะชื่อบิลเพื่อกาง (navTouchToggle) · บิลที่อยู่ตอนนี้กางไว้เสมอ
+    var open = here || ui.navOpenKey === b.key;
+    return '<div class="sn-bill'+(here ? ' here' : '')+(open ? ' open' : '')+'" data-nav-key="'+esc(b.key)+'">'+
       go("split", "sn-bhead", false, '<span class="sn-bico" aria-hidden="true">'+b.icon+'</span><span class="sn-bname">'+esc(b.name)+'</span>'+
-        (b.group ? '<span class="sn-bgroup" title="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>' : ''), b.name)+
+        (b.group ? '<span class="sn-bgroup" title="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>' : '')+
+        '<span class="sn-caret" aria-hidden="true">'+ICON_CHEVRON+'</span>', b.name)+
       '<div class="sn-subs">'+
-        go("split", "sn-sub", here && path === "/split", L("หารบิล"))+
-        go("bill", "sn-sub", here && path === "/bill", L("ใบสรุปยอด")+(b.paid ? ' <span class="sn-badge mono">'+b.paid+'</span>' : ''))+
+        go("split", "sn-sub", here && path === "/split", ICON_FORK+'<span>'+L("หารบิล")+'</span>')+
+        go("bill", "sn-sub", here && path === "/bill", ICON_COPY+'<span class="sn-long">'+L("ใบสรุปยอด")+'</span><span class="sn-short">'+L("สรุปยอด")+'</span>'+(b.paid ? ' <span class="sn-badge mono">'+b.paid+'</span>' : ''))+
       '</div></div>';
   }).join("");
 }

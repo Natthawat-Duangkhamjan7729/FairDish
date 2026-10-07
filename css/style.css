@@ -1010,7 +1010,16 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-bill.here .sn-bhead{background:var(--link-soft);color:var(--link)}
   .sn-bico{font-size:22px;line-height:1.2}
   .sn-bname{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sn-bgroup,.sn-subs{display:none}
+  .sn-bgroup,.sn-caret,.sn-subs{display:none}
+  /* v4.15: dropdown — กางเมื่อชี้เมาส์ (คอม) / แตะ (.open) / บิลที่อยู่ตอนนี้ (.here กางเสมอ) */
+  .sn-bill.open .sn-subs{display:flex}
+  @media (hover:hover){ .sn-bill:hover .sn-subs,.sn-bill:focus-within .sn-subs{display:flex} }
+  .sn-subs{flex-direction:column;gap:2px;margin-top:2px}
+  .sn-sub{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;border-radius:12px;font-size:10px;color:var(--ink-2)}
+  .sn-sub svg{width:16px;height:16px}
+  .sn-sub .sn-long{display:none}
+  .sn-sub.on{background:var(--link-soft);color:var(--link)}
+  .sn-sub .sn-badge{position:static;font-size:9px;padding:0 4px}
   button.sn-bhead,button.sn-sub{width:100%;font:inherit;font-size:inherit;cursor:pointer}
   button.sn-bhead{font-weight:600}
 
@@ -1320,9 +1329,19 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-bname{flex:1;min-width:0}
   .sn-bgroup{display:inline-flex;color:var(--ink-3)}
   .sn-bgroup svg{width:16px;height:16px}
-  .sn-subs{display:flex;flex-direction:column;gap:2px;margin:2px 0 0 26px;padding-left:12px;border-left:2px solid var(--line)}
+  .sn-subs{display:none;flex-direction:column;gap:2px;margin:2px 0 0 26px;padding-left:12px;border-left:2px solid var(--line)}
+  .sn-bill.open .sn-subs{display:flex}
+  @media (hover:hover){ .sn-bill:hover .sn-subs,.sn-bill:focus-within .sn-subs{display:flex} }
+  .sn-caret{display:inline-flex;color:var(--ink-3);transition:transform .15s ease}
+  .sn-caret svg{width:16px;height:16px;transform:rotate(90deg)}
+  .sn-bill.open .sn-caret svg{transform:rotate(-90deg)}
+  @media (hover:hover){ .sn-bill:hover .sn-caret svg{transform:rotate(-90deg)} }
+  .sn-sub svg{display:none}
   .sn-bill.here .sn-subs{border-left-color:var(--link-line)}
-  .sn-sub{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 10px;border-radius:10px;font-size:14px;color:var(--ink-2)}
+  .sn-sub{flex-direction:row;align-items:center;gap:8px;min-height:34px;padding:0 10px;border-radius:10px;font-size:14px;color:var(--ink-2)}
+  .sn-sub .sn-long{display:inline}
+  .sn-sub .sn-short{display:none}
+  .sn-sub .sn-badge{font-size:12px;padding:1px 8px}
   .sn-sub:hover{background:var(--surface-2);color:var(--ink)}
   .sn-sub.on{background:var(--link-soft);color:var(--link);font-weight:600}
   .sn-sub .sn-badge{margin-left:auto}

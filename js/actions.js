@@ -746,6 +746,7 @@ async function fillHome(again){
         await Store.saveLocalBill(emptyBill(normalizeBill(saved).kind));
         if (ui.ctx === null) ui.ctx = undefined;          // ให้หน้าหารบิลโหลดบิลว่างใหม่ ไม่ใช้ของเก่าในหน่วยความจำ
         has = false; saved = null;
+        renderSideNav();                                  // v4.15: แถบซ้ายไม่ค้างบิลที่เพิ่งเก็บเข้าประวัติ
       } catch(e){}
     } else {
       ui.doneShown.local = true;
@@ -1179,7 +1180,7 @@ async function togglePaid(key){
   if (prog.all && next[key]){
     ui.showDone = true;
     if (currentPath() !== "/bill") location.hash = billHref();
-    else { document.getElementById("view").innerHTML = pageBill(); jumpTo(0); }
+    else { document.getElementById("view").innerHTML = pageBill(); renderSideNav(); jumpTo(0); }   // v4.15: บิลจบแล้วออกจากแถบซ้ายทันที
   } else rerenderBill();
   await commit();
 }
