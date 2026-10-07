@@ -100,9 +100,6 @@ function navOpenBills(){
   return list;
 }
 var NAV_HIST_MAX = 6;
-/** v4.15: จอสัมผัส (ชี้เมาส์ไม่ได้) แตะชื่อบิลครั้งแรก = กางเมนูย่อย ไม่เปิดบิลทันที · กางอยู่แล้วแตะอีกครั้ง = เปิดหน้าหารบิล */
-function navTouch(){ return !!(window.matchMedia && matchMedia("(hover: none)").matches); }
-/** (ตัวรับการแตะอยู่ใน events.js) */
 
 function navBillsHTML(path){
   var bills = navOpenBills();
@@ -115,7 +112,7 @@ function navBillsHTML(path){
       return b.hist ? '<button type="button"'+attrs+' data-nav-open="'+esc(b.key)+':'+where+'">'+inner+'</button>'
                     : '<a'+attrs+' href="'+(where === "bill" ? b.bill : b.split)+'">'+inner+'</a>';
     };
-    // v4.15: แต่ละบิลเป็น dropdown — คอมชี้เมาส์แล้วกางเอง แท็บเล็ต/จอสัมผัสแตะชื่อบิลเพื่อกาง (navTouchToggle) · บิลที่อยู่ตอนนี้กางไว้เสมอ
+    // v4.15: แต่ละบิลเป็น dropdown — แตะ/คลิกชื่อบิลครั้งแรก = กาง (ตัวรับใน events.js) กางอยู่แล้วแตะอีกครั้ง = เปิดหน้าหารบิล · บิลที่อยู่ตอนนี้กางไว้เสมอ
     var open = here || ui.navOpenKey === b.key;
     return '<div class="sn-bill'+(here ? ' here' : '')+(open ? ' open' : '')+'" data-nav-key="'+esc(b.key)+'">'+
       go("split", "sn-bhead", false, '<span class="sn-bico" aria-hidden="true">'+b.icon+'</span><span class="sn-bname">'+esc(b.name)+'</span>'+

@@ -1011,9 +1011,8 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-bico{font-size:22px;line-height:1.2}
   .sn-bname{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sn-bgroup,.sn-caret,.sn-subs{display:none}
-  /* v4.15: dropdown — กางเมื่อชี้เมาส์ (คอม) / แตะ (.open) / บิลที่อยู่ตอนนี้ (.here กางเสมอ) */
+  /* v4.15: dropdown — กางเมื่อแตะ/คลิกชื่อบิล (.open) หรือเป็นบิลที่อยู่ตอนนี้ (.here กางเสมอ) */
   .sn-bill.open .sn-subs{display:flex}
-  @media (hover:hover){ .sn-bill:hover .sn-subs,.sn-bill:focus-within .sn-subs{display:flex} }
   .sn-subs{flex-direction:column;gap:2px;margin-top:2px}
   .sn-sub{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;border-radius:12px;font-size:10px;color:var(--ink-2)}
   .sn-sub svg{width:16px;height:16px}
@@ -1331,11 +1330,9 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .sn-bgroup svg{width:16px;height:16px}
   .sn-subs{display:none;flex-direction:column;gap:2px;margin:2px 0 0 26px;padding-left:12px;border-left:2px solid var(--line)}
   .sn-bill.open .sn-subs{display:flex}
-  @media (hover:hover){ .sn-bill:hover .sn-subs,.sn-bill:focus-within .sn-subs{display:flex} }
   .sn-caret{display:inline-flex;color:var(--ink-3);transition:transform .15s ease}
   .sn-caret svg{width:16px;height:16px;transform:rotate(90deg)}
   .sn-bill.open .sn-caret svg{transform:rotate(-90deg)}
-  @media (hover:hover){ .sn-bill:hover .sn-caret svg{transform:rotate(-90deg)} }
   .sn-sub svg{display:none}
   .sn-bill.here .sn-subs{border-left-color:var(--link-line)}
   .sn-sub{flex-direction:row;align-items:center;gap:8px;min-height:34px;padding:0 10px;border-radius:10px;font-size:14px;color:var(--ink-2)}
