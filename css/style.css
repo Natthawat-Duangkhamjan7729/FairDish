@@ -96,14 +96,6 @@
   --font-head:"Bai Jamjuree","Sarabun",system-ui,sans-serif;
   --font-body:"Sarabun","Noto Sans Thai",system-ui,-apple-system,sans-serif;
   --font-num:"IBM Plex Mono",ui-monospace,monospace;
-  /* งาน 1.2: ฟอนต์และขนาดตัวอักษรของหน้าแรก (ใช้ใน body.is-home ท้ายไฟล์) — มี 5 ขนาดเท่านั้น */
-  --font-heading:"Bai Jamjuree",sans-serif;
-  --font-text:"Noto Sans Thai",sans-serif;
-  --fs-hero:clamp(36px,2.4vw + 26px,48px);
-  --fs-section:clamp(28px,.8vw + 25px,32px);
-  --fs-sub:clamp(20px,.4vw + 18.5px,22px);
-  --fs-text:clamp(16px,.4vw + 14.5px,18px);
-  --fs-note:14px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -1475,37 +1467,3 @@ button.appbar-sub{padding-block:.22em}
 .inapp-dialog .install-ico{font-weight:700;letter-spacing:1px}
 .inapp-copy{margin-bottom:var(--s2)}
 .inapp-skip{display:block;margin:var(--s3) auto 0}
-
-/* ---------------- งาน 1.2: ฟอนต์และขนาดตัวอักษรของหน้าแรก (body.is-home จาก route() ใน router.js) ----------------
-   หัวเรื่อง Bai Jamjuree · เนื้อหาและตัวเลข Noto Sans Thai · 5 ขนาด (--fs-hero/section/sub/text/note) · น้ำหนัก 400/500/600
-   line-height: หัวข้อและข้อความบรรทัดเดียว (ปุ่ม ป้าย เมนู) 1.35 · เนื้อหา 1.7
-   หน้าอื่นยังใช้ชุดเดิม (Sarabun / IBM Plex Mono) จนถึงงาน 6.1 */
-body.is-home,body.is-home .receipt-wrap{   /* .receipt-wrap ตั้งตัวแปรชุดสว่างของตัวเอง ต้องสลับด้วย */
-  --font-head:var(--font-heading); --font-body:var(--font-text); --font-num:var(--font-text);
-  --fs-display:var(--fs-hero); --fs-title:var(--fs-sub); --fs-body:var(--fs-text); --fs-small:var(--fs-note);
-}
-/* ค่าตั้งต้น: ทุกข้อความในหน้าแรก (รวมแถบที่ใช้ร่วมกัน) = ขนาดเนื้อหา — ขนาดอื่นต้องอยู่ในรายการด้านล่างเท่านั้น */
-body.is-home :is(#view,#sidenav,#tabbar){font-family:var(--font-text);font-size:var(--fs-text);line-height:1.7}
-body.is-home .sandbox-bar{font-family:var(--font-text);line-height:1.7}
-body.is-home :is(#view,#sidenav,#tabbar) *{font-size:inherit;line-height:inherit}
-body.is-home :is(#view,#sidenav,#tabbar) :is(b,strong,h1,h2,h3){font-weight:600}
-body.is-home :is(#view,#sidenav) .mono{font-variant-numeric:tabular-nums}
-
-/* หัวข้อส่วน: "บิลของฉัน" หัวข้อแนะนำแอป + ยอดเงินตัวใหญ่บนการ์ดบิล (--fs-hero ยังไม่มีที่ใช้ในหน้าแรกแบบนี้) */
-body.is-home #view :is(.home-title,.w-head h1,.intro-title,.w-welcome h2,.active-sum,.w-active-amt){font-size:var(--fs-section);line-height:1.35}
-/* หัวข้อย่อย: หัวการ์ด ชื่อบิล ชื่อแบรนด์ ยอดรวมใบเสร็จ อีโมจิไอคอน */
-body.is-home #view :is(h3,.active-name,.w-active-sum h2,.home-brand,.list-title h2,.r-total,.kind-text b,.w-mascot-card b,
-  .kind-ico,.blob,.w-active-amt span),
-body.is-home #sidenav :is(.sn-brand b,.sn-bico){font-size:var(--fs-sub);line-height:1.35}
-/* ข้อความเล็ก 14px: ป้าย หมายเหตุ ข้อมูลรอง ปุ่มลัด เลขเวอร์ชัน แถบที่ใช้ร่วมกัน */
-body.is-home #view :is(.eyebrow,.badge,.active-meta,.progress-text,.intro-note,.r-title,.r-meta,.r-sum,.kbd,
-  .av,.lang-switch button,.tag,.w-active-prog,.list-meta,.list-date,.list-body span),
-body.is-home #sidenav :is(.sn-label,.sn-sub,.sn-badge,.kbd,.sn-tip,.sn-tip span,.sn-bhead small),
-body.is-home #tabbar span,
-body.is-home .sandbox-bar{font-size:var(--fs-note)}
-/* ข้อความบรรทัดเดียว (ปุ่ม ป้าย เมนู) ใช้ระยะบรรทัดแบบหัวข้อ */
-body.is-home :is(#view,#sidenav,#tabbar) :is(button,.btn-main,.btn-line,.badge,.kbd,.av,.link-btn,.r-title){line-height:1.35}
-/* แท็บเล็ต: แถบไอคอนซ้าย (88px) ป้ายใต้ไอคอนเป็นข้อความเล็ก */
-@media(min-width:600px) and (max-width:1279px){body.is-home #sidenav :is(.sn-text,.sn-bname){font-size:var(--fs-note)}}
-/* น้ำหนักไม่เกิน 600 */
-body.is-home :is(#view,#sidenav,#tabbar) :is(.eyebrow,.lang-switch button,.av,.sn-label),body.is-home .sandbox-bar{font-weight:600}

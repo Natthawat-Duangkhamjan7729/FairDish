@@ -79,7 +79,6 @@ function route(){
   // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน
   document.body.classList.toggle("no-tabbar", needsBill(path) || (path==="/" && (ui.showOnb || needName())));
   document.body.classList.toggle("show-foot", path==="/more" || path==="/about");
-  document.body.classList.toggle("is-home", path==="/" && !ui.showOnb && !needName());   // งาน 1.2: ฟอนต์/ขนาดตัวอักษรของหน้าแรก (style.css)
   document.getElementById("view").innerHTML = r.view();
   var tab = tabOf(path);
   Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function(a){
