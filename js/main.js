@@ -106,7 +106,11 @@ async function refreshGroup(manual, live){
   try {
     var g = await Cloud.get(id);
     if (ui.ctx !== id) return;
-    if (!g){ ui.groupError = "notfound"; return refreshView(); }
+    if (!g){
+      var mine = myGroup(id);                        // งาน 4.2: กลุ่มถูกยุบ → ล้างสำเนาในเครื่อง การ์ดหน้าแรกไม่ค้าง
+      if (mine && mine.snap){ mine.snap = null; saveMyGroups(); }
+      ui.groupError = "notfound"; return refreshView();
+    }
     if (g.version !== Store.version){
       var before = groupSnapshot(), wasDone = billDone(serialize());
       applyBill(g.data);

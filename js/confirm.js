@@ -265,6 +265,8 @@ function pageGuest(){
   var me = guestMember();
   var html = '<div class="page page-guest">'+guestHead();
 
+  // งาน 4.2: คนอื่นแก้รายการของเราหลังยืนยัน (อัปเดตสด) → กลับไปหน้าติ๊กพร้อมคำเตือน ไม่ค้างที่ "ยืนยันแล้ว"
+  if (ui.guestDone && me && confirmStatusOf(serialize(), me) === "changed"){ ui.guestDone = false; ui.guestSel = null; }
   if (ui.guestDone && me){
     var mine = compute().list.filter(function(p){ return p.id === me; })[0];
     return html + '<section class="guest-done">'+

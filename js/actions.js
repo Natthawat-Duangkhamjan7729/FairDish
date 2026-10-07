@@ -723,7 +723,7 @@ async function refreshHomeGroups(){
   await Promise.all(list.map(async function(g){
     try {
       var r = await Cloud.get(g.id);
-      if (!r) return;
+      if (!r){ if (g.snap){ g.snap = null; changed = true; } return; }   // งาน 4.2: กลุ่มถูกยุบ → การ์ดไม่ค้างในหน้าแรก
       var snap = r.data || {};
       if (JSON.stringify(snap) !== JSON.stringify(g.snap)){ g.snap = snap; changed = true; }
       if (r.name && r.name !== g.name){ g.name = r.name; changed = true; }
