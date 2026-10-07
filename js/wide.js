@@ -163,19 +163,19 @@ function pageOnboardWide(){
     '<div class="w-onb-text">'+
       '<div class="w-onb-top">'+langSwitch()+'<button class="link-btn" type="button" data-onb-skip="1">'+L("ข้าม")+'</button></div>'+
       '<div class="w-onb-main">'+
-        '<p class="eyebrow">'+L("หารบิลให้สนุกขึ้นอีกนิด")+'</p>'+
-        '<h1>'+L("จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์")+'</h1>'+
-        '<p class="w-onb-lead">'+L("FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปออกมาเป็นบิลรายคนที่ส่งเข้ากลุ่มได้ทันที")+'</p>'+
+        '<p class="eyebrow">'+L("หารค่าอาหารและค่าทริปกับเพื่อน")+'</p>'+
+        '<h1>'+L("จ่ายเฉพาะเมนูที่คุณกิน")+'</h1>'+
+        '<p class="w-onb-lead">'+L("สำหรับเพื่อนที่กินข้าวหรือเที่ยวด้วยกัน ใส่ว่าใครกินอะไร แล้วรู้ทันทีว่าใครต้องโอนให้ใคร")+'</p>'+
         '<div class="w-onb-steps">'+
           '<div class="w-onb-step"><span class="num">1</span><div><b>'+L("หารเฉพาะคนที่กินจานนั้น")+'</b>'+
-            '<p>'+L("แตะชื่อคนที่กินจานนั้น ระบบหารเฉพาะคนที่แตะไว้ ไม่ใช่ทั้งโต๊ะ ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน")+'</p></div></div>'+
-          '<div class="w-onb-step"><span class="num">2</span><div><b>'+L("ส่งลิงก์ให้เพื่อนกดยืนยันเมนูเอง")+'</b>'+
-            '<p>'+L("เพื่อนเปิดลิงก์ เลือกชื่อตัวเอง แล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตให้ทันที")+'</p></div></div>'+
+            '<p>'+L("แตะชื่อคนที่กินแต่ละจาน ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน")+'</p></div></div>'+
+          '<div class="w-onb-step"><span class="num">2</span><div><b>'+L("ให้เพื่อนยืนยันเมนูเอง")+'</b>'+
+            '<p>'+L("เพื่อนเปิดลิงก์หรือสแกน QR แล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตภายใน 3 วินาที")+'</p></div></div>'+
         '</div>'+
       '</div>'+
       '<div class="w-onb-actions">'+
         '<div class="w-onb-btns"><button class="btn-main" type="button" data-onb-start="1">'+L("เริ่มใช้งาน")+'</button>'+
-          '<button class="btn-line" type="button" data-onb-demo="1">'+L("ลองกับข้อมูลตัวอย่าง")+'</button></div>'+
+          '<button class="btn-line" type="button" data-onb-demo="1">'+L("ดูบิลตัวอย่าง 8 คน")+'</button></div>'+
         '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
       '</div>'+
     '</div>'+
@@ -229,16 +229,16 @@ function activeCardWide(saved, o, open){
           (payerNames.length ? '<span class="muted">'+L("{name} จ่ายให้ร้านไปก่อน", { name:esc(payerNames.join(", ")) })+'</span>' : '')+'</div>'+
         '<div class="progress"><i style="width:'+Math.round(prog.done / prog.total * 100)+'%"></i></div>'
       : '<div class="w-active-prog"><span class="muted">'+(b.kind === "trip" ? L("ใส่คนจ่ายของแต่ละรายการ แล้วจะสรุปว่าใครโอนให้ใคร") : L("เลือกคนจ่ายให้ร้านในใบสรุปยอด แล้วจะสรุปว่าใครโอนให้ใคร"))+'</span></div>')+
-    '<div class="btn-pair"><a class="btn-main" href="'+c.split+'">'+L("ทำต่อ")+'</a><a class="btn-line" href="'+c.bill+'">'+L("ใบสรุปยอด")+'</a></div>'+
+    '<div class="btn-pair"><a class="btn-main" href="'+c.split+'">'+L("หารบิลต่อ")+'</a><a class="btn-line" href="'+c.bill+'">'+L("ดูใบสรุปยอด")+'</a></div>'+
   '</section>';
 }
 /** ยังไม่มีบิลที่กำลังหาร — แนะนำแอปแทน */
 function emptyCardWide(){
   return '<section class="w-active w-welcome" aria-labelledby="h-welcome">'+
-    '<p class="eyebrow">'+L("หารบิลให้สนุกขึ้นอีกนิด")+'</p>'+
-    '<h2 id="h-welcome">'+L("จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์")+'</h2>'+
-    '<p class="muted">'+L("FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปว่าใครต้องโอนให้ใคร ส่งเข้ากลุ่มได้ทันที")+'</p>'+
-    '<div class="btn-pair"><button class="btn-line" type="button" data-start-demo="1">'+L("ลองกับข้อมูลตัวอย่าง")+'</button>'+
+    '<p class="eyebrow">'+L("หารค่าอาหารและค่าทริปกับเพื่อน")+'</p>'+
+    '<h2 id="h-welcome">'+L("จ่ายเฉพาะเมนูที่คุณกิน")+'</h2>'+
+    '<p class="muted">'+L("สำหรับเพื่อนที่กินข้าวหรือเที่ยวด้วยกัน ใส่ว่าใครกินอะไร แล้วรู้ทันทีว่าใครต้องโอนให้ใคร")+'</p>'+
+    '<div class="btn-pair"><button class="btn-line" type="button" data-start-demo="1">'+L("ดูบิลตัวอย่าง 8 คน")+'</button>'+
       '<a class="btn-line" href="#/how">'+L("ดูวิธีใช้")+'</a></div>'+
     '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
   '</section>';
