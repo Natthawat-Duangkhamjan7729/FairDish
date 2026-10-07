@@ -79,21 +79,17 @@ function pageHome(){
 }
 /** แนะนำแอปสำหรับคนที่เพิ่งเปิดครั้งแรก (ยังไม่มีบิลเลย) */
 function homeIntroHTML(){
+  // งาน 1.5: ข้อความชิดซ้ายมาก่อน แล้วตามด้วยใบสรุปยอดจริงของระบบ (เอาก้อนสีตกแต่งออก)
   return '<section class="intro" aria-labelledby="h-intro">'+
-    '<div class="intro-art">'+
-      '<span class="blob purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v6a3 3 0 0 0 6 0V3M10 12v9M17 3v18M17 3c-2 1-3 4-3 7h3"/></svg></span>'+
-      '<span class="blob coral" aria-hidden="true">&#247;</span>'+
-      '<span class="blob mint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>'+
-      demoReceiptHTML()+
-    '</div>'+
     '<p class="eyebrow">'+L("หารค่าอาหารและค่าทริปกับเพื่อน")+'</p>'+
     '<h2 id="h-intro" class="intro-title">'+L("จ่ายเฉพาะเมนูที่คุณกิน")+'</h2>'+
     '<p class="intro-body">'+L("สำหรับเพื่อนที่กินข้าวหรือเที่ยวด้วยกัน ใส่ว่าใครกินอะไร แล้วรู้ทันทีว่าใครต้องโอนให้ใคร")+'</p>'+
     '<div class="btn-stack">'+
       '<button class="btn-line btn-block" type="button" data-start-demo="1">'+L("ดูบิลตัวอย่าง 8 คน")+'</button>'+
-      '<a class="link-btn center" href="#/how">'+L("ดูวิธีใช้")+'</a>'+
+      '<a class="link-btn" href="#/how">'+L("ดูวิธีใช้")+'</a>'+
     '</div>'+
     '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
+    '<div class="intro-art">'+demoReceiptHTML()+'</div>'+
   '</section>';
 }
 /** v4.10: บิลเสร็จแล้ว = มีคนต้องโอน และติ๊กว่าโอนครบทุกคนแล้ว */
@@ -150,7 +146,7 @@ function activeBillHTML(saved, o, open){
     : '';
   return '<section class="active-card'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
     '<div class="active-top">'+statusBadge(prog && prog.all, open)+'<span class="active-meta">'+meta+'</span></div>'+
-    '<h2 id="'+c.hid+'" class="active-name">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
+    '<h2 id="'+c.hid+'" class="active-name">'+kindIconHTML(b.kind)+' '+esc(c.name)+'</h2>'+
     '<div class="active-sum">'+baht(r.grand)+' ฿</div>'+
     progress+
     '<div class="btn-pair">'+
@@ -166,20 +162,21 @@ function billRow(href, name, sub, amount){
     (amount ? '<span class="list-amt">'+amount+'</span>' : '')+
     '<span class="list-go">'+ICON_CHEVRON+'</span></a>';
 }
-function historyRowHTML(h){
+/** svg === true = ไอคอน SVG (บิลล่าสุดในหน้าแรก งาน 1.5) · ไม่ส่ง = อีโมจิเดิม (หน้าประวัติ — map() ส่ง index มาเป็นอาร์กิวเมนต์ที่สอง จึงเช็ก === true) */
+function historyRowHTML(h, svg){
   var b = normalizeBill(h.data);
-  return billRow('#/h/'+esc(h.id), ktOf(b.kind,"icon")+' '+esc(h.name),
+  return billRow('#/h/'+esc(h.id), (svg === true ? kindIconHTML(b.kind) : ktOf(b.kind,"icon"))+' '+esc(h.name),
     L("{date} · {n} คน", { date:esc(shortDate(h.at)), n:b.members.length }), baht(computeBill(b).grand));
 }
-function groupRowHTML(g){
-  return billRow('#/g/'+esc(g.id), ktOf(g.kind,"icon")+' '+esc(g.name),
+function groupRowHTML(g, svg){
+  return billRow('#/g/'+esc(g.id), (svg === true ? kindIconHTML(g.kind) : ktOf(g.kind,"icon"))+' '+esc(g.name),
     '<span class="tag-group">'+ICON_USERS+' '+L("บิลกลุ่ม")+'</span>'+(g.done ? ' · '+L("เสร็จแล้ว") : '')+
     (g.at ? ' · '+L("เปิดล่าสุด {date}", { date:esc(shortDate(g.at)) }) : ''), '');
 }
 /** บิลล่าสุด = กลุ่มที่เคยเปิด + บิลในประวัติ เรียงตามเวลา (skip = กลุ่มที่ขึ้นเป็นการ์ดด้านบนแล้ว) */
 function recentItems(skip){
-  var list = ui.myGroups.filter(function(g){ return !(skip && skip[g.id]); }).map(function(g){ return { at:g.at || 0, html:groupRowHTML(g) }; })
-    .concat(ui.history.map(function(h){ return { at:h.at || 0, html:historyRowHTML(h) }; }));
+  var list = ui.myGroups.filter(function(g){ return !(skip && skip[g.id]); }).map(function(g){ return { at:g.at || 0, html:groupRowHTML(g, true) }; })
+    .concat(ui.history.map(function(h){ return { at:h.at || 0, html:historyRowHTML(h, true) }; }));
   list.sort(function(a,b){ return b.at - a.at; });
   return list;
 }

@@ -961,7 +961,7 @@ async function openKindSheet(){
     : L("บันทึกในเครื่องให้อัตโนมัติ ไม่ต้องสมัครสมาชิก");
   function card(kind, cls){
     return '<button class="kind-card '+cls+'" type="button" data-new-kind="'+kind+'">'+
-      '<span class="kind-ico" aria-hidden="true">'+ktOf(kind,"icon")+'</span>'+
+      '<span class="kind-ico" aria-hidden="true">'+kindIconHTML(kind)+'</span>'+
       '<span class="kind-text"><b>'+ktOf(kind,"name")+'</b><span>'+ktOf(kind,"kindSub")+'</span></span></button>';
   }
   ui.sheet = "kind";
@@ -1166,7 +1166,7 @@ function stopScan(){
 function tripGroupCard(){
   if (!Cloud.ready()) return "";
   return '<button class="kind-card trip trip-group" type="button" data-new-kind="trip-group">'+
-    '<span class="kind-ico" aria-hidden="true">👥</span>'+
+    '<span class="kind-ico" aria-hidden="true">'+kindIconHTML("trip-group")+'</span>'+
     '<span class="kind-text"><b>'+L("ทริปแบบกลุ่ม")+'</b><span>'+L("สร้างกลุ่มก่อน ส่ง QR ให้เพื่อนเข้ามา ทุกคนใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้ตลอดทริป")+'</span></span></button>';
 }
 function openRenameSheet(){

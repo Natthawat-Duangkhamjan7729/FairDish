@@ -74,6 +74,8 @@
   --glow-2:#D6F6E8;
   --glow-3:#FFF0C4;
   --deco-dots:#D9C6F2;
+  --coral-ink:#B3354A;           /* งาน 1.5: คอรัลเข้มสำหรับตัวอักษร/เส้นไอคอน (คอรัล #FF6D7A อ่านไม่ผ่าน WCAG บนพื้นครีม) */
+  --coral-soft:#FFE6E9;          /* งาน 1.5: พื้นคอรัลอ่อนหลังไอคอน */
   --deco-ring:#FFD9DE;
   --deco-sun:#FFE7A3;
 
@@ -1420,6 +1422,7 @@ button.appbar-sub{padding-block:.22em}
     --good-line:#24594A; --warn-line:#5A4818; --error-line:#6A2E39; --row-warn-line:#6A2E39; --spark-line:#6B5520;
     --glow-1:rgba(255,109,122,.14); --glow-2:rgba(61,191,146,.10); --glow-3:rgba(240,163,60,.08);
     --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
+    --coral-ink:#FF9AA4; --coral-soft:rgba(255,109,122,.16);
     --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
     --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
     --hero-bg:linear-gradient(165deg,#362C4D 0%,#2A2240 55%,#251D36 100%); --hero-edge:rgba(185,163,255,.38);
@@ -1441,6 +1444,7 @@ button.appbar-sub{padding-block:.22em}
   --good-line:#24594A; --warn-line:#5A4818; --error-line:#6A2E39; --row-warn-line:#6A2E39; --spark-line:#6B5520;
   --glow-1:rgba(255,109,122,.14); --glow-2:rgba(61,191,146,.10); --glow-3:rgba(240,163,60,.08);
   --deco-dots:#3D3260; --deco-ring:rgba(255,109,122,.16); --deco-sun:rgba(240,163,60,.18); --yellow-dot:#E8B93A;
+  --coral-ink:#FF9AA4; --coral-soft:rgba(255,109,122,.16);
   --shadow:0 2px 4px rgba(0,0,0,.25), 0 28px 56px -28px rgba(0,0,0,.7);
   --qr-ink:#31224D; --qr-paper:#FFFFFF; --scrim:rgba(0,0,0,.6);
   --hero-bg:linear-gradient(165deg,#362C4D 0%,#2A2240 55%,#251D36 100%); --hero-edge:rgba(185,163,255,.38);
@@ -1475,3 +1479,41 @@ button.appbar-sub{padding-block:.22em}
 .intro-body,.onb-body,.w-onb-lead,.w-onb-step p,.w-welcome .muted,.kind-text span,.w-mascot-card span,.w-active-prog{text-wrap:pretty}
 .w-active-amt{white-space:nowrap}
 .w-active-sum{min-width:min-content}   /* กล่องยอดกว้างพอสำหรับยอดทั้งบรรทัด — วงกลมชื่อคนขึ้นบรรทัดใหม่แทน (.w-active-mid เป็น flex-wrap) */
+
+/* ---------------- งาน 1.5: หน้าแรกไม่ดูเป็นเทมเพลต (body.is-home จาก route() — หน้าอื่นไม่เปลี่ยน) ----------------
+   สีหลักเดียว = คอรัล (ปุ่ม + ไอคอน + ป้ายเน้น) · ชิปสมาชิกมิ้นต์ · ตัวอักษรพลัม · พื้นครีมเรียบ ไม่มี gradient ม่วง
+   กล่อง: การ์ดบิลที่ทำอยู่มีเงา (สำคัญสุด) · การ์ดเริ่มบิลเป็นเส้นขอบ · บิลล่าสุดเป็นแถวคั่นเส้น */
+.kind-svg{display:inline-flex;vertical-align:-.14em;color:var(--coral-ink)}
+.kind-svg svg{width:1em;height:1em}
+.kind-ico .kind-svg,.w-recent-card .ico .kind-svg{vertical-align:0}
+.kind-ico .kind-svg svg{width:26px;height:26px}
+.sn-bico .kind-svg svg{width:20px;height:20px}
+body.is-home{background:var(--bg)}
+body.is-home::before,body.is-home::after,
+body.is-home .blob,body.is-home .intro-art::before,body.is-home .onb-circle{display:none}
+body.is-home .eyebrow{color:var(--coral-ink)}
+body.is-home .new-bill-ico{background:var(--coral-soft);color:var(--coral-ink);box-shadow:none}
+body.is-home .kind-card .kind-ico,body.is-home .w-recent-card .ico{background:var(--coral-soft)}
+body.is-home .kind-card{box-shadow:none;border:1px solid var(--line);border-radius:var(--r-sm)}
+body.is-home .kind-card:hover{border-color:var(--coral-ink)}
+body.is-home .w-mascot-card{background:transparent;border:0}
+body.is-home .onb-dots i.on{background:var(--primary)}
+body.is-home .tabbar a.on{color:var(--coral-ink)}
+body.is-home .av1{background:var(--coral-soft);color:var(--coral-ink)}
+body.is-home .sn-item.on,body.is-home .sn-bill.here .sn-bhead,body.is-home .sn-sub.on{background:var(--coral-soft);color:var(--coral-ink)}
+body.is-home .w-onb-step .num{background:var(--primary);color:var(--on-primary);box-shadow:none}
+/* บิลล่าสุด: แถวคั่นเส้นแทนกล่อง */
+body.is-home #homeRecent .list-row{background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;margin-bottom:0;padding-left:var(--s1)}
+body.is-home .w-recent-card{border-radius:var(--r-sm);background:transparent}
+/* มือถือ: ข้อความชิดซ้ายมาก่อน แล้วตามด้วยใบสรุปยอดจริง */
+body.is-home .intro .intro-note{text-align:left}
+body.is-home .intro .link-btn{justify-self:start;padding-left:0}
+body.is-home .intro .intro-art{margin:var(--s6) 0 0;padding:0}
+body.is-home .intro .receipt-wrap{max-width:none}
+/* จอใหญ่: การ์ดต้อนรับ = ข้อความชิดซ้าย | ใบสรุปยอดจริง (ครอปส่วนบน) — การ์ดแคบ (จอ ≥1280 ที่มีสองคอลัมน์) ภาพตกลงไปอยู่ใต้ข้อความเอง (flex-wrap) */
+.w-active.w-welcome{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:var(--s5)}
+.w-welcome-text{flex:1 1 300px;min-width:0}
+.w-welcome-shot{flex:1 0 250px;max-width:320px;max-height:300px;overflow:hidden;-webkit-mask:linear-gradient(#000 70%,transparent);mask:linear-gradient(#000 70%,transparent)}
+.w-welcome-shot .receipt-wrap{max-width:none;margin:0}
+/* ภาพตัวอย่างในหน้าแนะนำ: ชิปชื่อที่เลือกเป็นมิ้นต์ (สีชิปสมาชิก) แทน gradient ม่วง */
+body.is-home .w-onb-dish .chips .on,body.is-home .onb-card .pick button[aria-pressed=true]{background:var(--primary-soft);color:var(--primary-ink);border-color:transparent;box-shadow:none}

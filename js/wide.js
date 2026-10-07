@@ -83,18 +83,18 @@ function navOpenBills(){
   // v4.15: บิลที่ติ๊กโอนครบแล้ว (จบแล้ว) ไม่อยู่ในแถบซ้าย
   if (billHasData(local) && !billDone(local) && !groups.some(function(g){ return sameBillContent(local, snapOf(g)); })){
     var lb = normalizeBill(local);
-    list.push({ key:"local", name:savedBillName(local), icon:ktOf(lb.kind, "icon"), split:"#/split", bill:"#/bill",
+    list.push({ key:"local", name:savedBillName(local), icon:kindIconHTML(lb.kind), split:"#/split", bill:"#/bill",
       paid:paidTextOf(local), current:ui.ctx === null });
   }
   groups.forEach(function(g){
     var data = snapOf(g);
     if (!billHasData(data) || billDone(data)) return;
-    list.push({ key:g.id, name:(live && ui.ctx === g.id && Store.groupName) || g.name, icon:ktOf(normalizeBill(data).kind, "icon"),
+    list.push({ key:g.id, name:(live && ui.ctx === g.id && Store.groupName) || g.name, icon:kindIconHTML(normalizeBill(data).kind),
       split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", paid:paidTextOf(data), current:ui.ctx === g.id, group:true });
   });
   // v4.15: บิลในประวัติที่ยังไม่จบ (ยังโอนไม่ครบ) ก็นับว่าเปิดค้างอยู่ — กดแล้วสลับมาเป็นบิลที่ทำอยู่ (บิลเดิมเข้าประวัติแทน)
   ui.history.filter(function(h){ return !billDone(h.data); }).slice(0, NAV_HIST_MAX).forEach(function(h){
-    list.push({ key:h.id, name:h.name, icon:ktOf(normalizeBill(h.data).kind, "icon"), hist:true, paid:paidTextOf(h.data) });
+    list.push({ key:h.id, name:h.name, icon:kindIconHTML(normalizeBill(h.data).kind), hist:true, paid:paidTextOf(h.data) });
   });
   return list;
 }
@@ -195,9 +195,9 @@ function pageHomeWide(){
       '<section class="w-start" aria-labelledby="h-w-start">'+
         '<div class="w-mascot-card"><img src="img/mascot.png" alt="" width="88" height="88">'+
           '<div><b id="h-w-start">'+L("เริ่มบิลใหม่")+'</b><span>'+L("ใส่ชื่อ ใส่เมนู แล้วส่งยอดเข้ากลุ่ม")+'</span></div></div>'+
-        '<button class="kind-card meal" type="button" data-new-kind="meal"><span class="kind-ico" aria-hidden="true">🍲</span>'+
+        '<button class="kind-card meal" type="button" data-new-kind="meal"><span class="kind-ico" aria-hidden="true">'+kindIconHTML("meal")+'</span>'+
           '<span class="kind-text"><b>'+L("มื้ออาหาร")+'</b><span>'+L("หารตามเมนูที่กิน มีค่าบริการ/VAT")+'</span></span>'+kbd("M")+'</button>'+
-        '<button class="kind-card trip" type="button" data-new-kind="trip"><span class="kind-ico" aria-hidden="true">✈️</span>'+
+        '<button class="kind-card trip" type="button" data-new-kind="trip"><span class="kind-ico" aria-hidden="true">'+kindIconHTML("trip")+'</span>'+
           '<span class="kind-text"><b>'+L("ทริป")+'</b><span>'+L("ระบุคนจ่ายแต่ละรายการ แล้วสรุปว่าใครโอนให้ใคร")+'</span></span>'+kbd("T")+'</button>'+
         tripGroupCard()+
       '</section>'+
@@ -221,7 +221,7 @@ function activeCardWide(saved, o, open){
   return '<section class="w-active'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
     '<div class="active-top">'+statusBadge(prog && prog.all, open)+
       '<span class="active-meta">'+(c.group ? L("บิลกลุ่ม")+' · ' : '')+L("{n} คน · {k} {items}", { n:b.members.length, k:b.menus.length, items:ktOf(b.kind,"items") })+'</span></div>'+
-    '<div class="w-active-mid"><div class="w-active-sum"><h2 id="'+c.hid+'">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
+    '<div class="w-active-mid"><div class="w-active-sum"><h2 id="'+c.hid+'">'+kindIconHTML(b.kind)+' '+esc(c.name)+'</h2>'+
       '<div class="w-active-amt mono">'+baht(r.grand)+' <span>฿</span></div></div>'+
       '<div class="w-avs" aria-label="'+L("{n} คน", { n:b.members.length })+'">'+avs+'</div></div>'+
     (prog && prog.total
@@ -234,13 +234,15 @@ function activeCardWide(saved, o, open){
 }
 /** ยังไม่มีบิลที่กำลังหาร — แนะนำแอปแทน */
 function emptyCardWide(){
-  return '<section class="w-active w-welcome" aria-labelledby="h-welcome">'+
+  // งาน 1.5: ข้อความชิดซ้ายคู่กับใบสรุปยอดจริงของระบบ (demoReceiptHTML ตรงกับบิลตัวอย่าง)
+  return '<section class="w-active w-welcome" aria-labelledby="h-welcome"><div class="w-welcome-text">'+
     '<p class="eyebrow">'+L("หารค่าอาหารและค่าทริปกับเพื่อน")+'</p>'+
     '<h2 id="h-welcome">'+L("จ่ายเฉพาะเมนูที่คุณกิน")+'</h2>'+
     '<p class="muted">'+L("สำหรับเพื่อนที่กินข้าวหรือเที่ยวด้วยกัน ใส่ว่าใครกินอะไร แล้วรู้ทันทีว่าใครต้องโอนให้ใคร")+'</p>'+
     '<div class="btn-pair"><button class="btn-line" type="button" data-start-demo="1">'+L("ดูบิลตัวอย่าง 8 คน")+'</button>'+
       '<a class="btn-line" href="#/how">'+L("ดูวิธีใช้")+'</a></div>'+
-    '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
+    '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p></div>'+
+    '<div class="w-welcome-shot" aria-hidden="true">'+demoReceiptHTML()+'</div>'+
   '</section>';
 }
 /** บิลล่าสุด/ประวัติ เป็นข้อมูล (ใช้ทำการ์ดในหน้าแรกและรายการในหน้าประวัติ) */
@@ -264,7 +266,7 @@ function recentCardsWide(skip){
   return '<div class="list-title"><h2>'+L("บิลล่าสุด")+'</h2><a class="link-btn" href="#/history">'+L("ดูทั้งหมด ›")+'</a></div>'+
     '<div class="w-recent">'+list.map(function(x){
       return '<a class="w-recent-card" href="'+x.href+'">'+
-        '<span class="top"><span class="ico" aria-hidden="true">'+x.icon+'</span><span class="tag tag-'+x.kind+'">'+esc(x.tag)+'</span></span>'+
+        '<span class="top"><span class="ico" aria-hidden="true">'+kindIconHTML(x.group ? x.group.kind : x.kind)+'</span><span class="tag tag-'+x.kind+'">'+esc(x.tag)+'</span></span>'+
         '<b>'+esc(x.name)+'</b>'+
         '<span class="bottom"><span>'+esc(x.sub)+'</span><span class="mono">'+x.amt+'</span></span></a>';
     }).join("")+'</div>';
