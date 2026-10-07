@@ -59,7 +59,8 @@ function wideShortcut(e){
   if (path === "/split" && wsActive()){
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (k === "z" || k === "Z")){ e.preventDefault(); wsUndo(); return true; }
     if (e.ctrlKey || e.metaKey) return false;
-    if (k === "n" || k === "N"){ var n = document.getElementById("wsName"); if (n){ e.preventDefault(); n.focus(); return true; } }
+    // v4.15: M = เมนู (ตรงกับปุ่มลัดเริ่มมื้อในหน้าแรก) — N ยังใช้ได้สำหรับคนที่เคยชิน
+    if (k === "m" || k === "M" || k === "n" || k === "N"){ var n = document.getElementById("wsName"); if (n){ e.preventDefault(); n.focus(); return true; } }
     if (k === "Escape" && ui.wsFocus){ e.preventDefault(); ui.wsFocus = null; renderWorkspace(); return true; }
   }
   if (path === "/" && !ui.showOnb && !e.ctrlKey && !e.metaKey && (k === "m" || k === "M" || k === "t" || k === "T")){
@@ -235,8 +236,8 @@ document.addEventListener("click", async function(e){
   /* v3.0: คนจ่ายของรายการทริป */
   if ((v = t.getAttribute("data-pay"))){
     syncMenuForm();
-    state.menuForm.payer = v;
-    if (ui.menuErr) ui.menuErr.payer = "";
+    setPayersOf(state.menuForm, togglePayerIn(knownPayers(state.menuForm), v));   // v4.15: จ่ายด้วยกันหลายคนได้
+    if (ui.menuErr && knownPayers(state.menuForm).length) ui.menuErr.payer = "";
     return renderMenus();
   }
 
@@ -300,10 +301,10 @@ document.addEventListener("click", async function(e){
   }
 
   if (t.id==="menuOpen"){
-    // v2.4: โต๊ะไทยส่วนใหญ่กินด้วยกัน เริ่มที่ "ทุกคน" แล้วแตะเอาคนที่ไม่กินออก
-    state.menuForm={ id:null, name:"", price:"", eaters:state.members.map(function(p){ return p.id; }) };
+    // v4.15: ไม่เลือกทุกคนให้เอง — แตะชื่อคนที่กินเอง (หรือกด "ทุกคน")
+    state.menuForm={ id:null, name:"", price:"", eaters:[] };
     // v3.0: ทริป — คนจ่ายตั้งต้น = คนที่เลือกครั้งก่อน หรือ "ฉัน"
-    if (state.kind === "trip") state.menuForm.payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
+    if (state.kind === "trip") setPayersOf(state.menuForm, defaultPayers());
     ui.menuErr={}; ui.focusMenuField="mName";
     ui.suggest={ open:true, items:[], active:-1, total:0 };
     return renderMenus();
@@ -311,7 +312,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-suggest")) !== null) return pickSuggestion(parseInt(v,10));
   if ((v = t.getAttribute("data-edit-menu"))){
     var m = state.menus.filter(function(x){ return x.id===v; })[0];
-    if (m){ state.menuForm={ id:m.id, name:m.name, price:m.price, eaters:m.eaters.slice(), payer:m.payer || null }; ui.menuErr={}; }
+    if (m){ state.menuForm=setPayersOf({ id:m.id, name:m.name, price:m.price, eaters:m.eaters.slice() }, payersOf(m)); ui.menuErr={}; }
     closeSuggestions();
     return renderMenus();
   }

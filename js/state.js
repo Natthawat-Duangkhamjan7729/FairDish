@@ -21,7 +21,7 @@ var state = {
   shared: [],
   charges: defaultCharges(),
   payers: [],           // v2.5: [{ id:สมาชิก, amount:บาท | null }] null = จ่ายส่วนที่เหลือ
-  kind: "meal",         // v3.0: "meal" มื้ออาหาร | "trip" ทริป (ทริประบุคนจ่ายในแต่ละรายการ: menus[i].payer)
+  kind: "meal",         // v3.0: "meal" มื้ออาหาร | "trip" ทริป (ทริประบุคนจ่ายในแต่ละรายการ: menus[i].payer / payers — payersOf() ใน calc.js)
   name: "",             // v3.2: ชื่อบิลส่วนตัว (บิลกลุ่มใช้ชื่อกลุ่ม)
   paid: {},             // v3.2: การโอนที่ติ๊กแล้ว { transferKey(): true }
   confirms: {},         // v4.1: เพื่อนยืนยันเมนู { memberId: { at, sig } } (ดู confirm.js)
@@ -55,7 +55,7 @@ var ui = {
   theme:"system",       // v2.1: "system" | "light" | "dark"
   installNudgeOff:false, // v2.4: ผู้ใช้กดปิดการ์ดชวนติดตั้งแล้ว
   noReveal:false,       // v2.5: วาดหน้าใบสรุปซ้ำโดยไม่เล่นแอนิเมชันใบเสร็จ
-  lastPayer:null,       // v3.0: คนจ่ายล่าสุดในโหมดทริป ใช้เป็นค่าตั้งต้นของรายการถัดไป
+  lastPayers:[],        // v3.0: คนจ่ายล่าสุดในโหมดทริป ใช้เป็นค่าตั้งต้นของรายการถัดไป (v4.15: หลายคนได้)
   inappSkipped:false,   // v4.14: ปิดหน้าต่าง "เปิดในเบราว์เซอร์ดีกว่า" แล้ว (สำรองเมื่อ sessionStorage ใช้ไม่ได้)
   meAfterInApp:false,   // v4.14: รอถาม "เข้าร่วมกลุ่มไหม?" หลังปิดหน้าต่างนั้น
   tripStash:null,       // v3.1: กำลังแก้มื้ออาหารข้างในทริป { mealId, menus, shared, charges, payers } ของทริปที่พักไว้
@@ -79,14 +79,14 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.14";
+var APP_VERSION = "4.15";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */
 var KIND_TEXT = {
   meal: {
     icon:"🍲", name:"มื้ออาหาร", start:"หารค่าอาหาร", startSub:"เลือกได้ว่าใครกินเมนูไหน คิดตามที่กินจริง",
-    people:"ใครกินบ้าง", items:"เมนู", itemsTitle:"รายการอาหาร", who:"ใครกินเมนูนี้บ้าง", whoHint:"แตะชื่อคนที่ไม่ได้กินออก",
+    people:"ใครกินบ้าง", items:"เมนู", itemsTitle:"รายการอาหาร", who:"ใครกินเมนูนี้บ้าง", whoHint:"แตะชื่อคนที่กิน",
     add:"+ เพิ่มเมนู", newItem:"เพิ่มเมนูใหม่", editItem:"แก้ไขเมนู", addBtn:"เพิ่มเมนู",
     namePh:"ชื่อเมนู เช่น ต้มยำ", nameLabel:"ชื่อเมนู", pricePh:"ราคาต่อจาน (บาท)",
     another:"เพิ่มอีกจาน", del:"ลบเมนูนี้", next:"ต่อไป: ใส่เมนูที่สั่ง ›",
@@ -99,7 +99,7 @@ var KIND_TEXT = {
   },
   trip: {
     icon:"✈️", name:"ทริป", start:"หารค่าทริป", startSub:"ที่พัก ค่าน้ำมัน ตั๋ว ใครจ่ายอะไรก็ใส่ไว้ แล้วดูว่าใครโอนให้ใคร",
-    people:"ใครไปบ้าง", items:"ค่าใช้จ่าย", itemsTitle:"ค่าใช้จ่าย", who:"ใครมีส่วนในรายการนี้", whoHint:"แตะชื่อคนที่ไม่มีส่วนออก",
+    people:"ใครไปบ้าง", items:"ค่าใช้จ่าย", itemsTitle:"ค่าใช้จ่าย", who:"ใครมีส่วนในรายการนี้", whoHint:"แตะชื่อคนที่มีส่วน",
     add:"+ เพิ่มค่าใช้จ่าย", newItem:"เพิ่มค่าใช้จ่าย", editItem:"แก้ไขค่าใช้จ่าย", addBtn:"เพิ่ม",
     namePh:"เช่น ที่พัก ค่าน้ำมัน", nameLabel:"ชื่อรายการ", pricePh:"ยอด (บาท)",
     another:"ทำซ้ำรายการนี้", del:"ลบรายการนี้", next:"ต่อไป: ใส่ค่าใช้จ่าย ›",

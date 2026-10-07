@@ -52,6 +52,13 @@ function renderAppBarSub(){
   if (title) title.textContent = kt("title");
 }
 
+/** v4.15: ปุ่มเลือกคนจ่าย (แตะเพื่อเพิ่ม/เอาออก จ่ายด้วยกันหลายคน = คนละเท่ากัน) attr="data-pay" → data-pay="<id>" */
+function payerPickHTML(chosen, attr, label, prefix){
+  return '<div class="pick payer-pick" role="group" aria-label="'+label+'">'+state.members.map(function(p){
+    return '<button '+attr+'="'+(prefix || "")+p.id+'" aria-pressed="'+(chosen.indexOf(p.id) >= 0)+'">'+esc(p.name)+'</button>';
+  }).join("")+'</div>';
+}
+
 /* ---- v3.1: หัวของมื้ออาหารในทริป (ชื่อมื้อ, ใครจ่าย, ยอดมื้อ) ---- */
 function renderMealHead(){
   var box = document.getElementById("mealHead");
@@ -64,12 +71,9 @@ function renderMealHead(){
   box.innerHTML = '<section class="step-card meal-head" aria-label="'+L("ข้อมูลมื้อนี้")+'">'+
     '<label class="label" for="mealName">'+L("ชื่อมื้อ")+'</label>'+
     '<input type="text" id="mealName" value="'+esc(item.name)+'" maxlength="'+MAX_MENU_NAME+'" autocomplete="off" placeholder="'+L("เช่น มื้อเย็น ร้านส้มตำ")+'">'+
-    '<div class="label" style="margin-top:var(--s4)">'+L("ใครจ่ายมื้อนี้")+'</div>'+
-    '<div class="pick payer-pick" role="radiogroup" aria-label="'+L("ใครจ่ายมื้อนี้")+'">'+state.members.map(function(p){
-      var on = item.payer === p.id;
-      return '<button role="radio" data-meal-pay="'+p.id+'" aria-pressed="'+on+'" aria-checked="'+on+'">'+esc(p.name)+'</button>';
-    }).join("")+'</div>'+
-    (nameOf(item.payer) ? '' : '<p class="field-msg error">'+L("เลือกว่าใครจ่ายมื้อนี้ จะได้รวมในการโอนของทริป")+'</p>')+
+    '<div class="label" style="margin-top:var(--s4)">'+L("ใครจ่ายมื้อนี้")+' <span class="label-hint">'+L("เลือกได้หลายคน")+'</span></div>'+
+    payerPickHTML(knownPayers(item), "data-meal-pay", L("ใครจ่ายมื้อนี้"))+
+    (knownPayers(item).length ? '' : '<p class="field-msg error">'+L("เลือกว่าใครจ่ายมื้อนี้ จะได้รวมในการโอนของทริป")+'</p>')+
     '<p class="meal-total">'+L("ยอดมื้อนี้")+' <b>'+baht(r.grand)+' ฿</b> <span>'+L("หารตามที่แต่ละคนกินจริง")+'</span></p>'+
   '</section>';
 }
@@ -263,9 +267,9 @@ function memberExtraHTML(){
 /** v3.1: แถวมื้ออาหารในรายการทริป — แตะเพื่อเข้าไปแก้เมนูข้างใน */
 function mealRow(m){
   var sub = mealTotalOf(m), n = mealOf(m).menus.length;
-  var unpaid = sub.grand > 0 && !nameOf(m.payer);
-  var who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : (nameOf(m.payer) ? '<b class="payer-tag">'+L("{name} จ่าย", { name:esc(nameOf(m.payer)) })+'</b>' : ''))+
-    (unpaid || nameOf(m.payer) ? ' · ' : '')+(n ? L("{n} เมนู", { n:n }) : L("ยังไม่มีเมนู"));
+  var paidBy = payerText(m), unpaid = sub.grand > 0 && !paidBy;
+  var who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : (paidBy ? '<b class="payer-tag">'+paidBy+'</b>' : ''))+
+    (unpaid || paidBy ? ' · ' : '')+(n ? L("{n} เมนู", { n:n }) : L("ยังไม่มีเมนู"));
   return '<div class="row-item meal-row'+(unpaid ? ' warn' : '')+'">'+
     '<button class="row-tap" data-open-meal="'+m.id+'" aria-label="'+L("เปิดมื้อ {name}", { name:esc(m.name) })+'">'+
       '<span class="body"><span class="name">🍲 '+esc(m.name)+'</span><span class="sub">'+who+'</span></span>'+
@@ -305,8 +309,8 @@ function renderMenus(){
       var known = m.eaters.filter(function(id){ return !!nameOf(id); });
       var who = known.length ? eatersLabel(known) : L("ยังไม่ได้เลือกคนมีส่วน — ยังไม่ถูกนำไปคำนวณ");
       var trip = state.kind === "trip";
-      var unpaid = trip && known.length && !nameOf(m.payer);
-      if (trip && known.length) who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : '<b class="payer-tag">'+L("{name} จ่าย", { name:esc(nameOf(m.payer)) })+'</b>')+' · '+who;
+      var unpaid = trip && known.length && !knownPayers(m).length;
+      if (trip && known.length) who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : '<b class="payer-tag">'+payerText(m)+'</b>')+' · '+who;
       var each = known.length > 1 ? '<small>'+L("คนละ {amt}", { amt:baht(m.price/known.length) })+'</small>' : '';
       var editing = state.menuForm && state.menuForm.id===m.id;
       // v2.6: แถวไม่มีไอคอน แตะแถวเพื่อแก้ ปุ่มอีกจาน/ลบอยู่ในฟอร์มแก้
@@ -340,13 +344,10 @@ function renderMenus(){
       }).join("")+'</div>'
     : '';
   var preview = menuPreviewText(f);
-  // v3.0: ทริป — ใครจ่ายรายการนี้ (เลือกได้คนเดียว)
+  // v3.0: ทริป — ใครจ่ายรายการนี้ (v4.15: เลือกได้หลายคน จ่ายคนละเท่ากัน)
   var payerPick = state.kind === "trip" && state.members.length
-    ? '<div class="label">'+L("ใครจ่ายรายการนี้")+'</div>'+
-      '<div class="pick payer-pick" role="radiogroup" aria-label="'+L("ใครจ่ายรายการนี้")+'">'+state.members.map(function(p){
-        var on = f.payer === p.id;
-        return '<button role="radio" data-pay="'+p.id+'" aria-pressed="'+on+'" aria-checked="'+on+'">'+esc(p.name)+'</button>';
-      }).join("")+'</div>'+
+    ? '<div class="label">'+L("ใครจ่ายรายการนี้")+' <span class="label-hint">'+L("เลือกได้หลายคน")+'</span></div>'+
+      payerPickHTML(knownPayers(f), "data-pay", L("ใครจ่ายรายการนี้"))+
       (e.payer ? '<p class="field-msg error" aria-live="polite">'+esc(e.payer)+'</p>' : '')
     : '';
 
@@ -361,7 +362,7 @@ function renderMenus(){
         '<input type="number" id="mPrice" inputmode="decimal" step="0.01" min="0" placeholder="'+kt("pricePh")+'" value="'+(f.price===""?"":esc(f.price))+'" aria-describedby="mPriceMsg" aria-invalid="'+(e.price?"true":"false")+'">'+
         '<p class="field-msg '+(e.price?"error":"muted")+'" id="mPriceMsg" aria-live="polite">'+(e.price?esc(e.price):"")+'</p></div>'+
       payerPick+
-      '<div class="label">'+kt("who")+(state.members.length>1 && !f.id ? ' <span class="label-hint">'+kt("whoHint")+'</span>' : '')+'</div>'+picks+
+      '<div class="label">'+kt("who")+(state.members.length>1 && !f.eaters.length ? ' <span class="label-hint">'+kt("whoHint")+'</span>' : '')+'</div>'+picks+
       (e.eaters
         ? '<p class="field-msg error" aria-live="polite">'+esc(e.eaters)+'</p>'
         : '<p class="form-preview" id="mPreview" aria-live="polite">'+preview+'</p>')+

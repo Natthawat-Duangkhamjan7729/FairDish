@@ -136,24 +136,43 @@ function settle(r, payers){
 /* =========================================================
    4.6 โหมดทริป: คนจ่ายแยกรายการ (v3.0)
    ========================================================= */
-/** รวมยอดที่แต่ละคนจ่ายจาก payer ของแต่ละรายการ → { payers:[{id, amount}], missing:จำนวนรายการที่ยังไม่ระบุคนจ่าย }
- *  นับเฉพาะรายการที่ถูกคิดในบิล (มีคนมีส่วนอย่างน้อย 1 คน) ค่าส่วนกลางไม่มีคนจ่ายจึงนับเป็น missing */
+/** v4.15: คนจ่ายของรายการในทริป — จ่ายด้วยกันหลายคนได้ (m.payers) ข้อมูลเดิมมีแค่ m.payer */
+function payersOf(m){
+  if (m && Array.isArray(m.payers) && m.payers.length) return m.payers.slice();
+  return m && m.payer ? [m.payer] : [];
+}
+/** ตั้งคนจ่ายของรายการ — m.payer = คนแรกเสมอ (เครื่องที่ยังเป็นเวอร์ชันเก่าอ่านได้) m.payers มีเมื่อจ่ายกันเกินหนึ่งคน */
+function setPayersOf(m, ids){
+  ids = (ids || []).filter(function(id, i, a){ return id && a.indexOf(id) === i; });
+  if (ids.length) m.payer = ids[0]; else delete m.payer;
+  if (ids.length > 1) m.payers = ids; else delete m.payers;
+  return m;
+}
+/** ยอด cents หารเท่ากันระหว่างคนจ่าย (เศษสตางค์ให้คนแรก ๆ) บวกเข้า paid */
+function addPaid(paid, ids, cents){
+  var each = Math.floor(cents / ids.length), extra = cents - each * ids.length;
+  ids.forEach(function(id, i){ paid[id] = (paid[id] || 0) + each + (i < extra ? 1 : 0); });
+}
+/** รวมยอดที่แต่ละคนจ่ายจากคนจ่ายของแต่ละรายการ → { payers:[{id, amount}], missing:จำนวนรายการที่ยังไม่ระบุคนจ่าย }
+ *  นับเฉพาะรายการที่ถูกคิดในบิล (มีคนมีส่วนอย่างน้อย 1 คน) ค่าส่วนกลางไม่มีคนจ่ายจึงนับเป็น missing
+ *  v4.15: รายการที่จ่ายด้วยกันหลายคน = แต่ละคนจ่ายเท่ากัน */
 function itemPayers(b){
   b = b || state;
   var known = {};
   b.members.forEach(function(p){ known[p.id] = true; });
   var paid = {}, missing = 0;
   b.menus.forEach(function(m){
+    var who = payersOf(m).filter(function(id){ return known[id]; });
     if (m.type === "meal"){
       var md = mealOf(m);
       var cents = Math.round(computeBill({ members:b.members, menus:md.menus, shared:md.shared, charges:md.charges, kind:"meal" }).grand * 100);
       if (!cents) return;                                   // มื้อว่าง ไม่ต้องมีคนจ่าย
-      if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + cents;
+      if (who.length) addPaid(paid, who, cents);
       else missing++;
       return;
     }
     if (!m.eaters.some(function(id){ return known[id]; })) return;
-    if (m.payer && known[m.payer]) paid[m.payer] = (paid[m.payer] || 0) + Math.round(m.price * 100);
+    if (who.length) addPaid(paid, who, Math.round(m.price * 100));
     else missing++;
   });
   missing += b.shared.length;

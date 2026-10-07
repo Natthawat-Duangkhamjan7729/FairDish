@@ -305,6 +305,25 @@ function updateMenuPreview(){
   syncMenuForm();
   el.textContent = menuPreviewText(state.menuForm);
 }
+/** v4.15: ทริป — คนจ่ายของรายการ/ฟอร์มที่ยังอยู่ในบิล (จ่ายด้วยกันได้หลายคน) */
+function knownPayers(m){ return payersOf(m).filter(function(id){ return !!nameOf(id); }); }
+/** คนจ่ายตั้งต้นของรายการใหม่ = คนจ่ายครั้งก่อน หรือ "ฉัน" */
+function defaultPayers(){
+  var last = (ui.lastPayers || []).filter(function(id){ return !!nameOf(id); });
+  if (last.length) return last;
+  var me = myMemberId();
+  return me ? [me] : [];
+}
+/** แตะชื่อคนจ่าย = เพิ่ม/เอาออก */
+function togglePayerIn(list, id){
+  return list.indexOf(id) >= 0 ? list.filter(function(x){ return x !== id; }) : list.concat([id]);
+}
+/** "มาร์ค จ่าย" / "มาร์ค, ไอซ์ จ่ายคนละเท่ากัน" (ใส่ esc ให้แล้ว) — ไม่มีคนจ่าย = "" */
+function payerText(m){
+  var names = knownPayers(m).map(function(id){ return esc(nameOf(id)); });
+  if (!names.length) return "";
+  return names.length > 1 ? L("{name} จ่ายคนละเท่ากัน", { name:names.join(", ") }) : L("{name} จ่าย", { name:names[0] });
+}
 function validateMenuForm(f){
   var errs = { name:"", price:"", eaters:"", payer:"" };
   var name = String(f.name||"").trim();
@@ -320,7 +339,7 @@ function validateMenuForm(f){
 
   if (state.members.length === 0) errs.eaters = L("ยังไม่มีใครในโต๊ะ กลับไปเพิ่มชื่อในแท็บ \"คน\" ก่อน");
   else if (f.eaters.length === 0) errs.eaters = kt("noEater");
-  if (state.kind === "trip" && state.members.length && !nameOf(f.payer)) errs.payer = L("เลือกว่าใครจ่ายรายการนี้");
+  if (state.kind === "trip" && state.members.length && !knownPayers(f).length) errs.payer = L("เลือกว่าใครจ่ายรายการนี้");
   return errs;
 }
 async function saveMenuForm(){
@@ -341,14 +360,14 @@ async function saveMenuForm(){
 
   if (editing){
     state.menus.forEach(function(x){
-      if (x.id===f.id){ x.name=name; x.price=price; x.eaters=f.eaters.slice(); if (f.payer) x.payer=f.payer; }
+      if (x.id===f.id){ x.name=name; x.price=price; x.eaters=f.eaters.slice(); if (state.kind === "trip") setPayersOf(x, knownPayers(f)); }
     });
   } else {
     var item = { id:nid(), name:name, price:price, eaters:f.eaters.slice() };
-    if (state.kind === "trip" && f.payer) item.payer = f.payer;
+    if (state.kind === "trip") setPayersOf(item, knownPayers(f));
     state.menus.push(item);
   }
-  if (f.payer) ui.lastPayer = f.payer;
+  if (state.kind === "trip" && knownPayers(f).length) ui.lastPayers = knownPayers(f);
   state.menuForm = null;
   ui.menuErr = {};
 
@@ -364,7 +383,7 @@ async function duplicateMenu(id){
   if (index < 0) return;
   var src = state.menus[index];
   var copy = { id:nid(), name:src.name, price:src.price, eaters:src.eaters.slice() };
-  if (src.payer) copy.payer = src.payer;
+  setPayersOf(copy, payersOf(src));
   state.menus.splice(index+1, 0, copy);
   render();
   await commit(state.kind === "trip" ? L("ทำซ้ำ {name} แล้ว", { name:src.name }) : L("เพิ่ม {name} อีกจานแล้ว", { name:src.name }),"menu");
@@ -507,7 +526,9 @@ async function forgetGroup(id){
   if (!g) return;
   ui.myGroups = ui.myGroups.filter(function(x){ return x.id !== id; });
   await saveMyGroups();
-  if (currentPath() === "/history") document.getElementById("view").innerHTML = pageHistory();
+  // v4.15: เอากลุ่มที่เปิดอยู่ออก = เลิกเปิดด้วย ไม่งั้นลิงก์ "หารบิล" ในแถบซ้ายพากลับเข้ากลุ่ม แล้วกลุ่มกลับมาในรายการอีก
+  if (ui.ctx === id){ ui.ctx = undefined; Store.groupId = null; Store.groupName = ""; updateChrome(); renderSideNav(); }
+  refreshHistoryView();
   toast(L("เอา {name} ออกจากรายการแล้ว (กลุ่มยังอยู่ เปิดจากลิงก์ได้)", { name:g.name }),"ok");
 }
 
@@ -733,6 +754,11 @@ async function fillHome(again){
   }
   if (currentPath() !== "/") return;
   var groups = homeGroups(), skip = {}, marked = false;
+  if (has && groups.some(function(g){ return sameBillContent(saved, g.snap); })) has = false;   // v4.15: บิลเดียวกับบิลกลุ่ม ไม่ขึ้นซ้ำ
+  // v4.15: การ์ดมากกว่าหนึ่งใบ = ป้าย "เปิดอยู่" บนบิลที่เปิดล่าสุด (ui.ctx: null = บิลในเครื่อง, id = กลุ่ม)
+  var many = (has ? 1 : 0) + groups.length > 1;
+  var openLocal = many && has && ui.ctx === null;
+  function openGroup(g){ return many && ui.ctx === g.id; }
   groups.forEach(function(g){
     skip[g.id] = true;
     if (g.done && !g.doneSeen){ g.doneSeen = true; ui.doneShown[g.id] = true; marked = true; }
@@ -740,14 +766,14 @@ async function fillHome(again){
   if (marked) saveMyGroups();
   if (!again) refreshHomeGroups();
   if (isWide()){                                        // v4.4: หน้าแรกจอใหญ่ (wide.js)
-    active.innerHTML = (has ? activeCardWide(saved) : (groups.length ? "" : emptyCardWide()))+
-      groups.map(function(g){ return activeCardWide(g.snap, { id:g.id, name:g.name }); }).join("");
+    active.innerHTML = (has ? activeCardWide(saved, null, openLocal) : (groups.length ? "" : emptyCardWide()))+
+      groups.map(function(g){ return activeCardWide(g.snap, { id:g.id, name:g.name }, openGroup(g)); }).join("");
     recent.innerHTML = recentCardsWide(skip);
     intro.innerHTML = "";
     return updateInstallButton();
   }
-  active.innerHTML = (has ? activeBillHTML(saved) : "")+
-    groups.map(function(g){ return activeBillHTML(g.snap, { id:g.id, name:g.name }); }).join("");
+  active.innerHTML = (has ? activeBillHTML(saved, null, openLocal) : "")+
+    groups.map(function(g){ return activeBillHTML(g.snap, { id:g.id, name:g.name }, openGroup(g)); }).join("");
   var items = recentItems(skip);
   recent.innerHTML = items.length
     ? '<div class="list-title"><h2>'+L("บิลล่าสุด")+'</h2><a class="link-btn" href="#/history">'+L("ดูทั้งหมด")+'</a></div>'+
@@ -800,8 +826,13 @@ function emptyBill(kind){
   return { members:[], menus:[], shared:[], charges:defaultCharges(), payers:[], kind:kind, name:defaultBillName(kind), paid:{},
            savedAt:new Date().toISOString() };
 }
+/** v4.15: อ่านประวัติล่าสุดจากเครื่องก่อนแก้ — แอปที่เปิดไว้อีกแท็บอาจแก้ไปแล้ว (เดิมแท็บเก่าบันทึกทับ บิลที่ลบไปกลับมาอีก) */
+async function reloadHistory(){
+  try { ui.history = await Store.loadHistory(); } catch(e){}
+}
 /** เก็บบิลส่วนตัวเข้าประวัติ (ใหม่สุดก่อน) */
 async function archiveBill(saved){
+  await reloadHistory();
   var b = normalizeBill(saved);
   var entry = { id:"h"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), name:savedBillName(saved),
                 kind:b.kind, at:Date.now(), data:saved };
@@ -866,6 +897,7 @@ async function startNewBill(kind, demo, name){
 }
 async function restoreHistory(id){
   if (ui.tour) tourEnd(false);
+  await reloadHistory();
   var h = ui.history.filter(function(x){ return x.id === id; })[0];
   if (!h) return;
   try {
@@ -877,18 +909,34 @@ async function restoreHistory(id){
     toast(L("เปิดบิลไม่สำเร็จ ลองอีกครั้ง"),"error");
   }
 }
+/** v4.15: วาดหน้าประวัติใหม่หลังลบ/เอาคืน — จอใหญ่ต้องเติมรายการด้วย renderHistoryWide() ด้วย
+ *  (เดิมใส่แค่โครงหน้า รายการจึงหายหมด และลบจากหน้า #/history ที่เปิดอยู่แล้วหน้าไม่เปลี่ยน รายการที่ลบยังค้างอยู่) */
+function refreshHistoryView(){
+  var path = currentPath();
+  if (path !== "/history" && path !== "/groups") return;
+  var y = window.scrollY;
+  document.getElementById("view").innerHTML = pageHistory();
+  if (isWide()) renderHistoryWide();
+  jumpTo(y);
+}
 async function deleteHistory(id){
+  await reloadHistory();
   var index = -1;
   ui.history.forEach(function(x,i){ if (x.id === id) index = i; });
   if (index < 0) return;
   var h = ui.history[index];
   ui.history.splice(index, 1);
   try { await Store.saveHistory(ui.history); } catch(e){}
-  location.hash = "#/history";
-  toast(L("ลบ {name} ออกจากประวัติแล้ว", { name:h.name }),"ok",{ label:L("เลิกทำ"), action:async function(){
+  if (ui.histSel === id) ui.histSel = null;
+  if (location.hash === "#/history") refreshHistoryView(); else location.hash = "#/history";
+  // v4.15: ปุ่มในแจ้งเตือนเขียนว่า "เอาคืน" — คำว่า Undo ดูเหมือนปุ่มยกเลิกการลบ คนอ่านแล้วงง
+  toast(L("ลบ {name} ออกจากประวัติแล้ว", { name:h.name }),"ok",{ label:L("เอาคืน"), action:async function(){
+    await reloadHistory();
+    if (ui.history.some(function(x){ return x.id === h.id; })) return;
     ui.history.splice(Math.min(index, ui.history.length), 0, h);
     try { await Store.saveHistory(ui.history); } catch(e){}
-    if (currentPath() === "/history") document.getElementById("view").innerHTML = pageHistory();
+    ui.histSel = h.id;
+    refreshHistoryView();
   }});
 }
 
@@ -1258,10 +1306,9 @@ function backToTrip(){
 }
 async function addMeal(){
   var n = state.menus.filter(function(m){ return m.type === "meal"; }).length + 1;
-  var payer = nameOf(ui.lastPayer) ? ui.lastPayer : (myMemberId() || null);
   var item = { id:nid(), type:"meal", name:L("มื้อที่ {n}", { n:n }), price:0, eaters:[],
                meal:{ menus:[], shared:[], charges:defaultCharges() } };
-  if (payer) item.payer = payer;
+  setPayersOf(item, defaultPayers());
   state.menus.push(item);
   await commit(null, "menu");
   enterMeal(item.id);
@@ -1276,11 +1323,12 @@ async function renameMeal(value){
   renderMealHead();
   await commit(L("เปลี่ยนชื่อมื้อเป็น {name} แล้ว", { name:name }));
 }
+/** v4.15: แตะชื่อ = เพิ่ม/เอาออกจากคนจ่ายมื้อนี้ (จ่ายด้วยกันหลายคนได้) */
 async function setMealPayer(id){
   var item = currentMeal();
   if (!item || !nameOf(id)) return;
-  item.payer = id;
-  ui.lastPayer = id;
+  setPayersOf(item, togglePayerIn(knownPayers(item), id));
+  if (knownPayers(item).length) ui.lastPayers = knownPayers(item);
   renderMealHead();
   await commit();
 }

@@ -101,8 +101,20 @@ function billDone(saved){
   var b = normalizeBill(saved), r = computeBill(b), s = settleBill(r, b);
   return !!(s.ok && paidProgress(s.transfers, b.paid).all);
 }
-function statusBadge(done){
-  return done ? '<span class="badge ok">'+L("เสร็จแล้ว")+'</span>' : '<span class="badge warn">'+L("กำลังหาร")+'</span>';
+function statusBadge(done, open){
+  var st = done ? '<span class="badge ok">'+L("เสร็จแล้ว")+'</span>' : '<span class="badge warn">'+L("กำลังหาร")+'</span>';
+  // v4.15: การ์ดหลายใบ — บอกว่าใบไหนคือบิลที่เปิดอยู่
+  return open ? '<span class="badges">'+st+'<span class="badge open">'+L("เปิดอยู่")+'</span></span>' : st;
+}
+/** v4.15: บิลในเครื่องกับบิลกลุ่มเป็นบิลเดียวกันไหม (คนกับรายการตรงกัน) — สร้างกลุ่มจากบิลนี้แล้วบิลในเครื่องยังค้าง
+ *  (เช่นเปิดแอปไว้หลายแท็บ แท็บเก่าบันทึกทับ) หน้าหลักจะได้ไม่ขึ้นบิลเดียวกันสองใบ */
+function sameBillContent(a, b){
+  function key(x){
+    var n = normalizeBill(x);
+    return JSON.stringify([n.kind, n.members.map(function(p){ return p.name; }).sort(),
+      n.menus.map(function(m){ return [m.name, m.price]; })]);
+  }
+  return !!(a && b) && key(a) === key(b);
 }
 /** ลิงก์/ชื่อของการ์ด — บิลในเครื่อง (ไม่ส่ง o) หรือบิลกลุ่ม o = { id, name } */
 function cardLinks(saved, o){
@@ -110,7 +122,7 @@ function cardLinks(saved, o){
            : { split:"#/split", bill:"#/bill", name:savedBillName(saved), hid:"h-active", group:false };
 }
 /** การ์ดความคืบหน้าในหน้าหลัก — บิลส่วนตัวในเครื่อง หรือบิลกลุ่ม (v4.10) */
-function activeBillHTML(saved, o){
+function activeBillHTML(saved, o, open){
   var c = cardLinks(saved, o);
   var b = normalizeBill(saved);
   var r = computeBill(b);
@@ -122,7 +134,7 @@ function activeBillHTML(saved, o){
       '<div class="progress"><i style="width:'+Math.round(prog.done / prog.total * 100)+'%"></i></div>'
     : '';
   return '<section class="active-card'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
-    '<div class="active-top">'+statusBadge(prog && prog.all)+'<span class="active-meta">'+meta+'</span></div>'+
+    '<div class="active-top">'+statusBadge(prog && prog.all, open)+'<span class="active-meta">'+meta+'</span></div>'+
     '<h2 id="'+c.hid+'" class="active-name">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
     '<div class="active-sum">'+baht(r.grand)+' ฿</div>'+
     progress+
