@@ -129,7 +129,7 @@ document.addEventListener("click", async function(e){
             "[data-guest-who],[data-guest-add],[data-guest-item],[data-guest-save],[data-guest-change],[data-guest-again],"+
             "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
-            "[data-share-pick],[data-hist-sel],[data-sn-fold],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
+            "[data-share-pick],[data-hist-sel],[data-sn-fold],[data-goto-step],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
             "[data-scan-close],[data-scan-paste],[data-dissolve],[data-dissolve-ok],[data-open-join],[data-share-close],[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
             "[data-onb-start],[data-tour-start],[data-tour-next],[data-tour-skip],[data-tour-done],[data-tour-back],[data-tour-install]";
   var t = e.target.closest ? e.target.closest(sel) : null;
@@ -195,6 +195,7 @@ document.addEventListener("click", async function(e){
   if ((v = t.getAttribute("data-share-pick"))) return pickShareMember(v);
   if ((v = t.getAttribute("data-hist-sel"))){ ui.histSel = v; return renderHistoryWide(); }
   if ((v = t.getAttribute("data-hist-filter"))){ ui.histFilter = v; return renderHistoryWide(); }
+  if ((v = t.getAttribute("data-goto-step"))){ ui.step = v; return; }   // v4.16: แถบขั้นตอนในใบสรุปยอด → กลับหน้าหารบิลที่ขั้นนั้น (ลิงก์พาไปเอง)
   if ((v = t.getAttribute("data-sn-fold"))){   // v4.15: พับ/กางหัวข้อบิลในแถบซ้าย
     ui.snFold = ui.snFold || {};
     ui.snFold[v] = t.getAttribute("aria-expanded") === "true";

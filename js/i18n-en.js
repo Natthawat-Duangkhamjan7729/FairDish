@@ -472,6 +472,7 @@ EN = {
   "เลือกบิลทางซ้ายเพื่อดูใบสรุปยอด":"Pick a bill on the left to see its summary",
   "บิลกลุ่มอยู่บนเซิร์ฟเวอร์ เปิดเพื่อดูยอดล่าสุดที่เพื่อนแก้":"Group bills live on the server — open it to see your friends' latest changes",
   "เปิดบิลกลุ่ม":"Open group bill",
+  "ถัดไป: {step} ›":"Next: {step} ›",
   "บิลที่เปิดอยู่ ({n})":"Open bills ({n})", "{kind} ({n})":"{kind} ({n})", "อยู่ในประวัติ":"In history",
   "เอาออกจากรายการ":"Remove from list", "ยกเลิกการลบ":"Undo delete",
   "ทั้งหมด":"All",

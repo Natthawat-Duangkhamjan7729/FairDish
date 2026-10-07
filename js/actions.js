@@ -732,7 +732,7 @@ async function fillHome(again){
     }
   }
   if (!ui.tour && ui.ctx !== null){                    // v4.15: รายการบิลที่เปิดอยู่ในแถบซ้ายตรงกับการ์ดในหน้านี้
-    ui.localOpen = has ? { name:savedBillName(saved), kind:normalizeBill(saved).kind } : null;
+    ui.localOpen = has ? { name:savedBillName(saved), kind:normalizeBill(saved).kind, ready:billReady(saved) } : null;
     renderSideNav();
   }
   if (currentPath() !== "/") return;
@@ -876,7 +876,7 @@ async function restoreHistory(id){
   try {
     ui.history = ui.history.filter(function(x){ return x.id !== id; });
     await Store.saveHistory(ui.history);
-    var archived = await replaceLocalBill(h.data, "summary");
+    var archived = await replaceLocalBill(h.data, billReady(h.data) ? "summary" : "members");   // v4.16: ไปที่เดียวกับการเปิดบิลจากที่อื่น
     toast(archived ? L("เปิด {name} แล้ว (บิลที่ทำค้างไว้ย้ายเข้าประวัติ)", { name:h.name }) : L("เปิด {name} แล้ว", { name:h.name }),"ok");
   } catch(err){
     toast(L("เปิดบิลไม่สำเร็จ ลองอีกครั้ง"),"error");

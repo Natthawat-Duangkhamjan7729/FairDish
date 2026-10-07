@@ -65,11 +65,11 @@ function sideNavHTML(){
 /** บิลในเครื่องที่มีข้อมูล { name, kind } | null — จำไว้ใน ui.localOpen (โหลดจากเครื่องครั้งแรกแบบ async แล้ววาดแถบซ้ายใหม่) */
 function localOpenBill(){
   if (ui.ctx === null && !ui.loading && !ui.tour){
-    ui.localOpen = billHasData(state) || ui.tripStash ? { name:billName(), kind:ui.tripStash ? "trip" : state.kind } : null;
+    ui.localOpen = billHasData(state) || ui.tripStash ? { name:billName(), kind:ui.tripStash ? "trip" : state.kind, ready:billReady(serialize()) } : null;
   } else if (ui.localOpen === undefined && !ui.localOpenLoading){
     ui.localOpenLoading = true;
     Store.loadLocalBill().then(function(saved){
-      ui.localOpen = billHasData(saved) ? { name:savedBillName(saved), kind:normalizeBill(saved).kind } : null;
+      ui.localOpen = billHasData(saved) ? { name:savedBillName(saved), kind:normalizeBill(saved).kind, ready:billReady(saved) } : null;
     }).catch(function(){ ui.localOpen = null; }).then(function(){ ui.localOpenLoading = false; renderSideNav(); });
   }
   return ui.localOpen || null;
@@ -78,14 +78,14 @@ function localOpenBill(){
     { key, name, kind, split, bill, tag:"local"|"group"|"history" } */
 function openBills(){
   var list = [], local = localOpenBill(), seen = {};
-  if (local) list.push({ key:"local", name:local.name, kind:local.kind, split:"#/split", bill:"#/bill", tag:"local" });
+  if (local) list.push({ key:"local", name:local.name, kind:local.kind, href:local.ready ? "#/bill" : "#/split", tag:"local" });
   var groups = homeGroups().slice();
   if (ui.ctx && myGroup(ui.ctx) && !groups.some(function(g){ return g.id === ui.ctx; })) groups.unshift(myGroup(ui.ctx));
   groups.forEach(function(g){
     if (seen[g.id]) return;
     seen[g.id] = true;
     list.push({ key:"g:"+g.id, name:g.name || L("กลุ่ม"), kind:(g.snap && g.snap.kind) || g.kind || "meal",
-                split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", tag:"group" });
+                href:groupOpenHref(g), tag:"group" });
   });
   // v4.15: บิลในประวัติที่ยังโอนไม่ครบ = ยังไม่ปิด (ผลจำไว้ต่อรายการ ข้อมูลในประวัติไม่เปลี่ยน)
   var cut = Date.now() - HOME_GROUP_DAYS * 864e5;
@@ -94,7 +94,7 @@ function openBills(){
     if ((h.at || 0) < cut) return;
     if (!(h.id in ui.histDone)){ try { ui.histDone[h.id] = billDone(h.data); } catch(e){ ui.histDone[h.id] = true; } }
     if (ui.histDone[h.id]) return;
-    list.push({ key:"h:"+h.id, name:h.name, kind:normalizeBill(h.data).kind, split:"#/h/"+h.id, bill:"#/h/"+h.id, tag:"history" });
+    list.push({ key:"h:"+h.id, name:h.name, kind:normalizeBill(h.data).kind, href:"#/h/"+h.id, tag:"history" });
   });
   return list;
 }
@@ -110,7 +110,6 @@ function openBillsHTML(path){
   var bills = openBills();
   var label = '<div class="sn-label">'+(bills.length ? L("บิลที่เปิดอยู่ ({n})", { n:bills.length }) : L("บิลที่เปิดอยู่"))+'</div>';
   if (!bills.length) return label;
-  var toBill = path === "/bill" || path === "/h";
   var cur = currentBillKey(path);
   ui.snFold = ui.snFold || {};
   return label+'<div class="sn-open">'+["meal", "trip"].map(function(kind){
@@ -124,7 +123,7 @@ function openBillsHTML(path){
         '<span class="sn-caret" aria-hidden="true">▾</span></button>'+
       '<div class="sn-bills" role="group" aria-label="'+esc(ktOf(kind, "name"))+'"'+(open ? '' : ' hidden')+'>'+mine.map(function(b){
         var on = b.key === cur;
-        return '<a class="sn-bill'+(on ? ' on' : '')+'" href="'+(toBill ? b.bill : b.split)+'"'+(on ? ' aria-current="true"' : '')+' title="'+esc(b.name)+'">'+
+        return '<a class="sn-bill'+(on ? ' on' : '')+'" href="'+b.href+'"'+(on ? ' aria-current="true"' : '')+' title="'+esc(b.name)+'">'+
           '<span class="ico" aria-hidden="true">'+ktOf(b.kind, "icon")+'</span>'+
           '<span class="sn-bill-name">'+esc(b.name)+'</span>'+
           (b.tag === "group" ? '<span class="sn-bill-tag" aria-label="'+L("บิลกลุ่ม")+'">'+ICON_USERS+'</span>'
@@ -238,7 +237,7 @@ function activeCardWide(saved, o){
           (payerNames.length ? '<span class="muted">'+L("{name} จ่ายให้ร้านไปก่อน", { name:esc(payerNames.join(", ")) })+'</span>' : '')+'</div>'+
         '<div class="progress"><i style="width:'+Math.round(prog.done / prog.total * 100)+'%"></i></div>'
       : '<div class="w-active-prog"><span class="muted">'+(b.kind === "trip" ? L("ใส่คนจ่ายของแต่ละรายการ แล้วจะสรุปว่าใครโอนให้ใคร") : L("เลือกคนจ่ายให้ร้านในใบสรุปยอด แล้วจะสรุปว่าใครโอนให้ใคร"))+'</span></div>')+
-    '<div class="btn-pair"><a class="btn-main" href="'+c.split+'">'+L("ทำต่อ")+'</a><a class="btn-line" href="'+c.bill+'">'+L("ใบสรุปยอด")+'</a></div>'+
+    '<a class="btn-main btn-block" href="'+c.open+'">'+openLabel(c.ready)+'</a>'+   // v4.16: ปุ่มเดียว ไปตามกฎ billReady()
   '</section>';
 }
 /** ยังไม่มีบิลที่กำลังหาร — แนะนำแอปแทน */
@@ -256,7 +255,7 @@ function emptyCardWide(){
 function billEntries(){
   var groups = ui.myGroups.map(function(g){
     return { id:"g:"+g.id, group:g, kind:"group", icon:ktOf(g.kind,"icon"), name:g.name, at:g.at || 0,
-      tag:g.done ? L("เสร็จแล้ว") : L("บิลกลุ่ม"), sub:g.at ? L("เปิดล่าสุด {date}", { date:shortDate(g.at) }) : "", amt:"", href:"#/g/"+g.id };
+      tag:g.done ? L("เสร็จแล้ว") : L("บิลกลุ่ม"), sub:g.at ? L("เปิดล่าสุด {date}", { date:shortDate(g.at) }) : "", amt:"", href:groupOpenHref(g) };
   });
   var hist = ui.history.map(function(h){
     var b = normalizeBill(h.data);

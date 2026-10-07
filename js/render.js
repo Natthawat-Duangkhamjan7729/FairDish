@@ -119,9 +119,11 @@ function renderStepTabs(){
     var c = document.getElementById("count-"+st.id);
     if (c) c.textContent = (!ui.loading && counts[st.id]) ? counts[st.id] : "";
   });
+  // v4.16: ปุ่มไปขั้นถัดไปท้ายทุกขั้น (เดิมมีแค่จากขั้นคน ตอนยังไม่มีเมนู)
   var next = document.getElementById("memberNext");
-  if (next) next.innerHTML = (!ui.loading && state.members.length && !state.menus.length)
-    ? '<button class="add-slot" data-step="menus" style="margin-top:var(--s4)">'+kt("next")+'</button>' : "";
+  if (next) next.innerHTML = stepNextHTML("members");
+  var mnext = document.getElementById("menuNext");
+  if (mnext) mnext.innerHTML = state.menuForm ? "" : stepNextHTML("menus");
   var hint = document.getElementById("menuNoMembers");
   if (hint) hint.innerHTML = (!ui.loading && !state.members.length)
     ? '<div class="notice info" style="margin:0 0 var(--s3)"><p>'+L("ยังไม่มีใครในบิลนี้ ใส่ชื่อก่อน แล้วค่อยเลือกว่าใครมีส่วนในรายการไหน")+'</p>'+
