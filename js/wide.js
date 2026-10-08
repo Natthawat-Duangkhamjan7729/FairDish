@@ -83,18 +83,18 @@ function navOpenBills(){
   // v4.15: บิลที่ติ๊กโอนครบแล้ว (จบแล้ว) ไม่อยู่ในแถบซ้าย
   if (billHasData(local) && !billDone(local) && !groups.some(function(g){ return sameBillContent(local, snapOf(g)); })){
     var lb = normalizeBill(local);
-    list.push({ key:"local", name:savedBillName(local), icon:ktOf(lb.kind, "icon"), split:"#/split", bill:"#/bill",
+    list.push({ key:"local", name:savedBillName(local), icon:kindIconHTML(lb.kind), split:"#/split", bill:"#/bill",
       paid:paidTextOf(local), current:ui.ctx === null });
   }
   groups.forEach(function(g){
     var data = snapOf(g);
     if (!billHasData(data) || billDone(data)) return;
-    list.push({ key:g.id, name:(live && ui.ctx === g.id && Store.groupName) || g.name, icon:ktOf(normalizeBill(data).kind, "icon"),
+    list.push({ key:g.id, name:(live && ui.ctx === g.id && Store.groupName) || g.name, icon:kindIconHTML(normalizeBill(data).kind),
       split:"#/g/"+g.id, bill:"#/g/"+g.id+"/bill", paid:paidTextOf(data), current:ui.ctx === g.id, group:true });
   });
   // v4.15: บิลในประวัติที่ยังไม่จบ (ยังโอนไม่ครบ) ก็นับว่าเปิดค้างอยู่ — กดแล้วสลับมาเป็นบิลที่ทำอยู่ (บิลเดิมเข้าประวัติแทน)
   ui.history.filter(function(h){ return !billDone(h.data); }).slice(0, NAV_HIST_MAX).forEach(function(h){
-    list.push({ key:h.id, name:h.name, icon:ktOf(normalizeBill(h.data).kind, "icon"), hist:true, paid:paidTextOf(h.data) });
+    list.push({ key:h.id, name:h.name, icon:kindIconHTML(normalizeBill(h.data).kind), hist:true, paid:paidTextOf(h.data) });
   });
   return list;
 }
@@ -148,34 +148,37 @@ async function sideInvite(){
    หน้าแนะนำ (หน้าเดียว)
    ========================================================= */
 function pageOnboardWide(){
+  var d = demoSummary(), dish = d.menu("ลาบหมู");   // งาน 3.1: ตัวเลขในภาพคำนวณจากบิลตัวอย่าง
+  function who(n){ return d.bill.members.filter(function(x){ return x.name === L(n); })[0]; }
   return '<div class="w-onb">'+
     '<div class="w-onb-art" aria-hidden="true">'+
       '<i class="w-onb-sun"></i><i class="w-onb-ring"></i>'+
       '<span class="w-onb-brand"><img src="img/logo.png" alt="" width="40" height="40"><b>FairDish</b></span>'+
       '<img class="w-onb-mascot" src="img/mascot.png" alt="" width="480" height="480">'+
       '<div class="w-onb-receipt"><span class="w-onb-tag">'+L("ใบสรุปยอด")+'</span>'+
-        '<div><span>มาร์ค</span><span class="mono">151.67</span></div><div><span>ไอซ์</span><span class="mono">250.00</span></div>'+
-        '<div class="tot"><span>'+L("รวมทั้งหมด")+'</span><span class="mono">1,110.00 ฿</span></div></div>'+
-      '<div class="w-onb-dish"><div class="top"><b>ลาบหมู</b><span class="mono">80.00</span></div>'+
-        '<div class="chips"><span class="on">มาร์ค</span><span class="on">พูม</span><span>ยูกะ</span></div>'+
-        '<p>'+L("หาร {n} คน · คนละ {amt} บาท", { n:4, amt:"20.00" })+'</p></div>'+
+        ["มาร์ค","ไอซ์"].map(function(n){ return '<div><span>'+esc(L(n))+'</span><span class="mono">'+baht(d.by[L(n)].rounded)+'</span></div>'; }).join("")+
+        '<div class="tot"><span>'+L("รวมทั้งหมด")+'</span><span class="mono">'+baht(d.r.grand)+' ฿</span></div></div>'+
+      '<div class="w-onb-dish"><div class="top"><b>'+esc(dish.name)+'</b><span class="mono">'+baht(dish.price)+'</span></div>'+
+        '<div class="chips">'+["มาร์ค","พูม","ยูกะ","ไอซ์","โม"].map(function(n){ var p = who(n);
+          return '<span'+(dish.eaters.indexOf(p.id) >= 0 ? ' class="on"' : '')+'>'+esc(p.name)+'</span>'; }).join("")+'</div>'+
+        '<p>'+L("หาร {n} คน · คนละ {amt} บาท", { n:dish.eaters.length, amt:baht(dish.price / dish.eaters.length) })+'</p></div>'+
     '</div>'+
     '<div class="w-onb-text">'+
       '<div class="w-onb-top">'+langSwitch()+'<button class="link-btn" type="button" data-onb-skip="1">'+L("ข้าม")+'</button></div>'+
       '<div class="w-onb-main">'+
-        '<p class="eyebrow">'+L("หารบิลให้สนุกขึ้นอีกนิด")+'</p>'+
-        '<h1>'+L("จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์")+'</h1>'+
-        '<p class="w-onb-lead">'+L("FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปออกมาเป็นบิลรายคนที่ส่งเข้ากลุ่มได้ทันที")+'</p>'+
+        '<p class="eyebrow">'+L("หารค่าอาหารและค่าทริปกับเพื่อน")+'</p>'+
+        '<h1>'+L("จ่ายเฉพาะเมนูที่คุณกิน")+'</h1>'+
+        '<p class="w-onb-lead">'+L("สำหรับเพื่อนที่กินข้าวหรือเที่ยวด้วยกัน ใส่ว่าใครกินอะไร แล้วรู้ทันทีว่าใครต้องโอนให้ใคร")+'</p>'+
         '<div class="w-onb-steps">'+
           '<div class="w-onb-step"><span class="num">1</span><div><b>'+L("หารเฉพาะคนที่กินจานนั้น")+'</b>'+
-            '<p>'+L("แตะชื่อคนที่กินจานนั้น ระบบหารเฉพาะคนที่แตะไว้ ไม่ใช่ทั้งโต๊ะ ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน")+'</p></div></div>'+
-          '<div class="w-onb-step"><span class="num">2</span><div><b>'+L("ส่งลิงก์ให้เพื่อนกดยืนยันเมนูเอง")+'</b>'+
-            '<p>'+L("เพื่อนเปิดลิงก์ เลือกชื่อตัวเอง แล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตให้ทันที")+'</p></div></div>'+
+            '<p>'+L("แตะชื่อคนที่กินแต่ละจาน ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน")+'</p></div></div>'+
+          '<div class="w-onb-step"><span class="num">2</span><div><b>'+L("ให้เพื่อนยืนยันเมนูเอง")+'</b>'+
+            '<p>'+L("เพื่อนเปิดลิงก์หรือสแกน QR แล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตภายใน 3 วินาที")+'</p></div></div>'+
         '</div>'+
       '</div>'+
       '<div class="w-onb-actions">'+
         '<div class="w-onb-btns"><button class="btn-main" type="button" data-onb-start="1">'+L("เริ่มใช้งาน")+'</button>'+
-          '<button class="btn-line" type="button" data-onb-demo="1">'+L("ลองกับข้อมูลตัวอย่าง")+'</button></div>'+
+          '<button class="btn-line" type="button" data-onb-demo="1">'+L("ดูบิลตัวอย่าง 8 คน")+'</button></div>'+
         '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
       '</div>'+
     '</div>'+
@@ -195,9 +198,9 @@ function pageHomeWide(){
       '<section class="w-start" aria-labelledby="h-w-start">'+
         '<div class="w-mascot-card"><img src="img/mascot.png" alt="" width="88" height="88">'+
           '<div><b id="h-w-start">'+L("เริ่มบิลใหม่")+'</b><span>'+L("ใส่ชื่อ ใส่เมนู แล้วส่งยอดเข้ากลุ่ม")+'</span></div></div>'+
-        '<button class="kind-card meal" type="button" data-new-kind="meal"><span class="kind-ico" aria-hidden="true">🍲</span>'+
+        '<button class="kind-card meal" type="button" data-new-kind="meal"><span class="kind-ico" aria-hidden="true">'+kindIconHTML("meal")+'</span>'+
           '<span class="kind-text"><b>'+L("มื้ออาหาร")+'</b><span>'+L("หารตามเมนูที่กิน มีค่าบริการ/VAT")+'</span></span>'+kbd("M")+'</button>'+
-        '<button class="kind-card trip" type="button" data-new-kind="trip"><span class="kind-ico" aria-hidden="true">✈️</span>'+
+        '<button class="kind-card trip" type="button" data-new-kind="trip"><span class="kind-ico" aria-hidden="true">'+kindIconHTML("trip")+'</span>'+
           '<span class="kind-text"><b>'+L("ทริป")+'</b><span>'+L("ระบุคนจ่ายแต่ละรายการ แล้วสรุปว่าใครโอนให้ใคร")+'</span></span>'+kbd("T")+'</button>'+
         tripGroupCard()+
       '</section>'+
@@ -221,7 +224,7 @@ function activeCardWide(saved, o, open){
   return '<section class="w-active'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
     '<div class="active-top">'+statusBadge(prog && prog.all, open)+
       '<span class="active-meta">'+(c.group ? L("บิลกลุ่ม")+' · ' : '')+L("{n} คน · {k} {items}", { n:b.members.length, k:b.menus.length, items:ktOf(b.kind,"items") })+'</span></div>'+
-    '<div class="w-active-mid"><div class="w-active-sum"><h2 id="'+c.hid+'">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
+    '<div class="w-active-mid"><div class="w-active-sum"><h2 id="'+c.hid+'">'+kindIconHTML(b.kind)+' '+esc(c.name)+'</h2>'+
       '<div class="w-active-amt mono">'+baht(r.grand)+' <span>฿</span></div></div>'+
       '<div class="w-avs" aria-label="'+L("{n} คน", { n:b.members.length })+'">'+avs+'</div></div>'+
     (prog && prog.total
@@ -229,18 +232,20 @@ function activeCardWide(saved, o, open){
           (payerNames.length ? '<span class="muted">'+L("{name} จ่ายให้ร้านไปก่อน", { name:esc(payerNames.join(", ")) })+'</span>' : '')+'</div>'+
         '<div class="progress"><i style="width:'+Math.round(prog.done / prog.total * 100)+'%"></i></div>'
       : '<div class="w-active-prog"><span class="muted">'+(b.kind === "trip" ? L("ใส่คนจ่ายของแต่ละรายการ แล้วจะสรุปว่าใครโอนให้ใคร") : L("เลือกคนจ่ายให้ร้านในใบสรุปยอด แล้วจะสรุปว่าใครโอนให้ใคร"))+'</span></div>')+
-    '<div class="btn-pair"><a class="btn-main" href="'+c.split+'">'+L("ทำต่อ")+'</a><a class="btn-line" href="'+c.bill+'">'+L("ใบสรุปยอด")+'</a></div>'+
+    '<div class="btn-pair"><a class="btn-main" href="'+c.split+'">'+L("หารบิลต่อ")+'</a><a class="btn-line" href="'+c.bill+'">'+L("ดูใบสรุปยอด")+'</a></div>'+
   '</section>';
 }
 /** ยังไม่มีบิลที่กำลังหาร — แนะนำแอปแทน */
 function emptyCardWide(){
-  return '<section class="w-active w-welcome" aria-labelledby="h-welcome">'+
-    '<p class="eyebrow">'+L("หารบิลให้สนุกขึ้นอีกนิด")+'</p>'+
-    '<h2 id="h-welcome">'+L("จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์")+'</h2>'+
-    '<p class="muted">'+L("FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปว่าใครต้องโอนให้ใคร ส่งเข้ากลุ่มได้ทันที")+'</p>'+
-    '<div class="btn-pair"><button class="btn-line" type="button" data-start-demo="1">'+L("ลองกับข้อมูลตัวอย่าง")+'</button>'+
+  // งาน 1.5: ข้อความชิดซ้ายคู่กับใบสรุปยอดจริงของระบบ (demoReceiptHTML ตรงกับบิลตัวอย่าง)
+  return '<section class="w-active w-welcome" aria-labelledby="h-welcome"><div class="w-welcome-text">'+
+    '<p class="eyebrow">'+L("หารค่าอาหารและค่าทริปกับเพื่อน")+'</p>'+
+    '<h2 id="h-welcome">'+L("จ่ายเฉพาะเมนูที่คุณกิน")+'</h2>'+
+    '<p class="muted">'+L("สำหรับเพื่อนที่กินข้าวหรือเที่ยวด้วยกัน ใส่ว่าใครกินอะไร แล้วรู้ทันทีว่าใครต้องโอนให้ใคร")+'</p>'+
+    '<div class="btn-pair"><button class="btn-line" type="button" data-start-demo="1">'+L("ดูบิลตัวอย่าง 8 คน")+'</button>'+
       '<a class="btn-line" href="#/how">'+L("ดูวิธีใช้")+'</a></div>'+
-    '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
+    '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p></div>'+
+    '<div class="w-welcome-shot" aria-hidden="true">'+demoReceiptHTML()+'</div>'+
   '</section>';
 }
 /** บิลล่าสุด/ประวัติ เป็นข้อมูล (ใช้ทำการ์ดในหน้าแรกและรายการในหน้าประวัติ) */
@@ -264,7 +269,7 @@ function recentCardsWide(skip){
   return '<div class="list-title"><h2>'+L("บิลล่าสุด")+'</h2><a class="link-btn" href="#/history">'+L("ดูทั้งหมด ›")+'</a></div>'+
     '<div class="w-recent">'+list.map(function(x){
       return '<a class="w-recent-card" href="'+x.href+'">'+
-        '<span class="top"><span class="ico" aria-hidden="true">'+x.icon+'</span><span class="tag tag-'+x.kind+'">'+esc(x.tag)+'</span></span>'+
+        '<span class="top"><span class="ico" aria-hidden="true">'+kindIconHTML(x.group ? x.group.kind : x.kind)+'</span><span class="tag tag-'+x.kind+'">'+esc(x.tag)+'</span></span>'+
         '<b>'+esc(x.name)+'</b>'+
         '<span class="bottom"><span>'+esc(x.sub)+'</span><span class="mono">'+x.amt+'</span></span></a>';
     }).join("")+'</div>';
@@ -444,7 +449,7 @@ function wsMenuCard(m, trip){
   var all = state.members.length > 0 && known.length === state.members.length;
   var dim = ui.wsFocus && known.indexOf(ui.wsFocus) < 0;
   var unpaid = trip && !knownPayers(m).length;
-  var note = !known.length ? ['warn', L("ยังไม่มีใครมีส่วน — ลากชื่อมาวางหรือแตะชื่อด้านล่าง")]
+  var note = !known.length ? ['warn', L("ยังไม่มีใครมีส่วน ลากชื่อมาวางหรือแตะชื่อด้านล่าง")]
     : (unpaid ? ['warn', L("ยังไม่เลือกคนจ่าย")]
     : ['ok', all ? L("หารทุกคน · คนละ {amt} บาท", { amt:baht(m.price / known.length) })
                  : L("หาร {n} คน · คนละ {amt} บาท", { n:known.length, amt:baht(m.price / known.length) })]);
@@ -711,7 +716,7 @@ function pageShareWide(){
                 avatarHTML(x.name, memberIndex(x.id))+'<b>'+esc(x.name)+(x.id === me ? ' <span class="me-tag">'+L("ฉัน")+'</span>' : '')+'</b>'+
                 '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+L(b[1])+'</span></button>';
             }).join("")
-          : '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
+          : '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
       '</section>'+
       '<section class="w-preview" aria-labelledby="h-w-prev">'+(trip ? tripSharePreviewHTML() : sharePreviewHTML(pick))+'</section>'+
     '</div>'+
@@ -810,7 +815,7 @@ function renderHistoryWide(){
     byMonth[key].push(x);
   });
   list.innerHTML = !d.any
-    ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'
+    ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'+'<div class="btn-row" style="margin-top:var(--s3)"><button class="btn-main" type="button" data-open-kind="1" aria-haspopup="dialog">'+L("เริ่มบิลใหม่")+'</button></div>'   // งาน 3.3: ปุ่มพาไปทำสิ่งแรก
     : (!all.length ? '<p class="w-empty-search">'+L("ไม่พบบิลที่ค้นหา")+'</p>'
       : (d.open.length ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+d.open.map(histRowHTML).join("") : '')+
         (d.groups.length ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+d.groups.map(histRowHTML).join("") : '')+
@@ -819,7 +824,8 @@ function renderHistoryWide(){
     b.setAttribute("aria-pressed", String(b.getAttribute("data-hist-filter") === (ui.histFilter || "all")));
   });
   var x = all.filter(function(it){ return it.id === ui.histSel; })[0];
-  if (!x){ detail.innerHTML = '<div class="w-hist-none"><img src="img/mascot.png" alt="" width="120" height="120"><p>'+L("เลือกบิลทางซ้ายเพื่อดูใบสรุปยอด")+'</p></div>'; return; }
+  // งาน 3.3: ยังไม่มีบิลเลย = บอกว่าแผงนี้จะแสดงอะไร (เดิมบอกให้เลือกบิลทั้งที่ทางซ้ายว่าง)
+  if (!x){ detail.innerHTML = '<div class="w-hist-none"><img src="img/mascot.png" alt="" width="120" height="120"><p>'+(d.any ? L("เลือกบิลทางซ้ายเพื่อดูใบสรุปยอด") : L("บิลที่เก็บไว้จะแสดงใบสรุปยอดตรงนี้"))+'</p></div>'; return; }
   if (x.group){
     detail.innerHTML = '<div class="w-hist-inner"><div class="w-card w-group-card"><span class="ico" aria-hidden="true">'+x.icon+'</span>'+
       '<h2>'+esc(x.name)+'</h2><p class="muted"><span class="tag-group">'+ICON_USERS+' '+L("บิลกลุ่ม")+'</span>'+(x.sub ? ' · '+esc(x.sub) : '')+'</p>'+

@@ -79,21 +79,17 @@ function pageHome(){
 }
 /** แนะนำแอปสำหรับคนที่เพิ่งเปิดครั้งแรก (ยังไม่มีบิลเลย) */
 function homeIntroHTML(){
+  // งาน 1.5: ข้อความชิดซ้ายมาก่อน แล้วตามด้วยใบสรุปยอดจริงของระบบ (เอาก้อนสีตกแต่งออก)
   return '<section class="intro" aria-labelledby="h-intro">'+
-    '<div class="intro-art">'+
-      '<span class="blob purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v6a3 3 0 0 0 6 0V3M10 12v9M17 3v18M17 3c-2 1-3 4-3 7h3"/></svg></span>'+
-      '<span class="blob coral" aria-hidden="true">&#247;</span>'+
-      '<span class="blob mint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>'+
-      demoReceiptHTML()+
-    '</div>'+
-    '<p class="eyebrow">'+L("หารบิลให้สนุกขึ้นอีกนิด")+'</p>'+
-    '<h2 id="h-intro" class="intro-title">'+L("จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์")+'</h2>'+
-    '<p class="intro-body">'+L("FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปว่าใครต้องโอนให้ใคร ส่งเข้ากลุ่มได้ทันที")+'</p>'+
+    '<p class="eyebrow">'+L("หารค่าอาหารและค่าทริปกับเพื่อน")+'</p>'+
+    '<h2 id="h-intro" class="intro-title">'+L("จ่ายเฉพาะเมนูที่คุณกิน")+'</h2>'+
+    '<p class="intro-body">'+L("สำหรับเพื่อนที่กินข้าวหรือเที่ยวด้วยกัน ใส่ว่าใครกินอะไร แล้วรู้ทันทีว่าใครต้องโอนให้ใคร")+'</p>'+
     '<div class="btn-stack">'+
-      '<button class="btn-line btn-block" type="button" data-start-demo="1">'+L("ลองกับข้อมูลตัวอย่าง")+'</button>'+
-      '<a class="link-btn center" href="#/how">'+L("ดูวิธีใช้")+'</a>'+
+      '<button class="btn-line btn-block" type="button" data-start-demo="1">'+L("ดูบิลตัวอย่าง 8 คน")+'</button>'+
+      '<a class="link-btn" href="#/how">'+L("ดูวิธีใช้")+'</a>'+
     '</div>'+
     '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
+    '<div class="intro-art">'+demoReceiptHTML()+'</div>'+
   '</section>';
 }
 /** v4.10: บิลเสร็จแล้ว = มีคนต้องโอน และติ๊กว่าโอนครบทุกคนแล้ว */
@@ -150,12 +146,12 @@ function activeBillHTML(saved, o, open){
     : '';
   return '<section class="active-card'+(prog && prog.all ? ' done' : '')+'" aria-labelledby="'+c.hid+'">'+
     '<div class="active-top">'+statusBadge(prog && prog.all, open)+'<span class="active-meta">'+meta+'</span></div>'+
-    '<h2 id="'+c.hid+'" class="active-name">'+ktOf(b.kind,"icon")+' '+esc(c.name)+'</h2>'+
+    '<h2 id="'+c.hid+'" class="active-name">'+kindIconHTML(b.kind)+' '+esc(c.name)+'</h2>'+
     '<div class="active-sum">'+baht(r.grand)+' ฿</div>'+
     progress+
     '<div class="btn-pair">'+
-      '<a class="btn-main" href="'+c.split+'">'+L("ทำต่อ")+'</a>'+
-      '<a class="btn-line" href="'+c.bill+'">'+L("ใบสรุปยอด")+'</a>'+
+      '<a class="btn-main" href="'+c.split+'">'+L("หารบิลต่อ")+'</a>'+
+      '<a class="btn-line" href="'+c.bill+'">'+L("ดูใบสรุปยอด")+'</a>'+
     '</div>'+
   '</section>';
 }
@@ -166,20 +162,21 @@ function billRow(href, name, sub, amount){
     (amount ? '<span class="list-amt">'+amount+'</span>' : '')+
     '<span class="list-go">'+ICON_CHEVRON+'</span></a>';
 }
-function historyRowHTML(h){
+/** svg === true = ไอคอน SVG (บิลล่าสุดในหน้าแรก งาน 1.5) · ไม่ส่ง = อีโมจิเดิม (หน้าประวัติ — map() ส่ง index มาเป็นอาร์กิวเมนต์ที่สอง จึงเช็ก === true) */
+function historyRowHTML(h, svg){
   var b = normalizeBill(h.data);
-  return billRow('#/h/'+esc(h.id), ktOf(b.kind,"icon")+' '+esc(h.name),
+  return billRow('#/h/'+esc(h.id), (svg === true ? kindIconHTML(b.kind) : ktOf(b.kind,"icon"))+' '+esc(h.name),
     L("{date} · {n} คน", { date:esc(shortDate(h.at)), n:b.members.length }), baht(computeBill(b).grand));
 }
-function groupRowHTML(g){
-  return billRow('#/g/'+esc(g.id), ktOf(g.kind,"icon")+' '+esc(g.name),
+function groupRowHTML(g, svg){
+  return billRow('#/g/'+esc(g.id), (svg === true ? kindIconHTML(g.kind) : ktOf(g.kind,"icon"))+' '+esc(g.name),
     '<span class="tag-group">'+ICON_USERS+' '+L("บิลกลุ่ม")+'</span>'+(g.done ? ' · '+L("เสร็จแล้ว") : '')+
     (g.at ? ' · '+L("เปิดล่าสุด {date}", { date:esc(shortDate(g.at)) }) : ''), '');
 }
 /** บิลล่าสุด = กลุ่มที่เคยเปิด + บิลในประวัติ เรียงตามเวลา (skip = กลุ่มที่ขึ้นเป็นการ์ดด้านบนแล้ว) */
 function recentItems(skip){
-  var list = ui.myGroups.filter(function(g){ return !(skip && skip[g.id]); }).map(function(g){ return { at:g.at || 0, html:groupRowHTML(g) }; })
-    .concat(ui.history.map(function(h){ return { at:h.at || 0, html:historyRowHTML(h) }; }));
+  var list = ui.myGroups.filter(function(g){ return !(skip && skip[g.id]); }).map(function(g){ return { at:g.at || 0, html:groupRowHTML(g, true) }; })
+    .concat(ui.history.map(function(h){ return { at:h.at || 0, html:historyRowHTML(h, true) }; }));
   list.sort(function(a,b){ return b.at - a.at; });
   return list;
 }
@@ -349,7 +346,7 @@ function pageHistory(){
   var empty = !ui.myGroups.length && !ui.history.length && !cur;
   return appBar({ title:L("ประวัติบิล"), right:settingsLink() })+
     '<div class="page">'+
-      (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ — กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>' : '')+
+      (empty ? '<p class="empty">'+L("ยังไม่มีบิลในประวัติ กด \"เริ่มบิลใหม่\" แล้วบิลเดิมจะถูกเก็บไว้ตรงนี้")+'</p>'+'<div class="btn-row" style="margin-top:var(--s3)"><button class="btn-main" type="button" data-open-kind="1" aria-haspopup="dialog">'+L("เริ่มบิลใหม่")+'</button></div>' : '')+   // งาน 3.3: ปุ่มพาไปทำสิ่งแรก
       (open ? '<h2 class="list-head">'+L("บิลที่เปิดอยู่")+'</h2>'+'<div class="list-wrap">'+open+
         '<button class="icon-btn list-x" type="button" data-del-local="1" aria-label="'+L("ลบบิลนี้")+'">'+ICON_X+'</button></div>' : '')+
       (groups ? '<h2 class="list-head">'+L("กลุ่มของฉัน")+'</h2>'+groups : '')+
@@ -433,23 +430,9 @@ function pageHow(){
       '<div class="stp"><b>1</b><h3>'+L("ใครกินบ้าง")+'</h3><p>'+L("พิมพ์ชื่อทุกคนที่ร่วมโต๊ะ กดเพิ่มทีละคน ชื่อเล่นสั้น ๆ อ่านง่ายที่สุดตอนดูบิล")+'</p></div>'+
       '<div class="stp"><b>2</b><h3>'+L("รายการอาหาร")+'</h3><p>'+L("ใส่ชื่อเมนูกับราคาต่อจาน แล้วแตะเลือกคนที่กินจานนั้น ถ้าทั้งโต๊ะกินกดปุ่มทุกคนได้เลย")+'</p></div>'+
       '<div class="stp"><b>3</b><h3>'+L("ค่าส่วนกลาง")+'</h3><p>'+L("เปิดค่าบริการหรือ VAT ตามที่ร้านคิด ส่วนน้ำเปล่า น้ำแข็ง ข้าวเหนียว ใส่เป็นรายการหารเท่ากัน")+'</p></div>'+
-      '<div class="stp"><b>4</b><h3>'+L("สรุปยอด")+'</h3><p>'+L("เลือกว่าใครจ่ายให้ร้าน แล้วรู้เลยว่าใครต้องโอนให้ใคร ติ๊กเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p></div>'+
+      '<div class="stp"><b>4</b><h3>'+L("ใบสรุปยอด")+'</h3><p>'+L("เลือกว่าใครจ่ายให้ร้าน แล้วรู้เลยว่าใครต้องโอนให้ใคร ติ๊กชื่อเมื่อโอนแล้ว")+'</p></div>'+
     '</div>'+
-    '<section><div class="sec-head"><h2>'+L("บิลใบเดียวกัน สองวิธีคิด")+'</h2>'+
-      '<p>'+L("มื้ออีสานร้านหน้ามอ: 8 คน 10 เมนู รวมข้าวเหนียวกับน้ำ 1,110 บาท")+'</p></div>'+
-      '<div class="compare">'+
-        '<div class="cmp bad"><h3>'+L("หารเท่ากันทั้งโต๊ะ")+'</h3><div class="tag">'+L("1,110 ÷ 8 = ทุกคนจ่ายเท่ากัน")+'</div>'+
-          '<ul><li><span>'+L("โฟรค์ — กิน 2 เมนู")+'</span><span>138.75</span></li>'+
-          '<li><span>'+L("ยูกะ — ไม่กินเผ็ด 3 เมนู")+'</span><span>138.75</span></li>'+
-          '<li><span>'+L("ไอซ์ — กิน 6 เมนู มีซอยจุ๊")+'</span><span>138.75</span></li></ul>'+
-          '<p class="foot">'+L("โฟรค์จ่ายเกินไป 77.09 บาท ส่วนไอซ์จ่ายขาดไป 111.25 บาท ทั้งที่ไม่มีใครตั้งใจเอาเปรียบกัน")+'</p></div>'+
-        '<div class="cmp good"><h3>'+L("หารด้วย FairDish")+'</h3><div class="tag">'+L("คิดจากเมนูที่แต่ละคนกินจริง")+'</div>'+
-          '<ul><li><span>'+L("โฟรค์ — กิน 2 เมนู")+'</span><span>61.66</span></li>'+
-          '<li><span>'+L("ยูกะ — ไม่กินเผ็ด 3 เมนู")+'</span><span>121.67</span></li>'+
-          '<li><span>'+L("ไอซ์ — กิน 6 เมนู มีซอยจุ๊")+'</span><span>250.00</span></li></ul>'+
-          '<p class="foot">'+L("ยอดรายคนรวมกันได้ 1,110.00 บาทพอดี ไม่มีเศษสตางค์หาย และทุกคนกดดูได้ว่ายอดของตัวเองมาจากเมนูไหน")+'</p></div>'+
-      '</div>'+
-    '</section>'+
+    howCompareHTML()+
     '<section><div class="sec-head"><h2>'+L("สามคำถามที่ถูกถามบ่อย")+'</h2></div>'+
       '<div class="split2">'+
         '<div class="panel"><h3>'+L("เศษสตางค์หายไปไหน")+'</h3><p>'+L("ไม่หาย FairDish กระจายเศษสตางค์ให้ยอดรายคนรวมกันเท่ากับยอดบิลเป๊ะเสมอ ไม่ต้องมีใครควักเพิ่มทีหลัง")+'</p></div>'+
@@ -463,6 +446,30 @@ function pageHow(){
   '</div>';
 }
 
+/** งาน 3.1: "บิลใบเดียวกัน สองวิธีคิด" — ทุกตัวเลขคำนวณจากบิลตัวอย่าง (demoSummary) ด้วย computeBill() */
+function howCompareHTML(){
+  var d = demoSummary(), r = d.r, n = r.n;
+  var equal = Math.round(r.grand / n * 100) / 100;
+  var fork = d.by[L("โฟรค์")], yuka = d.by[L("ยูกะ")], ice = d.by[L("ไอซ์")];
+  var labels = [
+    L("{name} กิน {n} เมนู", { name:esc(fork.name), n:fork.items.length }),
+    L("{name} ไม่กินเผ็ด {n} เมนู", { name:esc(yuka.name), n:yuka.items.length }),
+    L("{name} กิน {n} เมนู มีซอยจุ๊", { name:esc(ice.name), n:ice.items.length })
+  ];
+  function rows(vals){ return '<ul>'+labels.map(function(t, k){ return '<li><span>'+t+'</span><span>'+baht(vals[k])+'</span></li>'; }).join("")+'</ul>'; }
+  return '<section><div class="sec-head"><h2>'+L("บิลใบเดียวกัน สองวิธีคิด")+'</h2>'+
+      '<p>'+L("มื้ออีสานร้านหน้ามอ: {n} คน {k} เมนู รวมข้าวเหนียวกับน้ำ {total} บาท", { n:n, k:d.bill.menus.length, total:baht(r.grand) })+'</p></div>'+
+      '<div class="compare">'+
+        '<div class="cmp bad"><h3>'+L("หารเท่ากันทั้งโต๊ะ")+'</h3><div class="tag">'+L("{total} ÷ {n} = ทุกคนจ่ายเท่ากัน", { total:baht(r.grand), n:n })+'</div>'+
+          rows([equal, equal, equal])+
+          '<p class="foot">'+L("{a}จ่ายเกินไป {over} บาท ส่วน{b}จ่ายขาดไป {short} บาท",
+            { a:esc(fork.name), over:baht(equal - fork.rounded), b:esc(ice.name), short:baht(ice.rounded - equal) })+'</p></div>'+
+        '<div class="cmp good"><h3>'+L("หารด้วย FairDish")+'</h3><div class="tag">'+L("คิดจากเมนูที่แต่ละคนกินจริง")+'</div>'+
+          rows([fork.rounded, yuka.rounded, ice.rounded])+
+          '<p class="foot">'+L("ยอดรายคนรวมกันได้ {total} บาทพอดี ไม่มีเศษสตางค์หาย และทุกคนกดดูได้ว่ายอดของตัวเองมาจากเมนูไหน", { total:baht(r.grand) })+'</p></div>'+
+      '</div>'+
+    '</section>';
+}
 function pageAbout(){
   return appBar({ back:"#/more", title:L("เกี่ยวกับ") })+
     '<div class="page">'+
@@ -482,7 +489,7 @@ function pageAbout(){
       '<p>'+L("FairDish มีผู้ใช้ประเภทเดียว ทุกคนที่เปิดแอปทำสิ่งเดียวกันได้ทั้งหมด จึงไม่มีระบบสมาชิกหรือสิทธิ์แอดมินให้ต้องจำรหัสผ่าน")+'</p></div>'+
       '<ul class="bill-list">'+
         item("✓",L("ใช้ได้ทันทีโดยไม่ต้องล็อกอิน"),L("เปิดแล้วใช้เลย ไม่เก็บข้อมูลส่วนตัว ไม่ต้องรอโหลดบัญชี"))+
-        item("✓",L("บันทึกบิลไว้ในเครื่องให้อัตโนมัติ"),L("แก้อะไรก็บันทึกทันที เริ่มบิลใหม่แล้วบิลเดิมเก็บไว้ในหน้าประวัติ เปิดกลับมาทำต่อได้"))+
+        item("✓",L("บันทึกบิลไว้ในเครื่องให้อัตโนมัติ"),L("เริ่มบิลใหม่แล้วบิลเดิมเก็บไว้ในหน้าประวัติ เปิดกลับมาทำต่อได้"))+
         item("✓",L("เพื่อนยืนยันเมนูเองได้"),L("ส่งลิงก์ให้เพื่อนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตให้ทันที"))+
         item("✓",L("ไม่เก็บเบอร์โทรหรือเลขบัตรประชาชน"),L("FairDish เก็บแค่ชื่อเล่นและรายการในบิล ไม่ขอข้อมูลที่ใช้ระบุตัวตน"))+
         item("—",L("ยังไม่มีบัญชีผู้ใช้"),L("บิลส่วนตัวอยู่ในเครื่องที่ใช้เท่านั้น ถ้าอยากเปิดหลายเครื่องให้ย้ายบิลขึ้นกลุ่ม"))+
@@ -494,35 +501,40 @@ function pageAbout(){
 /* ---------------- v4.1: หน้าแนะนำ 3 หน้า (เปิดครั้งแรกที่หน้าหลัก) ---------------- */
 var ONBOARD_KEY = "fairdish:onboarded:v2";   // v4.4.1: v2 = ทุกคนเห็นหน้าแนะนำแบบใหม่หนึ่งครั้ง (ค่า v1 เดิมไม่ถูกอ่านแล้ว)
 var ONBOARD = [
-  ["หารบิลให้สนุกขึ้นอีกนิด", "จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์",
-   "FairDish คิดค่าอาหารจากเมนูที่แต่ละคนกินจริง บวกค่าส่วนกลางให้อัตโนมัติ แล้วสรุปออกมาเป็นบิลรายคนที่ส่งเข้ากลุ่มได้ทันที"],
+  ["หารค่าอาหารและค่าทริปกับเพื่อน", "จ่ายเฉพาะเมนูที่คุณกิน",
+   "สำหรับเพื่อนที่กินข้าวหรือเที่ยวด้วยกัน ใส่ว่าใครกินอะไร แล้วรู้ทันทีว่าใครต้องโอนให้ใคร"],
   ["เลือกคนที่กินแต่ละเมนู", "หารเฉพาะคนที่กินจานนั้น",
-   "แตะชื่อคนที่กินจานนั้น ระบบหารเฉพาะคนที่แตะไว้ ไม่ใช่ทั้งโต๊ะ ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน"],
-  ["ใหม่ในแอป", "ส่งลิงก์ให้เพื่อนกดยืนยันเมนูเอง",
-   "เพื่อนเปิดลิงก์ เลือกชื่อตัวเอง แล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตให้ทันที"]
+   "แตะชื่อคนที่กินแต่ละจาน ส่วนน้ำแข็ง น้ำเปล่า ข้าวเหนียว หารเท่ากันทุกคน"],
+  ["ไม่ต้องกรอกคนเดียว", "ให้เพื่อนยืนยันเมนูเอง",
+   "เพื่อนเปิดลิงก์หรือสแกน QR แล้วติ๊กเมนูที่กิน ยอดของทุกคนอัปเดตภายใน 3 วินาที"]
 ];
 function onboardArt(i){
+  var d = demoSummary();   // งาน 3.1: ตัวเลขในภาพคำนวณจากบิลตัวอย่าง (ไม่เขียนตายตัว)
   if (i === 0){
-    var rows = [[L("มาร์ค"),"151.67"],[L("ไอซ์"),"250.00"],[L("โฟรค์"),"61.66"]];
+    var rows = ["มาร์ค","ไอซ์","โฟรค์"].map(function(n){ return [esc(L(n)), baht(d.by[L(n)].rounded)]; });
     return '<div class="onb-art onb-art-0">'+
       '<span class="onb-circle sun" aria-hidden="true"></span>'+
       '<span class="blob purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v6a3 3 0 0 0 6 0V3M10 12v9M17 3v18M17 3c-2 1-3 4-3 7h3"/></svg></span>'+
       '<span class="blob coral" aria-hidden="true">&#247;</span>'+
       '<span class="blob mint" aria-hidden="true">'+ICON_CHECK+'</span>'+
       '<div class="receipt-wrap"><div class="receipt">'+
-        '<div class="r-title">'+L("ใบสรุปยอด")+'</div><div class="r-meta">'+L("8 คน · ร้านส้มตำหน้ามอ")+'</div>'+
+        '<div class="r-title">'+L("ใบสรุปยอด")+'</div><div class="r-meta">'+L("{n} คน · {name}", { n:d.r.n, name:esc(d.bill.name) })+'</div>'+
         rows.map(function(r){ return '<div class="r-line"><span class="who">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>'; }).join("")+
-        '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>1,110.00 ฿</span></div>'+
+        '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>'+baht(d.r.grand)+' ฿</span></div>'+
       '</div><div class="receipt-edge"></div></div></div>';
   }
   if (i === 1){
-    var chips = [[L("มาร์ค"),1],[L("พูม"),1],[L("ยูกะ"),0],[L("ไอซ์"),1],[L("โม"),1]];
+    var dish = d.menu("ลาบหมู");
+    var chips = ["มาร์ค","พูม","ยูกะ","ไอซ์","โม"].map(function(n){
+      var p = d.bill.members.filter(function(x){ return x.name === L(n); })[0];
+      return [esc(p.name), dish.eaters.indexOf(p.id) >= 0 ? 1 : 0];
+    });
     return '<div class="onb-art"><span class="onb-circle mint" aria-hidden="true"></span>'+
-      '<div class="onb-card"><div class="onb-dish"><b>'+L("ลาบหมู")+'</b><span class="mono">80.00</span></div>'+
+      '<div class="onb-card"><div class="onb-dish"><b>'+esc(dish.name)+'</b><span class="mono">'+baht(dish.price)+'</span></div>'+
       '<div class="pick" aria-hidden="true"><button class="all" tabindex="-1">'+L("ทุกคน")+'</button>'+chips.map(function(c){
         return '<button tabindex="-1" aria-pressed="'+(c[1] ? "true" : "false")+'">'+c[0]+'</button>';
       }).join("")+'</div>'+
-      '<p class="form-preview">'+L("หาร 4 คน · คนละ 20.00 บาท")+'</p></div></div>';
+      '<p class="form-preview">'+L("หาร {n} คน · คนละ {amt} บาท", { n:dish.eaters.length, amt:baht(dish.price / dish.eaters.length) })+'</p></div></div>';
   }
   var st = [[L("ยูกะ"),"ok",L("ยืนยันแล้ว")],[L("โฟรค์"),"ok",L("ยืนยันแล้ว")],[L("ชาเน่"),"warn",L("รอยืนยัน")]];
   return '<div class="onb-art"><span class="onb-circle lilac" aria-hidden="true"></span>'+
@@ -537,7 +549,7 @@ function pageOnboard(){
       '<button class="link-btn" type="button" data-onb-skip="1">'+L("ข้าม")+'</button></div>'+
     onboardArt(i)+
     '<p class="eyebrow">'+L(o[0])+'</p><h1 class="onb-title">'+L(o[1])+'</h1><p class="onb-body">'+L(o[2])+'</p>'+
-    '<div class="onb-dots" aria-label="'+L("หน้า {i} จาก 3", { i:i+1 })+'">'+[0,1,2].map(function(k){ return '<i'+(k === i ? ' class="on"' : '')+'></i>'; }).join("")+'</div>'+
+    '<div class="onb-dots" role="img" aria-label="'+L("หน้า {i} จาก 3", { i:i+1 })+'">'+[0,1,2].map(function(k){ return '<i'+(k === i ? ' class="on"' : '')+'></i>'; }).join("")+'</div>'+
     '<button class="btn-main btn-block" type="button" data-onb-next="1">'+(i < 2 ? L("ถัดไป") : L("เริ่มใช้งาน"))+'</button>'+
     '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
   '</div>';

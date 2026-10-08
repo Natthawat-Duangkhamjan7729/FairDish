@@ -108,7 +108,7 @@ async function removeMember(id){
 
   clearTimeout(ui.undoTimer);
   ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
-  toast(L("ลบ {name} แล้ว", { name:member.name }),"ok",{ label:L("เลิกทำ"), action:undoRemove });
+  toast(L("ลบ {name} แล้ว", { name:member.name }),"ok",{ label:L("เอาคืน"), action:undoRemove });
 }
 async function undoRemove(){
   if (!ui.undo) return;
@@ -218,7 +218,7 @@ function suggestBoxHTML(found, query, active, prefix, attr){
   var items = found.items;
   var head = String(query||"").trim()
     ? (found.total > items.length
-        ? L("{label} {n} จาก {total} รายการ — พิมพ์ต่อเพื่อกรองให้แคบลง", { label:kt("suggest"), n:items.length, total:found.total })
+        ? L("{label} {n} จาก {total} รายการ พิมพ์ต่อเพื่อกรองให้แคบลง", { label:kt("suggest"), n:items.length, total:found.total })
         : L("{label} {n} รายการ", { label:kt("suggest"), n:items.length }))
     : kt("suggestOften");
   return '<div class="suggest" id="'+prefix+'List" role="listbox" aria-label="'+kt("suggest")+'">'+
@@ -413,7 +413,7 @@ async function removeMenu(id){
   if (!ok){ ui.undo = null; return; }   // บันทึกไม่ได้/ชนกับเพื่อน อย่าให้ toast เลิกทำทับข้อความแจ้งปัญหา
   clearTimeout(ui.undoTimer);
   ui.undoTimer = setTimeout(function(){ ui.undo = null; }, 8000);
-  toast(L("ลบ {name} แล้ว", { name:menu.name }),"ok",{ label:L("เลิกทำ"), action:undoRemove });
+  toast(L("ลบ {name} แล้ว", { name:menu.name }),"ok",{ label:L("เอาคืน"), action:undoRemove });
 }
 
 /** ข้อความสรุปที่ส่งเข้าแชต — v2.4: เปิดด้วยคำขอบคุณให้อ่านเป็นเรื่องของเพื่อน ไม่ใช่ใบแจ้งหนี้ */
@@ -436,7 +436,7 @@ function summaryText(){
     });
   }
   if (ui.ctx) lines.push(L("กดดูได้ว่ายอดมาจาก{what}: {link}", { what:kt("fromWhat"), link:groupLink(ui.ctx)+"/bill" }));
-  lines.push(state.kind === "trip" ? L("— หารตามที่ใช้จริงด้วย FairDish") : L("— หารตามที่กินจริงด้วย FairDish"));
+  lines.push(state.kind === "trip" ? L("หารตามที่ใช้จริงด้วย FairDish") : L("หารตามที่กินจริงด้วย FairDish"));
   return lines.join("\n");
 }
 function copyText(text, okMessage){
@@ -531,6 +531,16 @@ function joinGroup(){
   location.hash = hash;
 }
 
+/** งาน 6.2: เอากลุ่มออกจากรายการ = เครื่องนี้ลืมกุญแจของกลุ่ม (ย้อนไม่ได้ถ้าไม่มีลิงก์) จึงถามก่อน */
+function openForgetSheet(id){
+  var g = myGroup(id);
+  if (!g) return;
+  ui.sheet = "forget"; ui.forgetId = id;
+  renderGlobalSheet('<h2 class="sheet-title" id="forgetTitle">'+L("เอา {name} ออกจากรายการ?", { name:esc(g.name) })+'</h2>'+
+    '<p class="sheet-sub">'+L("กลุ่มยังอยู่และเพื่อนยังใช้ได้ แต่เครื่องนี้จะลืมกลุ่มนี้ ถ้าไม่มีลิงก์เก็บไว้ จะเปิดกลุ่มนี้ไม่ได้อีก")+'</p>'+
+    '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
+    '<button class="btn-danger" type="button" data-forget-ok="1">'+L("เอาออก")+'</button></div>', "forgetTitle");
+}
 async function forgetGroup(id){
   var g = myGroup(id);
   if (!g) return;
@@ -584,7 +594,7 @@ function openMeDialog(){
           return '<button data-me-pick="'+p.id+'">'+esc(p.name)+'</button>';
         }).join("")+'</div>'
       : '')+
-    '<div class="me-other name-skip"><button class="me-skip" data-me-close="1">'+L("ไม่ใช่ตอนนี้")+'</button></div>';
+    '<div class="me-other name-skip"><button class="me-skip" data-me-close="1">'+L("ไว้ทีหลัง")+'</button></div>';
   if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open","");
   var close = box.querySelector("[data-me-close]");    // v4.12: showModal โฟกัสช่องแรกเอง (แป้นพิมพ์เด้ง) — ย้ายไปปุ่มปิดแทน
   if (close) close.focus({ preventScroll:true });
@@ -611,6 +621,7 @@ async function joinAsMe(){
   state.members.push({ id:id, name:name });
   var g = myGroup(ui.ctx);
   if (g){ g.me = id; g.asked = true; saveMyGroups(); }
+  logEvent("join", { who:id, by:id });             // งาน 4.3
   render();
   await commit(L("เข้าร่วมกลุ่มแล้ว สวัสดี {name} 👋", { name:name }));
   render();
@@ -723,7 +734,7 @@ async function refreshHomeGroups(){
   await Promise.all(list.map(async function(g){
     try {
       var r = await Cloud.get(g.id);
-      if (!r) return;
+      if (!r){ if (g.snap){ g.snap = null; changed = true; } return; }   // งาน 4.2: กลุ่มถูกยุบ → การ์ดไม่ค้างในหน้าแรก
       var snap = r.data || {};
       if (JSON.stringify(snap) !== JSON.stringify(g.snap)){ g.snap = snap; changed = true; }
       if (r.name && r.name !== g.name){ g.name = r.name; changed = true; }
@@ -874,7 +885,7 @@ function openTripNameSheet(kind){
   ui.sheet = "tripname";
   var def = defaultBillName("trip");
   renderGlobalSheet('<h2 class="sheet-title" id="tripNameTitle">'+(kind === "trip-group" ? L("ตั้งชื่อทริปแบบกลุ่ม") : L("ตั้งชื่อทริป"))+'</h2>'+
-    '<p class="sheet-sub">'+L("ไม่บังคับ — ไม่ตั้งก็ใช้ชื่อ {name}", { name:esc(def) })+'</p>'+
+    '<p class="sheet-sub">'+L("ไม่บังคับ ถ้าไม่ตั้งจะใช้ชื่อ {name}", { name:esc(def) })+'</p>'+
     '<div class="form-box">'+
       '<label class="sr-only" for="tripNameInput">'+L("ชื่อทริป")+'</label>'+
       '<input type="text" id="tripNameInput" maxlength="'+MAX_GROUP_NAME+'" autocomplete="off" placeholder="'+L("เช่น เชียงใหม่ 3 วัน 2 คืน")+'">'+
@@ -903,7 +914,7 @@ async function startNewBill(kind, demo, name){
     }
     toast(archived ? L("เก็บ {name} เข้าประวัติแล้ว เริ่ม{kind}ใหม่", { name:archived.name, kind:ktOf(kind,"name") }) : L("เริ่ม{kind}ใหม่แล้ว", { kind:ktOf(kind,"name") }),"ok");
   } catch(err){
-    toast(L("เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ"),"error");
+    toast(L("เริ่มบิลใหม่ไม่สำเร็จ บิลเดิมยังอยู่ครบ ลองกดเริ่มบิลใหม่อีกครั้ง"),"error");
   }
 }
 /** step: "summary" (ค่าเริ่มต้น) = เปิดที่ใบสรุปยอด · "members" = เปิดที่หน้าหารบิล (v4.15 แถบซ้าย) */
@@ -961,7 +972,7 @@ async function openKindSheet(){
     : L("บันทึกในเครื่องให้อัตโนมัติ ไม่ต้องสมัครสมาชิก");
   function card(kind, cls){
     return '<button class="kind-card '+cls+'" type="button" data-new-kind="'+kind+'">'+
-      '<span class="kind-ico" aria-hidden="true">'+ktOf(kind,"icon")+'</span>'+
+      '<span class="kind-ico" aria-hidden="true">'+kindIconHTML(kind)+'</span>'+
       '<span class="kind-text"><b>'+ktOf(kind,"name")+'</b><span>'+ktOf(kind,"kindSub")+'</span></span></button>';
   }
   ui.sheet = "kind";
@@ -1012,7 +1023,7 @@ function openDissolveSheet(){
   closeShareDialog();
   ui.sheet = "dissolve";
   renderGlobalSheet('<h2 class="sheet-title" id="dissolveTitle">'+L("ยุบกลุ่ม {name}?", { name:esc(Store.groupName) })+'</h2>'+
-    '<p class="sheet-sub">'+L("บิลกลุ่มจะถูกลบออกจากเซิร์ฟเวอร์ถาวร เพื่อนที่มีลิงก์จะเปิดไม่ได้อีก — เราเก็บสำเนาไว้ในประวัติของคุณให้")+'</p>'+
+    '<p class="sheet-sub">'+L("บิลกลุ่มจะถูกลบออกจากเซิร์ฟเวอร์ถาวร เพื่อนที่มีลิงก์จะเปิดไม่ได้อีก แต่เราเก็บสำเนาไว้ในประวัติของคุณ")+'</p>'+
     '<div class="form-actions"><button class="btn-quiet" type="button" data-close-global="1">'+L("ยกเลิก")+'</button>'+
     '<button class="btn-danger" type="button" data-dissolve-ok="1">'+L("ยุบกลุ่ม")+'</button></div>', "dissolveTitle");
 }
@@ -1022,7 +1033,7 @@ async function dissolveGroup(){
   ui.dissolving = true;
   try {
     var res = await Cloud.remove(id, g.owner);
-    if (!res || !res.ok){ toast(L("ยุบกลุ่มไม่สำเร็จ (กลุ่มอาจถูกลบไปแล้ว)"),"error"); return; }
+    if (!res || !res.ok){ toast(L("ยุบกลุ่มไม่สำเร็จ กลุ่มนี้อาจถูกยุบไปแล้ว ลองเปิดกลุ่มใหม่จากหน้าประวัติ"),"error"); return; }
     var data = serialize(); data.name = Store.groupName;
     try { await archiveBill(data); } catch(e){}
     ui.myGroups = ui.myGroups.filter(function(x){ return x.id !== id; });
@@ -1032,7 +1043,7 @@ async function dissolveGroup(){
     location.hash = "#/";
     toast(L("ยุบกลุ่มแล้ว เก็บสำเนาไว้ในประวัติของคุณ"),"ok");
   } catch(e){
-    toast(L("ยุบกลุ่มไม่ได้ — ตรวจอินเทอร์เน็ต หรือเซิร์ฟเวอร์ยังไม่รองรับ"),"error");
+    toast(L("ยุบกลุ่มไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"),"error");
   } finally {
     ui.dissolving = false;
   }
@@ -1153,8 +1164,8 @@ async function startScan(){
     tick();
   } catch(e){
     stopScan();
-    msg(e && e.name === "NotAllowedError" ? L("ไม่ได้รับอนุญาตให้ใช้กล้อง — เปิดสิทธิ์กล้องในการตั้งค่าเบราว์เซอร์ หรือวางลิงก์แทน")
-                                          : L("เปิดกล้องไม่ได้ — วางลิงก์ด้านล่างแทน หรือใช้แอปกล้องของมือถือสแกน"), true);
+    msg(e && e.name === "NotAllowedError" ? L("ไม่ได้รับอนุญาตให้ใช้กล้อง เปิดสิทธิ์กล้องในการตั้งค่าเบราว์เซอร์ หรือวางลิงก์แทน")
+                                          : L("เปิดกล้องไม่ได้ วางลิงก์ด้านล่างแทน หรือใช้แอปกล้องของมือถือสแกน"), true);
   }
 }
 function stopScan(){
@@ -1166,7 +1177,7 @@ function stopScan(){
 function tripGroupCard(){
   if (!Cloud.ready()) return "";
   return '<button class="kind-card trip trip-group" type="button" data-new-kind="trip-group">'+
-    '<span class="kind-ico" aria-hidden="true">👥</span>'+
+    '<span class="kind-ico" aria-hidden="true">'+kindIconHTML("trip-group")+'</span>'+
     '<span class="kind-text"><b>'+L("ทริปแบบกลุ่ม")+'</b><span>'+L("สร้างกลุ่มก่อน ส่ง QR ให้เพื่อนเข้ามา ทุกคนใส่ค่าใช้จ่ายที่ตัวเองจ่ายได้ตลอดทริป")+'</span></span></button>';
 }
 function openRenameSheet(){
@@ -1217,6 +1228,9 @@ async function togglePaid(key){
   if (!state.paid[key]) next[key] = true;
   state.paid = next;
   var prog = paidProgress(s.transfers, state.paid);
+  var tf = s.transfers[keys.indexOf(key)];         // งาน 4.3: ใครติ๊ก การโอนไหน เมื่อไร
+  logEvent(next[key] ? "paid" : "unpaid", { who:tf.from, to:tf.to, amt:tf.amount });
+  if (prog.all && next[key]) logEvent("done");
   if (prog.all && next[key]){
     ui.showDone = true;
     if (currentPath() !== "/bill") location.hash = billHref();
@@ -1232,6 +1246,8 @@ async function togglePaidAll(){
   var all = paidProgress(s.transfers, state.paid).all, next = {};
   if (!all) s.transfers.forEach(function(t){ next[transferKey(t)] = true; });
   state.paid = next;
+  logEvent(all ? "unpaidAll" : "paidAll");         // งาน 4.3
+  if (!all) logEvent("done");
   if (!all && (currentPath() === "/bill" || currentPath() === "/split")){
     ui.showDone = true;
     if (currentPath() !== "/bill") location.hash = billHref();
@@ -1253,7 +1269,7 @@ async function togglePaidAllHistory(id){
   Object.keys(h.data).forEach(function(k){ data[k] = h.data[k]; });
   data.paid = next;
   h.data = data;
-  try { await Store.saveHistory(ui.history); } catch(e){ return toast(L("บันทึกไม่สำเร็จ ข้อมูลบนหน้าจอยังอยู่ครบ"),"error"); }
+  try { await Store.saveHistory(ui.history); } catch(e){ return toast(L("บันทึกไม่สำเร็จ ลองติ๊กอีกครั้ง"),"error"); }
   refreshHistoryView();
   renderSideNav();                                     // บิลที่โอนครบแล้วออกจากแถบซ้าย
   toast(all ? L("เอาติ๊กออกทั้งหมดแล้ว") : L("ติ๊ก {name} ว่าโอนครบทุกคนแล้ว 🎉", { name:h.name }),"ok");
@@ -1261,7 +1277,7 @@ async function togglePaidAllHistory(id){
 /* ---- v3.2: ชวนเพื่อนเข้ากลุ่มจากบิลส่วนตัว = ย้ายบิลนี้ขึ้นกลุ่ม ---- */
 /** hostName: ชื่อคนสร้างกลุ่ม ("" = ไม่ใส่) · ไม่ส่งมา = ใช้ชื่อที่ให้เราเรียก ยังไม่มีชื่อ = ถามก่อนสร้าง */
 async function inviteFromBill(hostName){
-  if (ui.tour) return toast(L("ตอนฝึกยังชวนเพื่อนไม่ได้ — จบการสอนแล้วลองกับบิลจริงได้เลย"),"error");
+  if (ui.tour) return toast(L("ตอนฝึกยังชวนเพื่อนไม่ได้ จบการสอนแล้วลองกับบิลจริงได้เลย"),"error");
   if (ui.ctx || !Cloud.ready() || ui.creatingGroup) return;
   // v4.7: คนสร้างกลุ่ม = คนเปิด QR ให้เพื่อนสแกน → ใส่ชื่อตัวเองในบิลกลุ่มให้เลย และจำว่า "ฉันคือคนนี้"
   if (typeof hostName !== "string"){
@@ -1278,6 +1294,7 @@ async function inviteFromBill(hostName){
     else { meId = nid(); data.members = [{ id:meId, name:hostName }].concat(data.members); }   // ไม่แตะ state จนกว่าจะสร้างกลุ่มสำเร็จ
   }
   var name = billName().slice(0, MAX_GROUP_NAME);
+  addLog(data, "create", { by:meId });             // งาน 4.3: เริ่มประวัติของกลุ่ม
   ui.creatingGroup = true;
   if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>'+L("กำลังสร้างกลุ่ม"); }
   try {
@@ -1439,36 +1456,9 @@ async function setTheme(theme){
 
 async function loadDemo(){
   if (state.kind === "trip") return loadTripDemo();
-  state.members=[]; state.menus=[]; state.shared=[];
-  [L("มาร์ค"),L("พูม"),L("ไอซ์"),L("ชาเน่"),L("โม"),L("ยูกะ"),L("โฟรค์"),L("เจ้าสัว")].forEach(function(n){
-    state.members.push({ id:nid(), name:n });
-  });
-  function ids(){
-    return Array.prototype.slice.call(arguments).map(function(n){
-      var f = state.members.filter(function(m){ return m.name===n; })[0];
-      return f ? f.id : null;
-    }).filter(Boolean);
-  }
-  // มื้ออีสานร้านหน้ามอ 8 คน — แต่ละคนกินไม่เท่ากันแบบที่เกิดจริง
-  var all = [L("มาร์ค"),L("พูม"),L("ไอซ์"),L("ชาเน่"),L("โม"),L("ยูกะ"),L("โฟรค์"),L("เจ้าสัว")];
-  state.menus = [
-    { id:nid(), name:L("ตำไทย"), price:50, eaters:ids(L("ชาเน่"),L("ยูกะ"),L("โฟรค์")) },
-    { id:nid(), name:L("ตำปูปลาร้า"), price:50, eaters:ids(L("มาร์ค"),L("พูม"),L("เจ้าสัว")) },
-    { id:nid(), name:L("ตำซั่ว"), price:60, eaters:ids(L("ไอซ์"),L("มาร์ค")) },
-    { id:nid(), name:L("ไก่ย่างเขาสวนกวาง"), price:180, eaters:ids.apply(null, all) },
-    { id:nid(), name:L("คอหมูย่าง"), price:120, eaters:ids(L("มาร์ค"),L("ไอซ์"),L("เจ้าสัว")) },
-    { id:nid(), name:L("ลาบหมู"), price:80, eaters:ids(L("มาร์ค"),L("พูม"),L("ไอซ์"),L("โม")) },
-    { id:nid(), name:L("ต้มแซ่บกระดูกอ่อน"), price:120, eaters:ids(L("ไอซ์"),L("เจ้าสัว"),L("โม")) },
-    { id:nid(), name:L("ไส้กรอกอีสาน"), price:60, eaters:ids(L("ชาเน่"),L("โม")) },
-    { id:nid(), name:L("ไข่เจียวหมูสับ"), price:60, eaters:ids(L("ยูกะ")) },
-    { id:nid(), name:L("ซอยจุ๊"), price:150, eaters:ids(L("ไอซ์"),L("เจ้าสัว")) }
-  ];
-  state.shared = [
-    { id:nid(), name:L("ข้าวเหนียว 4 กระติ๊บ"), price:60 },
-    { id:nid(), name:L("น้ำแข็ง"), price:20 },
-    { id:nid(), name:L("โค้กขวดใหญ่ 2 ขวด"), price:70 },
-    { id:nid(), name:L("น้ำเปล่าขวดใหญ่ 2 ขวด"), price:30 }
-  ];
+  // งาน 3.1: ข้อมูลบิลตัวอย่างอยู่ที่ demoMealData() (state.js) แหล่งเดียว — ภาพตัวอย่างในหน้าแรก/หน้าแนะนำ/วิธีใช้คำนวณจากชุดเดียวกัน
+  var demo = demoMealData();
+  state.members = demo.members; state.menus = demo.menus; state.shared = demo.shared;
   state.charges.forEach(function(c){ c.on=false; });   // ร้านอีสานทั่วไปไม่คิดค่าบริการ / VAT
   state.payers = [];
   state.paid = {};

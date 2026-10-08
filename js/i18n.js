@@ -25,7 +25,7 @@ function longDate(t){
 function monthLabel(t){
   return new Date(t).toLocaleDateString(dateLocale(), { month:"long", year:"numeric" });
 }
-/** ข้อความคงที่ใน index.html (แท็บล่าง ท้ายหน้า) ใส่ data-i18n="ข้อความไทย" ไว้ */
+/** ข้อความคงที่ใน index.html (แท็บล่าง ท้ายหน้า แถบ Beta) ใส่ data-i18n="ข้อความไทย" ไว้ */
 function applyStaticText(){
   document.documentElement.lang = LANG;
   Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function(el){

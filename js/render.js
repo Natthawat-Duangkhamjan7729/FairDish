@@ -14,6 +14,7 @@ function render(){
   renderStepTabs(); renderTotalBar(); renderAppBarSub();
   if (wsActive()) renderWsHead();
   renderSideNav();                    // v4.4: ป้ายโอนแล้ว x/y ในแถบซ้าย
+  paintNewCounts();                   // งาน 4.3: ตัวเลขรายการใหม่บนปุ่มชวนเพื่อน
 }
 
 /* ---- v3.2: แผ่นล่างจอ (เพิ่ม/แก้เมนู, ค่าส่วนกลาง, ค่าบริการ, เลือกประเภทบิล) ---- */
@@ -216,7 +217,8 @@ function renderMembers(){
   }
 
   if (ui.loading){
-    box.innerHTML = '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
+    // งาน 3.3: ตอนโหลดบิลกลุ่มบอกเป็นข้อความด้วย (มือถือเดิมมีแค่แถบจาง ๆ ดูเหมือนบิลว่าง)
+    box.innerHTML = '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>'+'<p class="hint" role="status" style="margin:var(--s2) 0 0">'+L("กำลังโหลดข้อมูลบิล…")+'</p>';
     if (extra) extra.innerHTML = "";
     return;
   }
@@ -235,7 +237,7 @@ function renderMembers(){
         '</span>';
       }
       // v2.6: ชิปเหลือแค่ชื่อ แตะเพื่อแก้หรือลบ (ไอคอนไปอยู่ในโหมดแก้)
-      return '<button class="chip chip-tap" data-edit-member="'+p.id+'" aria-label="'+L("{name} — แตะเพื่อแก้หรือลบ", { name:esc(p.name) })+'">'+
+      return '<button class="chip chip-tap" data-edit-member="'+p.id+'" aria-label="'+L("{name}: แตะเพื่อแก้หรือลบ", { name:esc(p.name) })+'">'+
         '<span class="nm">'+esc(p.name)+'</span></button>';
     }).join("") + '</div>';
   }
@@ -254,11 +256,11 @@ function memberExtraHTML(){
     var m = state.members.filter(function(p){ return p.id === ui.confirmMember; })[0];
     if (m){
       var n = menusOf(m.id).length;
-      html += '<div class="confirm" role="alertdialog" aria-label="'+L("ยืนยันการลบสมาชิก")+'">'+
+      html += '<div class="confirm" role="alertdialog" aria-label="'+L("ยืนยันการลบคนออกจากบิล")+'">'+
         '<h3>'+L("ลบ {name} ออกจากโต๊ะ?", { name:esc(m.name) })+'</h3>'+
         '<p>'+L("{name} อยู่ใน {n} เมนู ระบบจะนำชื่อออกจากเมนูเหล่านั้นแล้วคิดยอดใหม่ให้เฉพาะคนที่เหลือ", { name:esc(m.name), n:n })+'</p>'+
         '<div class="btn-row"><button class="btn-quiet" data-cancel-del="1">'+L("ยกเลิก")+'</button>'+
-        '<button class="btn-danger" data-confirm-del="'+m.id+'">'+L("ลบออก")+'</button></div></div>';
+        '<button class="btn-danger" data-confirm-del="'+m.id+'">'+L("ลบ")+'</button></div></div>';
     }
   }
   return html;
@@ -292,7 +294,7 @@ function renderMenus(){
 
   if (ui.loading){
     if (meta) meta.textContent = "";
-    if (list) list.innerHTML = '<div class="skeleton" aria-hidden="true"><i style="width:100%"></i></div>';
+    if (list) list.innerHTML = '<div class="skeleton" aria-hidden="true"><i style="width:100%"></i></div>'+'<p class="hint" role="status" style="margin:var(--s2) 0 0">'+L("กำลังโหลดข้อมูลบิล…")+'</p>';
     slot.innerHTML = "";
     return;
   }
@@ -307,7 +309,7 @@ function renderMenus(){
     list.innerHTML = state.menus.map(function(m){
       if (m.type === "meal") return mealRow(m);
       var known = m.eaters.filter(function(id){ return !!nameOf(id); });
-      var who = known.length ? eatersLabel(known) : L("ยังไม่ได้เลือกคนมีส่วน — ยังไม่ถูกนำไปคำนวณ");
+      var who = known.length ? eatersLabel(known) : L("ยังไม่ได้เลือกคนมีส่วน จึงยังไม่ถูกนำไปคำนวณ");
       var trip = state.kind === "trip";
       var unpaid = trip && known.length && !knownPayers(m).length;
       if (trip && known.length) who = (unpaid ? '<span class="unpaid">'+L("ยังไม่เลือกคนจ่าย")+'</span>' : '<b class="payer-tag">'+payerText(m)+'</b>')+' · '+who;
@@ -401,9 +403,11 @@ function renderCharges(){
     '<div class="form-box">'+
       '<div class="form-title">'+L("ค่าใช้จ่ายแบบเปอร์เซ็นต์")+'</div>'+
       '<label class="sr-only" for="cLabel">'+L("ชื่อค่าใช้จ่าย")+'</label>'+
-      '<input type="text" id="cLabel" placeholder="'+L("ชื่อค่าใช้จ่าย เช่น ค่าเปิดขวด")+'" autocomplete="off">'+
+      '<input type="text" id="cLabel" placeholder="'+L("ชื่อค่าใช้จ่าย เช่น ค่าเปิดขวด")+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" aria-describedby="cLabelMsg">'+
+      '<p class="field-msg" id="cLabelMsg" aria-live="polite"></p>'+   // งาน 3.4: ข้อความใต้ช่องที่ผิด
       '<label class="sr-only" for="cRate">'+L("เปอร์เซ็นต์")+'</label>'+
-      '<input type="number" id="cRate" inputmode="decimal" step="0.1" min="0" placeholder="'+L("เปอร์เซ็นต์ (%)")+'">'+
+      '<input type="number" id="cRate" inputmode="decimal" step="0.1" min="0" max="100" placeholder="'+L("เปอร์เซ็นต์ (%)")+'" aria-describedby="cRateMsg">'+
+      '<p class="field-msg" id="cRateMsg" aria-live="polite"></p>'+
       '<div class="form-actions"><button class="btn-quiet" id="cCancel">'+L("ยกเลิก")+'</button>'+
       '<button class="btn-sm" id="cSave">'+L("เพิ่ม")+'</button></div>'+
     '</div>', 'data-close-sheet="charge"');
@@ -430,11 +434,13 @@ function renderShared(){
     '<div class="form-box">'+
       '<div class="form-title">'+L("เพิ่มรายการหารเท่ากัน")+'</div>'+
       '<label class="sr-only" for="sName">'+L("ชื่อรายการ")+'</label>'+
-      '<input type="text" id="sName" placeholder="'+L("ชื่อรายการ เช่น น้ำแข็ง")+'" autocomplete="off" '+
-        'role="combobox" aria-autocomplete="list" aria-controls="sSuggest" aria-expanded="false">'+
+      '<input type="text" id="sName" placeholder="'+L("ชื่อรายการ เช่น น้ำแข็ง")+'" autocomplete="off" maxlength="'+MAX_MENU_NAME+'" '+
+        'role="combobox" aria-autocomplete="list" aria-controls="sSuggest" aria-expanded="false" aria-describedby="sNameMsg">'+
       '<div id="sSuggest"></div>'+
+      '<p class="field-msg" id="sNameMsg" aria-live="polite"></p>'+   // งาน 3.4: ข้อความใต้ช่องที่ผิด
       '<label class="sr-only" for="sPrice">'+L("ราคา")+'</label>'+
-      '<input type="number" id="sPrice" inputmode="decimal" step="0.01" min="0" placeholder="'+L("ราคา (บาท)")+'">'+
+      '<input type="number" id="sPrice" inputmode="decimal" step="0.01" min="0" max="'+MAX_PRICE+'" placeholder="'+L("ราคา (บาท)")+'" aria-describedby="sPriceMsg">'+
+      '<p class="field-msg" id="sPriceMsg" aria-live="polite"></p>'+
       '<div class="form-actions"><button class="btn-quiet" id="sCancel">'+L("ยกเลิก")+'</button>'+
       '<button class="btn-sm" id="sSave">'+L("เพิ่ม")+'</button></div>'+
     '</div>', 'data-close-sheet="shared"');
@@ -468,4 +474,17 @@ function renderSummary(){
     '<div class="sum-total"><span>'+L("รวมทั้งหมด")+'</span><span class="mono">'+baht(r.grand)+' ฿</span></div>'+
     settleHTML(r)+
     '<a class="btn-main btn-block" style="margin-top:var(--s5)" href="'+billHref()+'">'+L("ดูใบสรุปยอด")+'</a>';
+}
+
+/** งาน 3.4: แสดงข้อความใต้ช่องที่ผิด (ไม่วาดแผ่นใหม่ ข้อความที่พิมพ์ไว้ไม่หาย) — ids = { ช่อง: id ของ input } · คืน true เมื่อมีช่องผิด */
+function showFieldErrors(errs, ids){
+  var first = null;
+  Object.keys(ids).forEach(function(k){
+    var input = document.getElementById(ids[k]), msg = document.getElementById(ids[k] + "Msg");
+    if (msg){ msg.textContent = errs[k] || ""; msg.className = "field-msg" + (errs[k] ? " error" : ""); }
+    if (input) input.setAttribute("aria-invalid", errs[k] ? "true" : "false");
+    if (errs[k] && !first) first = input;
+  });
+  if (first) first.focus();
+  return !!first;
 }

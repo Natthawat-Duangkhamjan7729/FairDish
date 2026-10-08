@@ -127,7 +127,7 @@ document.addEventListener("click", async function(e){
             "#shareNative,#shareCopy,#shareSaveQr,"+
             "[data-lang],[data-onb-next],[data-onb-skip],[data-onb-again],"+
             "[data-guest-who],[data-guest-add],[data-guest-item],[data-guest-save],[data-guest-change],[data-guest-again],"+
-            "[data-me],[data-forget-group],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
+            "[data-me],[data-forget-group],[data-forget-ok],#groupJoin,#groupCopy,#groupShare,#groupRefresh,#groupRetry,#groupLinkInput,"+
             "[data-ws-focus],[data-ws-eat],[data-ws-all],[data-ws-pay],[data-ws-me],#wsUndo,#wsAdd,[data-side-invite],"+
             "[data-share-pick],[data-hist-sel],[data-hist-filter],[data-onb-demo],[data-ws-suggest],"+
             "[data-scan-close],[data-scan-paste],[data-dissolve],[data-dissolve-ok],[data-del-local],[data-del-local-ok],[data-open-join],[data-share-close],[data-me-join],[data-guest-join],[data-host-save],[data-host-skip],[data-name-save],[data-name-skip],[data-myname-save],[data-myname-clear],[data-add-self],"+
@@ -269,7 +269,8 @@ document.addEventListener("click", async function(e){
   if (t.id==="groupRetry") return loadContext(ui.ctx);
   if (t.id==="groupLinkInput") return t.select();
   if ((v = t.getAttribute("data-me"))) return setMe(v);
-  if ((v = t.getAttribute("data-forget-group"))) return forgetGroup(v);
+  if ((v = t.getAttribute("data-forget-group"))) return openForgetSheet(v);   // งาน 6.2: ถามก่อน
+  if (t.getAttribute("data-forget-ok")){ var fid = ui.forgetId; ui.forgetId = null; closeGlobalSheet(); return forgetGroup(fid); }
 
   /* ส่วนอื่นของแอป */
   if (t.id==="demoBtn") return loadDemo();
@@ -301,7 +302,7 @@ document.addEventListener("click", async function(e){
     render();
     var cleared = await commit(null);
     render();
-    if (cleared) toast(L("ล้างข้อมูลแล้ว"),"ok",{ label:L("เลิกทำ"), action:function(){ undoReset(before); } });
+    if (cleared) toast(L("ล้างข้อมูลแล้ว"),"ok",{ label:L("เอาคืน"), action:function(){ undoReset(before); } });
     return;
   }
 
@@ -343,9 +344,14 @@ document.addEventListener("click", async function(e){
 
   if ((v = t.getAttribute("data-del-charge"))){
     e.stopPropagation();
-    state.charges = state.charges.filter(function(c){ return c.id!==v; });
+    var ci = state.charges.findIndex(function(c){ return c.id===v; }), gone = state.charges[ci];
+    if (ci < 0) return;
+    state.charges.splice(ci, 1);
     render();
-    await commit(L("ลบค่าใช้จ่ายแล้ว"));
+    if (await commit()) toast(L("ลบ {name} แล้ว", { name:gone.label }),"ok",{ label:L("เอาคืน"), action:async function(){   // งาน 6.2
+      if (state.charges.some(function(c){ return c.id === gone.id; })) return;
+      state.charges.splice(Math.min(ci, state.charges.length), 0, gone); render(); await commit(L("คืน {name} กลับมาแล้ว", { name:gone.label })); render();
+    } });
     return render();
   }
   if ((v = t.getAttribute("data-charge"))){
@@ -359,12 +365,12 @@ document.addEventListener("click", async function(e){
   if (t.id==="cSave"){
     var cl = document.getElementById("cLabel").value.trim();
     var cr = parseFloat(document.getElementById("cRate").value);
-    if (!cl) return toast(L("ใส่ชื่อค่าใช้จ่ายก่อน"),"error");
-    if (!(cr>=0)) return toast(L("ใส่เปอร์เซ็นต์เป็นตัวเลข"),"error");
+    // งาน 3.4: ตรวจทุกช่องพร้อมกัน แจ้งใต้ช่องที่ผิด (เดิมเป็นข้อความเด้ง และรับ % เกิน 100)
+    if (showFieldErrors(validateChargeForm(cl, document.getElementById("cRate").value), { label:"cLabel", rate:"cRate" })) return;
     state.charges.push({ id:nid(), label:cl, rate:cr, on:true, fixed:false });
     state.chargeForm=null;
     render();
-    await commit(L("เพิ่มค่าใช้จ่ายแล้ว"));
+    await commit(L("เพิ่ม {name} แล้ว", { name:cl }));
     return render();
   }
 
@@ -373,18 +379,23 @@ document.addEventListener("click", async function(e){
   if (t.id==="sSave"){
     var sn = document.getElementById("sName").value.trim();
     var sp = parseFloat(document.getElementById("sPrice").value);
-    if (!sn) return toast(L("ใส่ชื่อรายการก่อน"),"error");
-    if (!(sp>=0)) return toast(L("ใส่ราคาเป็นตัวเลข"),"error");
+    // งาน 3.4: ตรวจทุกช่องพร้อมกัน แจ้งใต้ช่องที่ผิด (เดิมเป็นข้อความเด้ง และรับราคาเกิน 100,000)
+    if (showFieldErrors(validateSharedForm(sn, document.getElementById("sPrice").value), { name:"sName", price:"sPrice" })) return;
     state.shared.push({ id:nid(), name:sn, price:sp });
     state.sharedForm=null;
     render();
-    await commit(L("เพิ่มค่าส่วนกลางแล้ว"));
+    await commit(L("เพิ่ม {name} แล้ว", { name:sn }));
     return render();
   }
   if ((v = t.getAttribute("data-del-shared"))){
-    state.shared = state.shared.filter(function(s){ return s.id!==v; });
+    var si = state.shared.findIndex(function(s){ return s.id===v; }), item = state.shared[si];
+    if (si < 0) return;
+    state.shared.splice(si, 1);
     render();
-    await commit(L("ลบรายการแล้ว"));
+    if (await commit()) toast(L("ลบ {name} แล้ว", { name:item.name }),"ok",{ label:L("เอาคืน"), action:async function(){   // งาน 6.2
+      if (state.shared.some(function(s){ return s.id === item.id; })) return;
+      state.shared.splice(Math.min(si, state.shared.length), 0, item); render(); await commit(L("คืน {name} กลับมาแล้ว", { name:item.name })); render();
+    } });
     return render();
   }
 

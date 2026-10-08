@@ -64,6 +64,7 @@ function refreshView(){
   if (path==="/bill") document.getElementById("view").innerHTML = pageBill();
   renderSideNav();                    // v4.4: ลิงก์บิลที่เปิดอยู่ + ป้ายโอนแล้ว ในแถบซ้าย
   refreshShareDialog();               // v4.11
+  paintNewCounts();                   // งาน 4.3
   if (path==="/me") rerenderGuest(true);
   if (path==="/share"){ document.getElementById("view").innerHTML = pageShare(); fitShareQr(); }
   if (ui.inviteAfterLoad && ui.ctx === null && !ui.loading){ ui.inviteAfterLoad = false; inviteFromBill(); }   // v4.5.3: กดชวนเพื่อนตอนยังไม่ได้โหลดบิล
@@ -106,7 +107,11 @@ async function refreshGroup(manual, live){
   try {
     var g = await Cloud.get(id);
     if (ui.ctx !== id) return;
-    if (!g){ ui.groupError = "notfound"; return refreshView(); }
+    if (!g){
+      var mine = myGroup(id);                        // งาน 4.2: กลุ่มถูกยุบ → ล้างสำเนาในเครื่อง การ์ดหน้าแรกไม่ค้าง
+      if (mine && mine.snap){ mine.snap = null; saveMyGroups(); }
+      ui.groupError = "notfound"; return refreshView();
+    }
     if (g.version !== Store.version){
       var before = groupSnapshot(), wasDone = billDone(serialize());
       applyBill(g.data);
@@ -123,6 +128,7 @@ async function refreshGroup(manual, live){
       }
       ui.noReveal = !manual;            // อัปเดตอัตโนมัติไม่เล่นแอนิเมชันใบเสร็จซ้ำ
       refreshView();
+      if (path === "/") fillHome(true);  // งาน 7.1: อยู่หน้าแรก → การ์ดบิลกลุ่มต้องเปลี่ยนตาม (เช่น เพื่อนเอาติ๊กโอนออก)
       ui.noReveal = false;
       var news = groupNews(before);
       if (news) toast(news,"ok");

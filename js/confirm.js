@@ -55,6 +55,37 @@ function cleanConfirms(c){
   return out;
 }
 
+/* ---- งาน 4.3: ประวัติการเปลี่ยนสถานะของบิลกลุ่ม (log) — ใคร ทำอะไร เมื่อไร
+   เก็บเฉพาะรหัสสมาชิกที่อยู่ในบิลอยู่แล้ว ไม่เก็บชื่อที่ให้เราเรียกหรือข้อมูลส่วนตัวอื่น (v4.2, v4.6) ---- */
+var LOG_MAX = 100;
+var LOG_EVENTS = ["create", "join", "confirm", "paid", "unpaid", "paidAll", "unpaidAll", "done"];
+/** log ที่โหลดมา — เก็บเฉพาะรูปแบบที่ถูกต้อง เรียงตามเวลา ไม่เกิน LOG_MAX รายการล่าสุด */
+function cleanLog(list){
+  if (!Array.isArray(list)) return [];
+  return list.filter(function(e){ return e && typeof e.id === "string" && typeof e.at === "string" && LOG_EVENTS.indexOf(e.ev) >= 0; })
+    .map(function(e){
+      var o = { id:e.id, at:e.at, ev:e.ev };
+      ["by", "who", "to"].forEach(function(k){ if (e[k] != null && e[k] !== "") o[k] = String(e[k]); });
+      if (e.amt != null && isFinite(Number(e.amt))) o.amt = Number(e.amt);
+      return o;
+    })
+    .sort(function(a, b){ return a.at < b.at ? -1 : a.at > b.at ? 1 : 0; })
+    .slice(-LOG_MAX);
+}
+/** เพิ่มเหตุการณ์ลงบิลดิบ d (d.log) → รายการที่เพิ่ม */
+function addLog(d, ev, extra){
+  var e = { id:nid(), at:new Date().toISOString(), ev:ev };
+  Object.keys(extra || {}).forEach(function(k){ if (extra[k] != null) e[k] = extra[k]; });
+  d.log = cleanLog((d.log || []).concat([e]));
+  return e;
+}
+/** รวม log สองเครื่องตอนบันทึกชนกัน (รายการเดียวกัน = id เดียวกัน) */
+function mergeLogs(a, b){
+  var seen = {}, all = [];
+  cleanLog(a).concat(cleanLog(b)).forEach(function(e){ if (!seen[e.id]){ seen[e.id] = true; all.push(e); } });
+  return cleanLog(all);
+}
+
 /* ---- ใช้กับบิลที่เปิดอยู่ ---- */
 /** { done, total, rows:[{ id, name, status }] } */
 function confirmSummary(){
@@ -69,6 +100,7 @@ async function saveConfirm(memberId, selected){
   var data = JSON.parse(JSON.stringify(serialize())), version = Store.version;
   for (var tries = 0; tries < 4; tries++){
     if (!applyConfirm(data, memberId, selected)) return "missing";
+    addLog(data, "confirm", { who:memberId, by:memberId });   // งาน 4.3
     data.savedAt = new Date().toISOString();
     var res = await Cloud.save(id, data, version);
     if (ui.ctx !== id) return false;
@@ -142,7 +174,7 @@ function pageShare(){
           return '<div class="status-row'+(x.id === me ? ' me' : '')+'"><b>'+esc(x.name)+'</b>'+
             '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+L(b[1])+'</span></div>';
         }).join("")
-      : '<p class="empty" style="margin-top:var(--s5)">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
+      : '<p class="empty" style="margin-top:var(--s5)">'+L("ยังไม่มีใครในบิลนี้ ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>')+
     '<div class="btn-stack">'+(trip
       ? '<a class="btn-main btn-block" href="'+splitHref()+'">'+L("ไปใส่ค่าใช้จ่าย")+'</a>'
       : '<a class="btn-line btn-block" href="'+confirmHref()+'">'+L("ยืนยันเมนูของฉัน · ดูหน้าที่เพื่อนเห็น")+'</a>')+'</div>'+
@@ -154,7 +186,7 @@ function shareIntro(){
     : L("ส่งลิงก์นี้เข้ากลุ่ม เพื่อนสแกนหรือเปิดลิงก์ได้เลย ไม่ต้องสมัคร แต่ละคนเลือกชื่อตัวเองแล้วติ๊กเมนูที่กิน ยอดในบิลอัปเดตให้ทันที");
 }
 /* ---- v4.11: หน้าต่างชวนเพื่อน — ใช้แทนการเปิดหน้า #/g/<id>/share (หน้านั้นยังเปิดจากลิงก์ได้) ---- */
-function shareDialogHTML(){
+function shareDialogHTML(fresh){
   var link = inviteLink(ui.ctx), q = QR.encode(link), trip = state.kind === "trip";
   var c = confirmSummary(), me = myMemberId(), amounts = {};
   if (hasData()) compute().list.forEach(function(p){ amounts[p.id] = p.rounded; });
@@ -172,7 +204,7 @@ function shareDialogHTML(){
       '<button class="btn-line" type="button" id="shareNative">'+ICON_SHARE+' '+L("แชร์ทางอื่น")+'</button>'+
       '<button class="btn-line" type="button" id="shareSaveQr">'+ICON_SAVE_IMG+' '+L("บันทึกรูป QR")+'</button>'+
     '</div>'+
-    (!c.total ? '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ — ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>'
+    (!c.total ? '<p class="empty">'+L("ยังไม่มีใครในบิลนี้ ใส่ชื่อในหน้าหารบิล หรือให้เพื่อนเพิ่มชื่อตัวเองตอนเปิดลิงก์")+'</p>'
       : trip ? tripPeopleHTML(amounts, me)
       : '<div class="list-title"><h2>'+L("ยืนยันแล้ว {done} จาก {total} คน", { done:c.done, total:c.total })+'</h2></div>'+
         c.rows.map(function(x){
@@ -180,13 +212,16 @@ function shareDialogHTML(){
           return '<div class="status-row'+(x.id === me ? ' me' : '')+'"><b>'+esc(x.name)+'</b>'+
             '<span class="mono">'+baht(amounts[x.id] || 0)+'</span><span class="badge '+b[0]+'">'+L(b[1])+'</span></div>';
         }).join(""))+
+    logSectionHTML(fresh)+
     (trip ? '' : '<div class="btn-stack"><a class="btn-line btn-block" href="'+confirmHref()+'">'+L("ยืนยันเมนูของฉัน · ดูหน้าที่เพื่อนเห็น")+'</a></div>')+
     (canDissolve() ? '<button class="link-btn danger center dissolve-btn" type="button" data-dissolve="1">'+ICON_DEL+' '+L("ยุบกลุ่ม (คุณเป็นคนสร้าง)")+'</button>' : '');
 }
 function openShareDialog(){
   var box = document.getElementById("shareDialog");
   if (!box || !ui.ctx || ui.loading) return;
-  box.innerHTML = shareDialogHTML();
+  var fresh = newLogIds();                          // งาน 4.3: ไฮไลต์รายการใหม่ครั้งนี้ แล้วนับว่าเห็นแล้ว
+  box.innerHTML = shareDialogHTML(fresh);
+  markLogSeen();
   if (!box.open){ if (typeof box.showModal === "function") box.showModal(); else box.setAttribute("open",""); }
   fitShareQr();
 }
@@ -200,6 +235,79 @@ function refreshShareDialog(){
   var box = document.getElementById("shareDialog");
   if (box && box.open && ui.ctx) openShareDialog();
 }
+/* ---- งาน 4.3: ประวัติการเปลี่ยนสถานะ + จำนวนรายการใหม่ ---- */
+/** บันทึกเหตุการณ์ของบิลกลุ่มที่เปิดอยู่ (บิลในเครื่อง/บิลฝึกไม่บันทึก) — by = คนที่เครื่องนี้เลือกว่าเป็นตัวเอง */
+function logEvent(ev, extra){
+  if (!ui.ctx || ui.tour) return;
+  addLog(state, ev, Object.assign({ by:myMemberId() }, extra || {}));
+}
+/** ป้ายสถานะ + ข้อความของแต่ละเหตุการณ์ */
+function logRowParts(e){
+  var by = e.by && nameOf(e.by) ? esc(nameOf(e.by)) : "";
+  var who = e.who ? (nameOf(e.who) ? esc(nameOf(e.who)) : L("คนที่ออกจากบิลแล้ว")) : "";
+  var to = e.to ? (nameOf(e.to) ? esc(nameOf(e.to)) : L("คนที่ออกจากบิลแล้ว")) : "";
+  var amt = baht(e.amt || 0);
+  switch (e.ev){
+    case "create":    return ["open", L("เริ่มกลุ่ม"), by ? L("{by} สร้างกลุ่มนี้", { by:by }) : L("สร้างกลุ่มนี้แล้ว")];
+    case "join":      return ["open", L("คนใหม่"), L("{name} เข้ากลุ่ม", { name:who })];
+    case "confirm":   return ["ok", L("ยืนยันแล้ว"), L("{name} ยืนยันเมนู", { name:who })];
+    case "paid":      return ["ok", L("โอนแล้ว"), by ? L("{by} ติ๊กว่า {from} โอนให้ {to} {amt} บาทแล้ว", { by:by, from:who, to:to, amt:amt })
+                                                     : L("มีคนติ๊กว่า {from} โอนให้ {to} {amt} บาทแล้ว", { from:who, to:to, amt:amt })];
+    case "unpaid":    return ["warn", L("เอาติ๊กออก"), by ? L("{by} เอาติ๊ก {from} โอนให้ {to} ออก", { by:by, from:who, to:to })
+                                                         : L("มีคนเอาติ๊ก {from} โอนให้ {to} ออก", { from:who, to:to })];
+    case "paidAll":   return ["ok", L("โอนแล้ว"), by ? L("{by} ติ๊กว่าโอนครบทุกคน", { by:by }) : L("มีคนติ๊กว่าโอนครบทุกคน")];
+    case "unpaidAll": return ["warn", L("เอาติ๊กออก"), by ? L("{by} เอาติ๊กโอนออกทั้งหมด", { by:by }) : L("มีคนเอาติ๊กโอนออกทั้งหมด")];
+    case "done":      return ["ok", L("เสร็จแล้ว"), L("โอนครบทุกคน บิลนี้เสร็จแล้ว")];
+  }
+  return ["open", "", ""];
+}
+function logTime(at){
+  var d = new Date(at);
+  if (isNaN(d)) return "";
+  var hm = d.toLocaleTimeString(dateLocale(), { hour:"2-digit", minute:"2-digit" });
+  return d.toDateString() === new Date().toDateString() ? hm : shortDate(d) + " " + hm;
+}
+/** ส่วน "ความเคลื่อนไหว" ในหน้าต่างชวนเพื่อน — ใหม่ไปเก่า, fresh = id ที่เครื่องนี้ยังไม่เคยเห็น */
+function logSectionHTML(fresh){
+  var list = (state.log || []).slice().reverse();
+  fresh = fresh || [];
+  return '<div class="list-title log-title"><h2>'+L("ความเคลื่อนไหว")+'</h2>'+
+      (fresh.length ? '<span class="badge changed">'+L("ใหม่ {n}", { n:fresh.length })+'</span>' : '')+'</div>'+
+    (list.length
+      ? '<ol class="log-list">'+list.map(function(e){
+          var p = logRowParts(e);
+          return '<li class="log-row'+(fresh.indexOf(e.id) >= 0 ? ' new' : '')+'"><time class="log-time mono" datetime="'+esc(e.at)+'">'+logTime(e.at)+'</time>'+
+            '<span class="badge '+p[0]+'">'+p[1]+'</span><span class="log-text">'+p[2]+'</span></li>';
+        }).join("")+'</ol>'
+      : '<p class="empty">'+L("ยังไม่มีความเคลื่อนไหว เพื่อนเข้ากลุ่ม ยืนยันเมนู หรือติ๊กโอนแล้วจะขึ้นตรงนี้")+'</p>');
+}
+/** id ของเหตุการณ์ที่คนอื่นทำ และเครื่องนี้ยังไม่ได้เปิดดู (จำไว้ในเครื่องที่ myGroups[].seenLog) */
+function newLogIds(){
+  var g = ui.ctx && myGroup(ui.ctx);
+  if (!g || ui.loading || ui.groupError) return [];
+  var log = state.log || [];
+  if (!Array.isArray(g.seenLog)){ g.seenLog = log.map(function(e){ return e.id; }); saveMyGroups(); return []; }   // เปิดกลุ่มครั้งแรก = เริ่มนับจากตอนนี้
+  var me = myMemberId();
+  return log.filter(function(e){ return g.seenLog.indexOf(e.id) < 0 && !(me && e.by === me); }).map(function(e){ return e.id; });
+}
+function markLogSeen(){
+  var g = ui.ctx && myGroup(ui.ctx);
+  if (!g || ui.loading || ui.groupError) return;
+  var ids = (state.log || []).map(function(e){ return e.id; });
+  if (JSON.stringify(ids) === JSON.stringify(g.seenLog)) return;
+  g.seenLog = ids; saveMyGroups();
+  paintNewCounts();
+}
+/** ตัวเลขรายการใหม่บนปุ่มที่เปิดหน้าต่างชวนเพื่อน (มือถือ #groupShare · จอใหญ่ ปุ่มชวนเพื่อนในพื้นที่ทำงาน) */
+function paintNewCounts(){
+  var n = newLogIds().length;
+  Array.prototype.forEach.call(document.querySelectorAll("#groupShare, [data-side-invite]"), function(btn){
+    var old = btn.querySelector(".new-count");
+    if (old) btn.removeChild(old);
+    if (n) btn.insertAdjacentHTML("beforeend", '<span class="new-count" aria-label="'+L("{n} รายการใหม่", { n:n })+'">'+n+'</span>');
+  });
+}
+
 /** v4.8: ทริปไม่มีการยืนยันเมนู — แสดงคนในทริปกับยอดของแต่ละคนแทน */
 function tripPeopleHTML(amounts, me){
   return '<div class="list-title"><h2>'+L("คนในทริป {n} คน", { n:state.members.length })+'</h2></div>'+
@@ -265,6 +373,8 @@ function pageGuest(){
   var me = guestMember();
   var html = '<div class="page page-guest">'+guestHead();
 
+  // งาน 4.2: คนอื่นแก้รายการของเราหลังยืนยัน (อัปเดตสด) → กลับไปหน้าติ๊กพร้อมคำเตือน ไม่ค้างที่ "ยืนยันแล้ว"
+  if (ui.guestDone && me && confirmStatusOf(serialize(), me) === "changed"){ ui.guestDone = false; ui.guestSel = null; }
   if (ui.guestDone && me){
     var mine = compute().list.filter(function(p){ return p.id === me; })[0];
     return html + '<section class="guest-done">'+
@@ -286,8 +396,8 @@ function pageGuest(){
         (myNameMemberId() ? L("ฉันคือ {name}", { name:esc(ui.myName) }) : L("เข้าร่วมในชื่อ {name}", { name:esc(ui.myName) }))+'</button>' : '')+
       (state.members.length
         ? '<div class="guest-who">'+state.members.map(function(p){
-            var ok = confirmStatusOf(d, p.id) === "confirmed";
-            return '<button type="button" data-guest-who="'+p.id+'">'+esc(p.name)+(ok ? ' <span class="guest-tick" aria-label="'+L("ยืนยันแล้ว")+'">✓</span>' : '')+'</button>';
+            var b = CONFIRM_BADGE[confirmStatusOf(d, p.id)];   // งาน 4.3: ทุกชื่อมีป้ายสถานะ
+            return '<button type="button" data-guest-who="'+p.id+'">'+esc(p.name)+' <span class="badge '+b[0]+'">'+L(b[1])+'</span></button>';
           }).join("")+'</div>'
         : '<p class="empty">'+L("ยังไม่มีใครในบิลนี้")+'</p>')+
       '<div class="guest-add"><label class="label" for="guestName">'+L("ไม่มีชื่อคุณ? เพิ่มชื่อตัวเอง")+'</label>'+
@@ -352,6 +462,7 @@ async function addGuest(){
   if (problem){ setFieldMsg("guestMsg", problem, true); return input.focus(); }
   var id = nid();
   state.members.push({ id:id, name:name });
+  logEvent("join", { who:id, by:id });             // งาน 4.3
   var ok = await commit(L("เพิ่ม {name} แล้ว", { name:name }));
   if (!ok) return rerenderGuest();
   pickGuest(id);

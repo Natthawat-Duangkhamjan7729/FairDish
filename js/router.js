@@ -5,7 +5,7 @@
    9. เส้นทางหน้า
    ========================================================= */
 var routes = {
-  "/":       { title:"FairDish — จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์", view:pageHome },
+  "/":       { title:"FairDish · จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์", view:pageHome },
   "/split":  { title:"หารบิล · FairDish", view:pageSplit },
   "/bill":   { title:"ใบสรุปยอด · FairDish", view:pageBill },
   "/history":{ title:"ประวัติบิล · FairDish", view:pageHistory },
@@ -79,6 +79,7 @@ function route(){
   // v3.2: แท็บล่างมีเฉพาะหน้าหลัก/ประวัติ/ตั้งค่า หน้าหารบิลกับใบสรุปใช้แถบยอดรวม/ปุ่มย้อนกลับแทน
   document.body.classList.toggle("no-tabbar", needsBill(path) || (path==="/" && (ui.showOnb || needName())));
   document.body.classList.toggle("show-foot", path==="/more" || path==="/about");
+  document.body.classList.toggle("is-home", path==="/");   // งาน 1.5: หน้าตาเฉพาะหน้าแรก (style.css ท้ายไฟล์)
   document.getElementById("view").innerHTML = r.view();
   var tab = tabOf(path);
   Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function(a){
@@ -94,6 +95,7 @@ function route(){
   if (path==="/share") fitShareQr();
   if ((path==="/history" || path==="/groups" || path==="/h") && isWide()) renderHistoryWide();
   renderSideNav();
+  paintNewCounts();                    // งาน 4.3: ตัวเลขรายการใหม่บนปุ่มชวนเพื่อน
   renderInApp();                       // v4.12: ลิงก์ "เปิดในเบราว์เซอร์" ต้องพาไปหน้าปัจจุบัน
   syncSheetLock();
   jumpTo(0);

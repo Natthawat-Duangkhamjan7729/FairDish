@@ -49,21 +49,26 @@ function receiptHTML(r, opts){
     barcode(r.grand)+
   '</div><div class="receipt-edge"></div></div>';
 }
+/** งาน 3.1: ยอดของบิลตัวอย่าง (demoMealData() ใน state.js) คำนวณจริงด้วย computeBill()
+ *  → { bill, r, by:{ ชื่อ: แถวใน r.list }, menu(ชื่อ) } ใช้ทำภาพตัวอย่างทุกจุด ไม่มีตัวเลขเขียนตายตัว */
+function demoSummary(){
+  var b = demoMealData(), r = computeBill(b), by = {};
+  r.list.forEach(function(p){ by[p.name] = p; });
+  return { bill:b, r:r, by:by, menu:function(name){ return b.menus.filter(function(m){ return m.name === L(name); })[0]; } };
+}
 function demoReceiptHTML(){
-  // ตรงกับปุ่ม "ใส่ข้อมูลตัวอย่าง" (loadDemo) — แก้ข้อมูลตัวอย่างแล้วต้องแก้ตรงนี้ด้วย
-  var rows = [["มาร์ค",151.67],["พูม",81.66],["ไอซ์",250.00],["ชาเน่",91.67],
-              ["โม",135.00],["ยูกะ",121.67],["โฟรค์",61.66],["เจ้าสัว",216.67]];
-  var lines = rows.map(function(p){
+  var d = demoSummary(), r = d.r;
+  var lines = r.list.map(function(p){
     return '<div class="r-line"><span class="caret" style="visibility:hidden">&#9654;</span>'+
-      '<span class="who">'+p[0]+'</span><span class="val">'+baht(p[1])+'</span></div>';
+      '<span class="who">'+esc(p.name)+'</span><span class="val">'+baht(p.rounded)+'</span></div>';
   }).join("");
   return '<div class="receipt-wrap reveal"><div class="receipt">'+
     '<div class="r-title">'+L("ใบสรุปยอด")+'</div>'+
-    '<div class="r-meta">'+L("8 คน · 10 เมนู · ร้านส้มตำหน้ามอ")+'</div>'+lines+
-    '<div class="r-sum"><div><span>'+L("ค่าอาหาร")+'</span><span>930.00</span></div>'+
-    '<div><span>'+L("ค่าส่วนกลาง")+'</span><span>180.00</span></div></div>'+
-    '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>1,110.00 ฿</span></div>'+
-    barcode(1110)+'</div><div class="receipt-edge"></div></div>';
+    '<div class="r-meta">'+L("{n} คน · {k} เมนู · {name}", { n:r.n, k:d.bill.menus.length, name:esc(d.bill.name) })+'</div>'+lines+
+    '<div class="r-sum"><div><span>'+L("ค่าอาหาร")+'</span><span>'+baht(r.foodTotal)+'</span></div>'+
+    '<div><span>'+L("ค่าส่วนกลาง")+'</span><span>'+baht(r.sharedTotal)+'</span></div></div>'+
+    '<div class="r-total"><span>'+L("รวมทั้งหมด")+'</span><span>'+baht(r.grand)+' ฿</span></div>'+
+    barcode(r.grand)+'</div><div class="receipt-edge"></div></div>';
 }
 
 /* ---- v2.5 / v3.2: ใครจ่ายให้ร้าน + ใครโอนให้ใคร (อยู่ในแท็บสรุปของหน้าหารบิล) ---- */
@@ -134,17 +139,17 @@ function transfersBlock(s, interactive, headId, paid, allAttr){
         ? '<button class="tf-tick" type="button" role="checkbox" data-paid="'+esc(k)+'" aria-checked="'+done+'" aria-label="'+L("{from} โอนให้ {to} แล้ว", { from:esc(t.fromName), to:esc(t.toName) })+'">'+box+'</button>'
         : '<span class="tf-tick" aria-hidden="true">'+box+'</span>')+
       '<span class="tf-who"><span class="tf-names"><b>'+esc(t.fromName)+'</b> <span class="tf-arrow" aria-label="'+L("โอนให้")+'">→</span> <b>'+esc(t.toName)+'</b></span>'+
-        '<span class="tf-status">'+(done ? L("โอนแล้ว") : L("ยังไม่ได้โอน"))+'</span></span>'+
+        '<span class="tf-status badge '+(done ? 'ok' : 'warn')+'">'+(done ? L("โอนแล้ว") : L("ยังไม่ได้โอน"))+'</span></span>'+
       '<span class="tf-amt">'+baht(t.amount)+'</span></div>';
   }).join("");
   return '<div class="tf-head"><h3 class="settle-head" id="'+headId+'">'+L("ใครโอนให้ใคร")+'</h3>'+
       (s.transfers.length ? '<span class="tf-count">'+L("โอนแล้ว {done}/{total}", { done:prog.done, total:prog.total })+'</span>' : '')+'</div>'+
     (s.transfers.length
-      ? (interactive ? '<p class="hint">'+L("แตะช่องหน้าชื่อเมื่อโอนแล้ว ไม่มีใครต้องตามทวง")+'</p>' : '')+
+      ? (interactive ? '<p class="hint">'+L("แตะช่องหน้าชื่อเมื่อโอนแล้ว")+'</p>' : '')+
         (allAttr && s.transfers.length > 1
           ? '<button class="tf-row tf-all'+(prog.all ? ' done' : '')+'" type="button" role="checkbox" aria-checked="'+prog.all+'" '+allAttr+'>'+
               '<span class="tf-tick" aria-hidden="true"><span class="tf-box">'+(prog.all ? ICON_CHECK : '')+'</span></span>'+
-              '<span class="tf-who"><b>'+(prog.all ? L("โอนครบทุกคนแล้ว — แตะเพื่อเอาติ๊กออกทั้งหมด") : L("ติ๊กว่าโอนครบทุกคน"))+'</b></span></button>'
+              '<span class="tf-who"><b>'+(prog.all ? L("โอนครบทุกคนแล้ว (แตะเพื่อเอาติ๊กออกทั้งหมด)") : L("ติ๊กว่าโอนครบทุกคน"))+'</b></span></button>'
           : '')+
         '<div class="tf-list">'+rows+'</div>'+
         (s.transfers.length > 1 ? '<p class="tf-note">'+L("หักลบให้แล้ว โอนแค่ {n} ครั้งก็จบ", { n:s.transfers.length })+'</p>' : '')
