@@ -31,6 +31,8 @@
 - 🔧 `manifest.webmanifest`: ชื่อแอป "FairDish · จ่ายตามที่กินจริง" (เลิกใช้ขีดยาว)
 - ℹ️ ตรวจแล้ว: ไม่มี env var ที่ต้องตั้ง (static ไม่มี build) · ไม่มีรหัสลับในโค้ดหรือประวัติ git · `SUPABASE_ANON_KEY` เป็น publishable key สาธารณะ ความปลอดภัยมาจาก `schema.sql` (ปิดตาราง เปิดแค่ 4 RPC) และข้อมูลกลุ่มเข้ารหัส
   สำรองก่อนงานที่ `claude/backup-full-before-7.3` (ตัวเต็ม v4.16) และ `claude/backup-beta-before-7.3`
+- ✅ บน https://fairdish.vercel.app (commit ปล่อย `494d59a`): เปิดแบบไม่มีข้อมูลเดิมทั้งมือถือและคอม title "FairDish · จ่ายตามที่กินจริง จบทุกมื้ออย่างแฟร์" ไม่มีแถบ Beta favicon โหลดได้ · ไฟล์ภายในตอบ 404 · สคริปต์ทุกบทบาทผ่าน (71 + 12 + 13 + 24 ขั้น + ทริปกลุ่ม) · console ไม่มี error
+  Lighthouse ตัวเต็ม: มือถือ Performance 97/98/100 · Accessibility 100 · LCP 2.4 วิ · คอม Performance 99 · Accessibility 100 · LCP 0.8 วิ
 
 ## v4.17.5 · 8 ต.ค. 2026 · Beta (งาน 7.2 ตรวจ error และความเร็ว)
 - 🔧 ฟอนต์ Google (ชุดเดิม) โหลดแบบไม่บล็อกการแสดงผล: `rel="preload" as="style"` + `onload` สลับเป็น stylesheet + `<noscript>` สำรอง (index.html)
