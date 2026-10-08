@@ -128,6 +128,7 @@ async function refreshGroup(manual, live){
       }
       ui.noReveal = !manual;            // อัปเดตอัตโนมัติไม่เล่นแอนิเมชันใบเสร็จซ้ำ
       refreshView();
+      if (path === "/") fillHome(true);  // งาน 7.1: อยู่หน้าแรก → การ์ดบิลกลุ่มต้องเปลี่ยนตาม (เช่น เพื่อนเอาติ๊กโอนออก)
       ui.noReveal = false;
       var news = groupNews(before);
       if (news) toast(news,"ok");
