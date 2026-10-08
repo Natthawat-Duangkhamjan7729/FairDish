@@ -379,7 +379,7 @@ EN = {
   "3 หน้าแรกตอนเปิดแอปครั้งแรก":"The 3 intro pages from your first visit",
   "เลือกว่าใครจ่ายให้ร้าน แล้วรู้เลยว่าใครต้องโอนให้ใคร ติ๊กชื่อเมื่อโอนแล้ว":"Pick who paid the restaurant and see who pays whom. Tick each payment when it's done.",
   "ไม่หาย ระบบบันทึกบิลไว้ในเครื่องให้อัตโนมัติทุกครั้งที่แก้ข้อมูล เริ่มบิลใหม่แล้วบิลเดิมก็ยังอยู่ในหน้าประวัติ":"No. Every change is saved on your device automatically, and when you start a new bill the old one stays in History.",
-  "เริ่มบิลใหม่แล้วบิลเดิมเก็บไว้ในหน้าประวัติ เปิดกลับมาทำต่อได้":"Every change is saved right away. Starting a new bill keeps the old one in History, ready to reopen.",
+  "เริ่มบิลใหม่แล้วบิลเดิมเก็บไว้ในหน้าประวัติ เปิดกลับมาทำต่อได้":"Starting a new bill keeps the old one in History, ready to reopen.",
   "ยังไม่มีบัญชีผู้ใช้":"No user accounts yet",
   "บิลส่วนตัวอยู่ในเครื่องที่ใช้เท่านั้น ถ้าอยากเปิดหลายเครื่องให้ย้ายบิลขึ้นกลุ่ม":"Personal bills stay on the device you used. To open a bill on several devices, move it to a group.",
   "หน้า {i} จาก 3":"Page {i} of 3",
