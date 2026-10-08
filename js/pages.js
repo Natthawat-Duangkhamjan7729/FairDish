@@ -549,7 +549,7 @@ function pageOnboard(){
       '<button class="link-btn" type="button" data-onb-skip="1">'+L("ข้าม")+'</button></div>'+
     onboardArt(i)+
     '<p class="eyebrow">'+L(o[0])+'</p><h1 class="onb-title">'+L(o[1])+'</h1><p class="onb-body">'+L(o[2])+'</p>'+
-    '<div class="onb-dots" aria-label="'+L("หน้า {i} จาก 3", { i:i+1 })+'">'+[0,1,2].map(function(k){ return '<i'+(k === i ? ' class="on"' : '')+'></i>'; }).join("")+'</div>'+
+    '<div class="onb-dots" role="img" aria-label="'+L("หน้า {i} จาก 3", { i:i+1 })+'">'+[0,1,2].map(function(k){ return '<i'+(k === i ? ' class="on"' : '')+'></i>'; }).join("")+'</div>'+
     '<button class="btn-main btn-block" type="button" data-onb-next="1">'+(i < 2 ? L("ถัดไป") : L("เริ่มใช้งาน"))+'</button>'+
     '<p class="intro-note">'+L("ไม่ต้องสมัครสมาชิก · บันทึกบิลไว้ในเครื่องให้อัตโนมัติ")+'</p>'+
   '</div>';
