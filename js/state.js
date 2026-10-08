@@ -80,7 +80,7 @@ var MAX_NAME = 24;
 var MAX_MENU_NAME = 40;
 var MAX_PRICE = 100000;
 function normText(x){ return String(x||"").toLowerCase().replace(/\s+/g,""); }
-var APP_VERSION = "4.17.2";
+var APP_VERSION = "4.17.3";
 var MENU_MEMORY_LIMIT = 60;
 
 /* ---- v3.0: คำที่ต่างกันตามประเภทบิล — ใช้ kt("key") แทนการเขียนคำตรง ๆ ---- */

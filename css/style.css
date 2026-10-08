@@ -1563,3 +1563,17 @@ body.is-home{
   --line:var(--home-line); --line-2:var(--home-line-2); --nav-bg:var(--home-nav-bg); --tabbar-bg:var(--home-tabbar-bg);
   --hero-bg:var(--home-hero-bg); --hero-edge:var(--home-hero-edge); --hero-shadow:var(--home-hero-shadow);
 }
+
+/* ---------------- งาน 6.3: มือถือ (<600px) จุดกดสูง/กว้างอย่างน้อย 44px ----------------
+   ปุ่มเล็กที่อยู่ในบรรทัดหัว/แถบ ขยายเฉพาะพื้นที่กด (padding + margin ติดลบ) หน้าตาและตำแหน่งเท่าเดิม */
+@media (max-width:599px){
+  :root{--tap-sm:44px}                                                       /* ปุ่มแก้ชื่อคน, ช่องแก้ชื่อ, ชวนเพื่อน, คัดลอกลิงก์, ปุ่มใน toast */
+  .sandbox-bar a{padding-block:14px}                                         /* "ไปตัวเต็ม" (inline: ไม่ดันความสูงแถบ) */
+  button.appbar-sub{min-height:44px;margin-block:-11px}                      /* ชื่อบิลใต้หัว แตะเพื่อเปลี่ยนชื่อ */
+  .group-sub{min-height:44px;margin-block:-8px}                              /* "เลือกว่าคุณคือใคร ›" */
+  .lang-switch button{position:relative}                                    /* TH/EN และ ธีม: ปุ่มสูง 34 คงเดิม ขยายแค่พื้นที่กดเป็น 44 */
+  .lang-switch button::after{content:"";position:absolute;left:0;right:0;top:-5px;bottom:-5px}
+  .tour-top .link-btn{min-height:44px;margin-block:-6px}                     /* "ข้ามการสอน" */
+  .link-btn{min-width:44px;justify-content:center}                           /* "ข้าม" ในหน้าแนะนำ */
+  .appbar-back{min-width:44px}                                              /* จอ < 360px ซ่อนคำว่า "ย้อนกลับ" เหลือไอคอน */
+}
