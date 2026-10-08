@@ -34,6 +34,61 @@ function restoreSheetScroll(slot){
 function syncSheetLock(){
   document.body.classList.toggle("sheet-open", !!document.querySelector(".sheet-wrap"));
 }
+
+/* v4.17.7: แป้นพิมพ์มือถือบังช่องพิมพ์ — iPhone/Android รุ่นใหม่ไม่ย่อหน้าเว็บตอนแป้นพิมพ์ขึ้น ย่อแค่ visualViewport
+   แผ่นล่างจอ/หน้าต่างที่ position:fixed จึงจมอยู่ใต้แป้นพิมพ์ → ตั้ง --vv-top / --vv-h / --kb ที่ <html> (ใช้ใน style.css)
+   ให้กล่องอยู่ในส่วนที่มองเห็น แล้วเลื่อนช่องที่กำลังพิมพ์ให้อยู่ในจอ */
+var VVP = window.visualViewport || null;
+var KB_MIN = 80;                       // จอหดน้อยกว่านี้ = แถบเครื่องมือเบราว์เซอร์ ไม่ใช่แป้นพิมพ์
+function fitKeyboard(){
+  if (!VVP) return false;
+  var root = document.documentElement, ih = window.innerHeight;
+  var h = Math.round(VVP.height), top = Math.max(0, Math.round(VVP.offsetTop));
+  var open = VVP.scale < 1.05 && ih - h > KB_MIN;      // ซูมสองนิ้วอยู่ = ไม่ใช่แป้นพิมพ์ ไม่ขยับอะไร
+  if (open){
+    root.style.setProperty("--vv-top", top + "px");
+    root.style.setProperty("--vv-h", h + "px");
+    root.style.setProperty("--kb", Math.max(0, ih - top - h) + "px");
+  } else ["--vv-top", "--vv-h", "--kb"].forEach(function(k){ root.style.removeProperty(k); });
+  root.classList.toggle("kb-open", open);
+  return open;
+}
+/** เลื่อนช่องที่โฟกัสอยู่ให้เห็น: ในแผ่น/หน้าต่าง = เลื่อนในกล่อง · ในหน้าปกติ = เลื่อนหน้า (เฉพาะตอนถูกแป้นพิมพ์บัง) */
+function keepFieldInView(){
+  var el = document.activeElement;
+  if (!el || !el.matches || !el.matches("input:not([type=checkbox]):not([type=radio]):not([type=button]), textarea, select")) return;
+  var pad = 12, r = el.getBoundingClientRect();
+  var visTop = VVP ? VVP.offsetTop : 0, visBottom = VVP ? VVP.offsetTop + VVP.height : window.innerHeight;
+  var box = el.closest(".sheet, dialog");
+  if (box){
+    var b = box.getBoundingClientRect(), lo = Math.min(b.bottom, visBottom) - pad, hi = Math.max(b.top, visTop) + pad;
+    if (r.bottom > lo) box.scrollTop += Math.min(r.bottom - lo, r.top - hi);
+    else if (r.top < hi) box.scrollTop -= hi - r.top;
+    return;
+  }
+  if (document.documentElement.classList.contains("kb-open") && r.bottom > visBottom - pad)
+    jumpTo(window.scrollY + r.bottom - visBottom + pad);
+}
+function watchKeyboard(){
+  if (!VVP) return;
+  var frame = 0, resized = false;
+  function onViewport(e){
+    if (e.type === "resize") resized = true;
+    if (frame) return;
+    frame = requestAnimationFrame(function(){
+      var grew = resized;
+      frame = 0; resized = false;
+      if (fitKeyboard() && grew) requestAnimationFrame(keepFieldInView);
+    });
+  }
+  VVP.addEventListener("resize", onViewport);
+  VVP.addEventListener("scroll", onViewport);
+  /* ย้ายไปช่องอื่นตอนแป้นพิมพ์ขึ้นอยู่แล้ว (จอไม่หดอีก) — เลื่อนช่องใหม่ให้เห็นเอง */
+  document.addEventListener("focusin", function(){
+    if (document.documentElement.classList.contains("kb-open")) setTimeout(keepFieldInView, 60);
+  });
+}
+watchKeyboard();
 /** ชื่อบิลใต้หัวหน้าหารบิล (เปลี่ยนชื่อ/โหลดเสร็จแล้วอัปเดตโดยไม่วาดทั้งหน้า) */
 function renderAppBarSub(){
   var wsName = document.querySelector(".ws-name");       // v4.4: ชื่อบิลบนหัวพื้นที่ทำงาน (จอใหญ่)

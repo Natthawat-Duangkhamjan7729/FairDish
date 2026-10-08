@@ -187,7 +187,9 @@ function tourTick(){
     }
   }
   var r = el ? el.getBoundingClientRect() : null;
-  var key = t.i + "|" + (away ? "away" : "") + "|" + (r ? [r.left, r.top, r.width, r.height].map(Math.round).join() : "none") + "|" + innerWidth + "x" + innerHeight;
+  var vv = window.visualViewport;           // v4.17.7: แป้นพิมพ์ขึ้น/ลง (innerHeight ไม่เปลี่ยน) ก็วางกล่องคำอธิบายใหม่
+  var key = t.i + "|" + (away ? "away" : "") + "|" + (r ? [r.left, r.top, r.width, r.height].map(Math.round).join() : "none") + "|" + innerWidth + "x" + innerHeight +
+    (vv ? "|" + Math.round(vv.offsetTop + vv.height) : "");
   if (key === tourLast) return;
   tourLast = key;
   placeTour(box, r);
@@ -244,12 +246,14 @@ function placeTour(box, r){
   var awayEl = tip.querySelector(".tour-away");
   if (awayEl) awayEl.hidden = !away;
   var pad = 6, W = innerWidth, H = innerHeight;
+  // v4.17.7: กล่องคำอธิบายต้องอยู่เหนือแป้นพิมพ์มือถือ (แป้นพิมพ์ย่อแค่ visualViewport) — ฉากบังยังใช้ทั้งจอ
+  var vv = window.visualViewport, TH = vv && vv.scale < 1.05 ? Math.min(H, vv.offsetTop + vv.height) : H;
   var blocks = box.querySelectorAll(".tour-block");
   if (!r){
     ring.style.display = "none";
     Array.prototype.forEach.call(blocks, function(b){ b.style.display = "none"; });
     tip.style.left = Math.max(12, (W - tip.offsetWidth) / 2) + "px";
-    tip.style.top = Math.max(12, H - tip.offsetHeight - 24) + "px";
+    tip.style.top = Math.max(12, TH - tip.offsetHeight - 24) + "px";
     return;
   }
   var x = Math.max(0, r.left - pad), y = Math.max(0, r.top - pad), w = Math.min(W, r.right + pad) - x, h = Math.min(H, r.bottom + pad) - y;
@@ -264,7 +268,7 @@ function placeTour(box, r){
     if (s === "r") set(b, x + w, y, W - x - w, h);
   });
   tip.classList.remove("mini");
-  var pos = tourTipPos(tip, x, y, w, h, W, H);
+  var pos = tourTipPos(tip, x, y, w, h, W, TH);
   if (pos.overlap){                     // ไม่มีที่ให้กล่องเต็ม (เช่นแผ่นฟอร์มเกือบเต็มจอ) → ย่อเหลือแถบหัวเรื่องบนสุดของจอ
     tip.classList.add("mini");
     pos = { left:Math.max(8, (W - tip.offsetWidth) / 2), top:8 };

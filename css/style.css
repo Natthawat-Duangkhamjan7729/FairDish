@@ -115,7 +115,7 @@
   --font-num:"IBM Plex Mono",ui-monospace,monospace;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;touch-action:manipulation}       /* v4.17.7: จอสัมผัส แตะสองครั้งเร็ว ๆ ไม่ซูมหน้า (ซูมสองนิ้วยังได้) */
 body{
   margin:0;color:var(--ink);overflow-x:hidden;
   background:
@@ -358,6 +358,8 @@ input[aria-invalid=true]{border-color:var(--danger);background:var(--danger-soft
 .group-panel{border-top:1px dashed var(--line-2);margin-top:var(--s3);padding-top:var(--s3)}
 .group-link{display:flex;gap:var(--s2)}
 .group-link input{flex:1;min-width:0;font-family:var(--font-num);font-size:var(--fs-small);color:var(--ink-2)}
+/* v4.17.7: iPhone ซูมหน้าเองเมื่อแตะช่องพิมพ์ที่ตัวอักษรเล็กกว่า 16px — จอสัมผัสใช้ขนาดปกติ */
+@media (pointer:coarse){ .chip.editing input,.group-link input{font-size:var(--fs-body)} }
 .group-link .btn-quiet{padding:var(--s2) var(--s4)}
 .group-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2);margin-top:var(--s4)}
 .group-hint{margin:0 0 var(--s3)}
@@ -473,6 +475,7 @@ body.show-foot .foot{display:block}
 .install-dialog{width:min(480px,calc(100vw - 2 * var(--s4)));max-height:calc(100dvh - 2 * var(--s4));overflow-y:auto;
   padding:var(--s5) var(--s4);border:1px solid var(--line);border-radius:var(--r-lg);
   background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.install-dialog:modal{top:var(--vv-top,0px);bottom:var(--kb,0px);max-height:calc(var(--vv-h,100dvh) - 2 * var(--s4))}
 .install-dialog::backdrop{background:rgba(23,18,31,.55);backdrop-filter:blur(3px)}
 .install-head{display:flex;align-items:flex-start;gap:var(--s3);margin-bottom:var(--s4)}
 .install-head img{width:48px;height:48px;border-radius:14px;flex:0 0 auto;border:1px solid var(--line)}
@@ -830,12 +833,14 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
 .past-when{text-align:center;font-size:var(--fs-caption);color:var(--ink-2);margin:var(--s2) 0 var(--s4)}
 
 /* แผ่นล่างจอ */
-.sheet-wrap{position:fixed;inset:0;z-index:90}
+/* v4.17.7: --vv-top / --kb มาจาก fitKeyboard() ใน render.js ตอนแป้นพิมพ์มือถือขึ้น — กล่องอยู่ในส่วนที่มองเห็น ไม่จมใต้แป้นพิมพ์ */
+.sheet-wrap{position:fixed;left:0;right:0;top:var(--vv-top,0px);bottom:var(--kb,0px);z-index:90}
 .sheet-backdrop{position:absolute;inset:0;background:var(--scrim)}
 .sheet{position:absolute;left:0;right:0;bottom:0;max-width:var(--shell);margin:0 auto;max-height:86vh;max-height:86dvh;overflow-y:auto;overscroll-behavior:contain;
   padding:10px var(--s4) calc(var(--s5) + env(safe-area-inset-bottom));background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;
   box-shadow:0 -20px 40px -20px var(--toast-shadow)}
 .sheet-grip{display:block;width:40px;height:5px;border-radius:3px;background:var(--line-2);margin:0 auto 14px}
+@media(max-width:599px){ html.kb-open .sheet{max-height:calc(var(--vv-h) - var(--s2));padding-bottom:var(--s4)} }
 .sheet .form-box{border:none;padding:0;background:none;gap:var(--s2)}
 .sheet .form-title{font-family:var(--font-head);font-size:var(--fs-lead);font-weight:600;margin-bottom:var(--s1)}
 .sheet .form-actions{margin-top:var(--s2)}
@@ -999,7 +1004,7 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   :root{--side:88px;--wpad-y:22px;--wpad-x:24px}
   /* แผ่นล่างจอ → หน้าต่างกลางจอ */
   .sheet-wrap{display:grid;place-items:center;padding:var(--s5)}
-  .sheet{position:relative;left:auto;right:auto;bottom:auto;width:100%;max-width:560px;max-height:calc(100dvh - 2 * var(--s5));
+  .sheet{position:relative;left:auto;right:auto;bottom:auto;width:100%;max-width:560px;max-height:calc(var(--vv-h,100dvh) - 2 * var(--s5));
     padding:var(--s5);border-radius:var(--r-lg);box-shadow:0 30px 60px -20px var(--toast-shadow)}
   .sheet-grip{display:none}
 
@@ -1235,8 +1240,9 @@ body.no-tabbar.has-total .toast{bottom:calc(var(--totalbar-h) + var(--s3) + env(
   .w-bill-side .notice{margin:0}
   .w-settle .settle{margin-top:0;padding-top:0;border-top:none}
   .w-settle .tf-list{display:grid;gap:8px}
-  .w-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-  .w-actions > *{min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px}
+  /* v4.17.7: ปุ่มยาวกว่าช่องได้ (เช่น "ชวนเพื่อนตรวจยอด · ยืนยันเมนู" บน iPad) — เรียงแบบ flex ตามความยาวข้อความ ไม่พอให้ขึ้นแถวใหม่ แคบสุด ๆ ตัดบรรทัด */
+  .w-actions{display:flex;flex-wrap:wrap;gap:12px}
+  .w-actions > *{flex:1 1 auto;min-width:0;min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px;white-space:normal;text-wrap:balance}
   .w-actions svg{width:18px;height:18px}
   .w-done{position:relative;display:flex;align-items:center;gap:16px;width:100%;min-height:140px;padding:18px 20px 18px 150px;border-radius:var(--r-md);
     background:var(--primary-soft);border:1.5px solid var(--chip-line);text-align:left;color:var(--ink)}
@@ -1525,6 +1531,7 @@ button.appbar-sub{padding-block:.22em}
    กล่อง: การ์ดบิลที่ทำอยู่มีเงา (สำคัญสุด) · การ์ดเริ่มบิลเป็นเส้นขอบ · บิลล่าสุดเป็นแถวคั่นเส้น */
 .kind-svg{display:inline-flex;vertical-align:-.14em;color:var(--coral-ink)}
 .kind-svg svg{width:1em;height:1em}
+.list-body .kind-svg{color:var(--coral-ink);font-size:inherit}                    /* v4.17.7: แถวบิลล่าสุด (มือถือ) ไม่ให้ .list-body span ทับสีคอรัล */
 .kind-ico .kind-svg,.w-recent-card .ico .kind-svg{vertical-align:0}
 .kind-ico .kind-svg svg{width:26px;height:26px}
 .sn-bico .kind-svg svg{width:20px;height:20px}
@@ -1569,7 +1576,7 @@ body.is-home{
 @media (max-width:599px){
   :root{--tap-sm:44px}                                                       /* ปุ่มแก้ชื่อคน, ช่องแก้ชื่อ, ชวนเพื่อน, คัดลอกลิงก์, ปุ่มใน toast */
   .sandbox-bar a{padding-block:14px}                                         /* "ไปตัวเต็ม" (inline: ไม่ดันความสูงแถบ) */
-  button.appbar-sub{min-height:44px;margin-block:-11px}                      /* ชื่อบิลใต้หัว แตะเพื่อเปลี่ยนชื่อ */
+  button.appbar-sub{min-height:44px;margin-block:-11px;position:relative;z-index:1} /* ชื่อบิลใต้หัว แตะเพื่อเปลี่ยนชื่อ (v4.17.7: อยู่เหนือ h1 ที่บังขอบบน) */
   .group-sub{min-height:44px;margin-block:-8px}                              /* "เลือกว่าคุณคือใคร ›" */
   .lang-switch button{position:relative}                                    /* TH/EN และ ธีม: ปุ่มสูง 34 คงเดิม ขยายแค่พื้นที่กดเป็น 44 */
   .lang-switch button::after{content:"";position:absolute;left:0;right:0;top:-5px;bottom:-5px}
@@ -1577,3 +1584,7 @@ body.is-home{
   .link-btn{min-width:44px;justify-content:center}                           /* "ข้าม" ในหน้าแนะนำ */
   .appbar-back{min-width:44px}                                              /* จอ < 360px ซ่อนคำว่า "ย้อนกลับ" เหลือไอคอน */
 }
+
+/* ---------------- v4.17.7: แป้นพิมพ์มือถือขึ้นอยู่ (html.kb-open จาก fitKeyboard() ใน render.js) ----------------
+   toast ที่ปกติอยู่ล่างจอจะจมใต้แป้นพิมพ์ — ยกขึ้นมาเหนือแป้นพิมพ์ (selector ยาวให้ชนะทุกกฎ bottom ของ .toast ด้านบน) */
+html.kb-open .toast,html.kb-open body.no-tabbar .toast,html.kb-open body.no-tabbar.has-total .toast,html.kb-open body.has-total .toast{bottom:calc(var(--kb) + var(--s3))}
